@@ -139,10 +139,46 @@ extension Statement {
 	///
 	/// - returns: The column's values as an array of `type`.
 	func values<T>(forColumn name: String, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> [T] {
-		let index = try index(ofColumn: name)
-		var values = [T]()
-		try results { row in
-			values.append(try row.value(forColumn: index, as: type, converter))
+		try values(forColumn: try index(ofColumn: name), as: type, converter)
+	}
+}
+
+extension Statement {
+	/// Returns the values of the column at `indexes` converted to `type` for each row in the result set.
+	///
+	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
+	///
+	/// - requires: `indexes.min() >= 0`
+	/// - requires: `indexes.max() < self.columnCount`
+	///
+	/// - parameter indexes: The indexes of the desired column.
+	/// - parameter type: The desired value type.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `type`.
+	///
+	/// - throws: An error if any element of `indexes` is out of bounds, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's values as an array of arrays of `type`.
+	func values<S: Collection, T>(forColumns indexes: S, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> [[T]] where S.Element == Int {
+		var values = [[T]](repeating: [], count: indexes.count)
+		for (n, x) in indexes.enumerated() {
+			values[n] = try self.values(forColumn: x, as: type, converter)
+		}
+		return values
+	}
+
+	/// Returns the values of the column with `names` converted to `type` for each row in the result set.
+	///
+	/// - parameter names: The names of the desired columns.
+	/// - parameter type: The desired value type.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `type`.
+	///
+	/// - throws: An error if any element of `names` doesn't exist, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's values as a dictionary of arrays of `type` keyed by column name.
+	func values<S: Collection, T>(forColumns names: S, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> [String: [T]] where S.Element == String {
+		var values: [String: [T]] = [:]
+		for name in names {
+			values[name] = try self.values(forColumn: name, as: type, converter)
 		}
 		return values
 	}
