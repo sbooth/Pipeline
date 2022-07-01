@@ -17,19 +17,19 @@ import CSQLite
 ///
 /// ```swift
 /// extension ParameterValueBinder where T == UUID {
-/// 	public static var uuid = ParameterValueBinder { value, statement, index in
+/// 	public static var uuid = ParameterValueBinder { statement, value, index in
 /// 		try statement.bind(text: value.uuidString.lowercased(), toParameter: index)
 /// 	}
 ///  ```
 public struct ParameterValueBinder<T> {
 	/// Binds `value` to the SQL parameter at `index` in `statement`.
 	///
-	/// - parameter value: The desired value of the SQL parameter.
 	/// - parameter statement: A `Statement` object to receive the desired parameter.
+	/// - parameter value: The desired value of the SQL parameter.
 	/// - parameter index: The index of the SQL parameter to bind.
 	///
 	/// - throws: An error if the type conversion could not be accomplished.
-	public let bind: (_ value: T, _ statement: Statement, _ index: Int) throws -> ()
+	public let bind: (_ statement: Statement, _ value: T, _ index: Int) throws -> ()
 }
 
 extension Statement {
@@ -43,7 +43,7 @@ extension Statement {
 	///
 	/// - throws: An error if `index` is out of bounds or type conversion could not be accomplished.
 	public func bind<T>(value: T, toParameter index: Int, _ binder: ParameterValueBinder<T>) throws {
-		try binder.bind(value, self, index)
+		try binder.bind(self, value, index)
 	}
 }
 
@@ -62,21 +62,21 @@ extension Statement {
 
 extension ParameterValueBinder where T == String {
 	/// Binds a text value to an SQL parameter.
-	public static var string = ParameterValueBinder { value, statement, index in
+	public static var string = ParameterValueBinder { statement, value, index in
 		try statement.bind(text: value, toParameter: index)
 	}
 }
 
 extension ParameterValueBinder where T == Data {
 	/// Binds a BLOB to an SQL parameter.
-	public static var data = ParameterValueBinder { value, statement, index in
+	public static var data = ParameterValueBinder { statement, value, index in
 		try statement.bind(blob: value, toParameter: index)
 	}
 }
 
 extension ParameterValueBinder where T == Int {
 	/// Binds an `Int` to an SQL parameter as a signed integer.
-	public static var int = ParameterValueBinder { value, statement, index in
+	public static var int = ParameterValueBinder { statement, value, index in
 		try statement.bind(integer: Int64(value), toParameter: index)
 	}
 }
@@ -84,56 +84,56 @@ extension ParameterValueBinder where T == Int {
 extension ParameterValueBinder where T == UInt {
 	/// Binds an `UInt` to an SQL parameter as a signed integer.
 	/// - note: The value is bound as an `Int` bit pattern.
-	public static var uint = ParameterValueBinder { value, statement, index in
+	public static var uint = ParameterValueBinder { statement, value, index in
 		try statement.bind(integer: Int64(Int(bitPattern: value)), toParameter: index)
 	}
 }
 
 extension ParameterValueBinder where T == Int8 {
 	/// Binds an `Int8` to an SQL parameter as a signed integer.
-	public static var int8 = ParameterValueBinder { value, statement, index in
+	public static var int8 = ParameterValueBinder { statement, value, index in
 		try statement.bind(integer: Int64(value), toParameter: index)
 	}
 }
 
 extension ParameterValueBinder where T == UInt8 {
 	/// Binds an `UInt8` to an SQL parameter as a signed integer.
-	public static var uint8 = ParameterValueBinder { value, statement, index in
+	public static var uint8 = ParameterValueBinder { statement, value, index in
 		try statement.bind(integer: Int64(value), toParameter: index)
 	}
 }
 
 extension ParameterValueBinder where T == Int16 {
 	/// Binds an `Int16` to an SQL parameter as a signed integer.
-	public static var int16 = ParameterValueBinder { value, statement, index in
+	public static var int16 = ParameterValueBinder { statement, value, index in
 		try statement.bind(integer: Int64(value), toParameter: index)
 	}
 }
 
 extension ParameterValueBinder where T == UInt16 {
 	/// Binds an `UInt16` to an SQL parameter as a signed integer.
-	public static var uint16 = ParameterValueBinder { value, statement, index in
+	public static var uint16 = ParameterValueBinder { statement, value, index in
 		try statement.bind(integer: Int64(value), toParameter: index)
 	}
 }
 
 extension ParameterValueBinder where T == Int32 {
 	/// Binds an `Int32` to an SQL parameter as a signed integer.
-	public static var int32 = ParameterValueBinder { value, statement, index in
+	public static var int32 = ParameterValueBinder { statement, value, index in
 		try statement.bind(integer: Int64(value), toParameter: index)
 	}
 }
 
 extension ParameterValueBinder where T == UInt32 {
 	/// Binds an `UInt32` as a signed integer value.
-	public static var uint32 = ParameterValueBinder { value, statement, index in
+	public static var uint32 = ParameterValueBinder { statement, value, index in
 		try statement.bind(integer: Int64(value), toParameter: index)
 	}
 }
 
 extension ParameterValueBinder where T == Int64 {
 	/// Binds a signed integer value to an SQL parameter.
-	public static var int64 = ParameterValueBinder { value, statement, index in
+	public static var int64 = ParameterValueBinder { statement, value, index in
 		try statement.bind(integer: value, toParameter: index)
 	}
 }
@@ -141,21 +141,21 @@ extension ParameterValueBinder where T == Int64 {
 extension ParameterValueBinder where T == UInt64 {
 	/// Binds an `UInt64` to an SQL parameter as a signed integer.
 	/// - note: The value is bound as an `Int64` bit pattern.
-	public static var uint64 = ParameterValueBinder { value, statement, index in
+	public static var uint64 = ParameterValueBinder { statement, value, index in
 		try statement.bind(integer: Int64(bitPattern: value), toParameter: index)
 	}
 }
 
 extension ParameterValueBinder where T == Float {
 	/// Binds a `Float` to an SQL parameter as a floating-point value.
-	public static var float = ParameterValueBinder { value, statement, index in
+	public static var float = ParameterValueBinder { statement, value, index in
 		try statement.bind(real: Double(value), toParameter: index)
 	}
 }
 
 extension ParameterValueBinder where T == Double {
 	/// Binds a floating-point value to an SQL parameter.
-	public static var double = ParameterValueBinder { value, statement, index in
+	public static var double = ParameterValueBinder { statement, value, index in
 		try statement.bind(real: value, toParameter: index)
 	}
 }
@@ -163,7 +163,7 @@ extension ParameterValueBinder where T == Double {
 extension ParameterValueBinder where T == Bool {
 	/// Binds a `Bool` to an SQL parameter as a signed integer.
 	/// - note: True is bound as 1 while false is bound as 0.
-	public static var bool = ParameterValueBinder { value, statement, index in
+	public static var bool = ParameterValueBinder { statement, value, index in
 		try statement.bind(integer: value ? 1 : 0, toParameter: index)
 	}
 }
@@ -171,13 +171,13 @@ extension ParameterValueBinder where T == Bool {
 extension ParameterValueBinder where T == UUID {
 	/// Binds a `UUID` to an SQL parameter as text.
 	/// - note: The text value is bound as a lower case UUID string.
-	public static var uuid = ParameterValueBinder { value, statement, index in
+	public static var uuid = ParameterValueBinder { statement, value, index in
 		try statement.bind(text: value.uuidString.lowercased(), toParameter: index)
 	}
 
 	/// Binds a `UUID` to an SQL parameter as a BLOB.
 	/// - note: The value is bound as a 16-byte `uuid_t`.
-	public static var uuidBytes = ParameterValueBinder { value, statement, index in
+	public static var uuidBytes = ParameterValueBinder { statement, value, index in
 		let b = withUnsafeBytes(of: value.uuid) {
 			Data($0)
 		}
@@ -188,7 +188,7 @@ extension ParameterValueBinder where T == UUID {
 extension ParameterValueBinder where T == URL {
 	/// Binds a `URL` to an SQL parameter as text.
 	/// - note: The text value is interpreted as a URL string.
-	public static var url = ParameterValueBinder { value, statement, index in
+	public static var url = ParameterValueBinder { statement, value, index in
 		try statement.bind(text: value.absoluteString, toParameter: index)
 	}
 }
@@ -196,13 +196,13 @@ extension ParameterValueBinder where T == URL {
 extension ParameterValueBinder where T == Date {
 	/// Binds a `Date` to an SQL parameter as a floating-point value.
 	/// - note: The value is bound as the number of seconds relative to 00:00:00 UTC on 1 January 1970.
-	public static var timeIntervalSince1970 = ParameterValueBinder { value, statement, index in
+	public static var timeIntervalSince1970 = ParameterValueBinder { statement, value, index in
 		try statement.bind(real: value.timeIntervalSince1970, toParameter: index)
 	}
 
 	/// Binds a `Date` to an SQL parameter as a floating-point value.
 	/// - note: The value is bound as the number of seconds relative to 00:00:00 UTC on 1 January 2001.
-	public static var timeIntervalSinceReferenceDate = ParameterValueBinder { value, statement, index in
+	public static var timeIntervalSinceReferenceDate = ParameterValueBinder { statement, value, index in
 		try statement.bind(real: value.timeIntervalSinceReferenceDate, toParameter: index)
 	}
 }
