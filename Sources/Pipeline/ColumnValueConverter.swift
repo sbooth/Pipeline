@@ -342,10 +342,3 @@ extension ColumnValueConverter where T == Date {
 		Date(timeIntervalSinceReferenceDate: try $0.real(forColumn: $1))
 	}
 }
-
-//extension ColumnValueConverter where T: Decodable {
-//	public static var json = ColumnValueConverter { row, index in
-//		let b = try row.blob(forColumn: index)
-//		return try JSONDecoder().decode(T.self, from: b)
-//	}
-//}
