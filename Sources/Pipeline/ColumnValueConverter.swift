@@ -77,6 +77,38 @@ extension Row {
 	}
 }
 
+extension Row {
+	/// Returns the value of the column with name `name` converted to `type`.
+	///
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter name: The name of the desired column.
+	/// - parameter type: The desired value type.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `type`.
+	///
+	/// - throws: An error if the column doesn't exist, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as `type`.
+	func value<T>(forColumn name: String, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> T {
+		try value(forColumn: statement.index(ofColumn: name), as: type, converter)
+	}
+
+	/// Returns the value of the column with name `name` converted to `type`.
+	///
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter name: The name of the desired column.
+	/// - parameter type: The desired value type.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `type`.
+	///
+	/// - throws: An error if the column doesn't exist or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as `type` or `nil` if null.
+	func valueOrNil<T>(forColumn name: String, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> T? {
+		try valueOrNil(forColumn: statement.index(ofColumn: name), as: type, converter)
+	}
+}
+
 extension ColumnValueConverter where T == String {
 	/// Returns the text value of a column.
 	static var string = ColumnValueConverter {
