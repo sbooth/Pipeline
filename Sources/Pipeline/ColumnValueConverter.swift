@@ -109,6 +109,45 @@ extension Row {
 	}
 }
 
+extension Statement {
+	/// Returns the value of the column at `index` converted to `type` for each row in the result set.
+	///
+	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
+	///
+	/// - parameter index: The index of the desired column.
+	/// - parameter type: The desired value type.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `type`.
+	///
+	/// - throws: An error if `index` is out of bounds, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's values as an array of `type`.
+	func values<T>(forColumn index: Int, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> [T] {
+		var values = [T]()
+		try results { row in
+			values.append(try row.value(forColumn: index, as: type, converter))
+		}
+		return values
+	}
+
+	/// Returns the value of the column with `name` converted to `type` for each row in the result set.
+	///
+	/// - parameter name: The name of the desired column.
+	/// - parameter type: The desired value type.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `type`.
+	///
+	/// - throws: An error if the column doesn't exist, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's values as an array of `type`.
+	func values<T>(forColumn name: String, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> [T] {
+		let index = try index(ofColumn: name)
+		var values = [T]()
+		try results { row in
+			values.append(try row.value(forColumn: index, as: type, converter))
+		}
+		return values
+	}
+}
+
 extension ColumnValueConverter where T == String {
 	/// Returns the text value of a column.
 	static var string = ColumnValueConverter {
