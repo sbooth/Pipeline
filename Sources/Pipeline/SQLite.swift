@@ -104,7 +104,7 @@ public struct SQLite {
 	public static func randomness(_ count: Int) -> Data {
 		var data = Data(count: count)
 		data.withUnsafeMutableBytes {
-			sqlite3_randomness(Int32(count), $0.baseAddress)
+			sqlite3_randomness(Int32($0.count), $0.baseAddress)
 		}
 		return data
 	}

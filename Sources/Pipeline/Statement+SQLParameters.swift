@@ -77,7 +77,7 @@ extension Statement {
 			}
 		case .blob(let b):
 			try b.withUnsafeBytes {
-				guard sqlite3_bind_blob(preparedStatement, Int32(index), $0.baseAddress, Int32(b.count), SQLiteTransientStorage) == SQLITE_OK else {
+				guard sqlite3_bind_blob(preparedStatement, Int32(index), $0.baseAddress, Int32($0.count), SQLiteTransientStorage) == SQLITE_OK else {
 					throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
 				}
 			}
@@ -154,7 +154,7 @@ extension Statement {
 	/// - throws: An error if `value` couldn't be bound.
 	public func bind(blob value: Data, toParameter index: Int) throws {
 		try value.withUnsafeBytes {
-			guard sqlite3_bind_blob(preparedStatement, Int32(index), $0.baseAddress, Int32(value.count), SQLiteTransientStorage) == SQLITE_OK else {
+			guard sqlite3_bind_blob(preparedStatement, Int32(index), $0.baseAddress, Int32($0.count), SQLiteTransientStorage) == SQLITE_OK else {
 				throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
 			}
 		}
