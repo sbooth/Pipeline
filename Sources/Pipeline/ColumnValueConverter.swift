@@ -295,7 +295,7 @@ extension ColumnValueConverter where T == Bool {
 extension ColumnValueConverter where T == UUID {
 	/// Converts the text value of a column to `UUID`.
 	/// - note: The text value is interpreted as a UUID string.
-	public static var uuid = ColumnValueConverter { row, index in
+	public static var uuidWithString = ColumnValueConverter { row, index in
 		let t = try row.text(forColumn: index)
 		guard let u = UUID(uuidString: t) else {
 			throw DatabaseError(message: "text \"\(t)\" isn't a valid UUID")

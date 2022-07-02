@@ -171,7 +171,7 @@ extension ParameterValueBinder where T == Bool {
 extension ParameterValueBinder where T == UUID {
 	/// Binds a `UUID` to an SQL parameter as text.
 	/// - note: The text value is bound as a lower case UUID string.
-	public static var uuid = ParameterValueBinder { statement, value, index in
+	public static var uuidString = ParameterValueBinder { statement, value, index in
 		try statement.bind(text: value.uuidString.lowercased(), toParameter: index)
 	}
 
