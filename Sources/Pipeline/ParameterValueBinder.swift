@@ -405,8 +405,8 @@ extension ParameterValueBinder {
 }
 
 extension ParameterValueBinder {
-	/// Binds a `Codable` instance as encoded JSON data.
-	public static func json<T>(_ value: T, _ encoder: JSONEncoder = JSONEncoder()) throws -> ParameterValueBinder where T: Codable {
+	/// Binds an `Encodable` instance as encoded JSON data.
+	public static func json<T>(_ value: T, _ encoder: JSONEncoder = JSONEncoder()) throws -> ParameterValueBinder where T: Encodable {
 		let b = try encoder.encode(value)
 		return ParameterValueBinder { statement, index in
 			try statement.bind(blob: b, toParameter: index)
