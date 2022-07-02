@@ -233,6 +233,13 @@ extension ParameterValueBinder {
 			try statement.bind(blob: value, toParameter: index)
 		}
 	}
+
+	/// Binds a SQL NULL value.
+	public static func null() -> ParameterValueBinder {
+		ParameterValueBinder { statement, index in
+			try statement.bindNull(toParameter: index)
+		}
+	}
 }
 
 extension ParameterValueBinder {
