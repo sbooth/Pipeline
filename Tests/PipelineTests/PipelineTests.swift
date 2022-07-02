@@ -144,14 +144,7 @@ final class PipelineTests: XCTestCase {
 
 		let a = TestStruct(a: 1, b: 3.14, c: Date(), d: "Lu")
 
-		func testStruct(_ value: TestStruct) throws -> ParameterValueBinder {
-			let b = try JSONEncoder().encode(value)
-			return ParameterValueBinder { statement, index in
-				try statement.bind(blob: b, toParameter: index)
-			}
-		}
-
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [testStruct(a)])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.json(a)])
 
 		let conv = ColumnValueConverter<TestStruct> { row, index in
 			let b = try row.blob(forColumn: index)
