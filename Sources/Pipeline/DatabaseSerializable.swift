@@ -9,7 +9,7 @@ import CSQLite
 
 /// A type that may be serialized to and deserialized from a database.
 ///
-/// This is a more general method for database storage than `ParameterBindable` and `ColumnConvertible`
+/// This is a more general method for database storage than `ParameterValueBinder` and `ColumnValueConverter`
 /// because it allows types to customize their behavior based on the database value's data type.
 /// A database value's data type is the value returned by the `sqlite3_column_type()` before any
 /// type conversions have taken place.
@@ -39,12 +39,12 @@ import CSQLite
 ///         case .real(let r):
 ///             return self.init(value: r)
 ///         default:
-///             throw Database.Error(message: "\(value) is not a number")
+///             throw DatabaseError(message: "\(value) is not a number")
 ///         }
 ///     }
 /// }
 /// ```
-public protocol DatabaseSerializable: ParameterBindable {
+public protocol DatabaseSerializable {
 	/// Returns a serialized value of `self`.
 	///
 	/// - returns: A serialized value representing `self`
