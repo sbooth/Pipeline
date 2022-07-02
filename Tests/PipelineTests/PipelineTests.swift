@@ -68,16 +68,16 @@ final class PipelineTests: XCTestCase {
 
 		try! db.execute(sql: "create table t1(a text);")
 
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [1])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: ["feisty"])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [2.5])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [Data(count: 8)])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.integer(1)])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.text("feisty")])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.real(2.5)])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.blob(Data(count: 8))])
 
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [URL(fileURLWithPath: "/tmp")])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [UUID()])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [Date()])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.urlString(URL(fileURLWithPath: "/tmp"))])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.uuidString(UUID())])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.timeIntervalSinceReferenceDate(Date())])
 
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [NSNull()])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.null()])
 	}
 
 	func testIteration() {
@@ -88,7 +88,7 @@ final class PipelineTests: XCTestCase {
 		let rowCount = 10
 
 		for i in 0..<rowCount {
-			try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [i]).execute()
+			try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: .int(i)).execute()
 		}
 
 		let s = try! db.prepare(sql: "select * from t1;")
@@ -109,9 +109,9 @@ final class PipelineTests: XCTestCase {
 
 		try! db.execute(sql: "create table t1(a,b,c,d);")
 
-		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(parameterValues: [1,2,3,4]).execute()
-		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(parameterValues: ["a","b","c","d"]).execute()
-		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(parameterValues: ["a",2,"c",4]).execute()
+		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(parameterValues: .int(1),.int(2),.int(3),.int(4)).execute()
+		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(parameterValues: .text("a"),.text("b"),.text("c"),.text("d")).execute()
+		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(parameterValues: .text("a"),.int(2),.text("c"),.int(4)).execute()
 
 		do {
 			let s = try! db.prepare(sql: "select * from t1 limit 1 offset 0;")
@@ -130,26 +130,33 @@ final class PipelineTests: XCTestCase {
 		}
 	}
 
-	func testEncodable() {
+	func testCodable() {
 		let db = try! Database()
 
-		struct TestStruct: ParameterBindable, Codable {
+		struct TestStruct: Codable {
 			let a: Int
 			let b: Float
 			let c: Date
 			let d: String
 		}
 
-		let conv = ColumnValueConverter<TestStruct> { row, index in
-			let b = try row.blob(forColumn: index)
-			return try JSONDecoder().decode(TestStruct.self, from: b)
-		}
-
 		try! db.execute(sql: "create table t1(a);")
 
 		let a = TestStruct(a: 1, b: 3.14, c: Date(), d: "Lu")
 
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [a])
+		func testStruct(_ value: TestStruct) throws -> ParameterValueBinder {
+			let b = try JSONEncoder().encode(value)
+			return ParameterValueBinder { statement, index in
+				try statement.bind(blob: b, toParameter: index)
+			}
+		}
+
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [testStruct(a)])
+
+		let conv = ColumnValueConverter<TestStruct> { row, index in
+			let b = try row.blob(forColumn: index)
+			return try JSONDecoder().decode(TestStruct.self, from: b)
+		}
 
 		let b = try! db.prepare(sql: "select * from t1 limit 1;").nextRow()!.value(forColumn: 0, conv)
 
@@ -167,10 +174,10 @@ final class PipelineTests: XCTestCase {
 
 		try! db.execute(sql: "create table t1(a text);")
 
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: ["a"])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: ["c"])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: ["z"])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: ["e"])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.text("a")])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.text("c")])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.text("z")])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.text("e")])
 
 		var str = ""
 		let s = try! db.prepare(sql: "select * from t1 order by a collate reversed;")
@@ -207,11 +214,11 @@ final class PipelineTests: XCTestCase {
 
 		try! db.execute(sql: "create table t1(a);")
 
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: ["this"])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: ["is"])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: ["only"])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: ["a"])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: ["test"])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.text("this")])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.text("is")])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.text("only")])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.text("a")])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.text("test")])
 
 		let s = try! db.prepare(sql: "select rot13(a) from t1;")
 		let results = s.map { try! $0.value(forColumn: 0, .string) }
@@ -251,7 +258,7 @@ final class PipelineTests: XCTestCase {
 		try! db.execute(sql: "create table t1(a);")
 
 		for i in  0..<10 {
-			try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [i])
+			try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.int(i)])
 		}
 
 		let s = try! db.prepare(sql: "select integer_sum(a) from t1;").nextRow()!.value(forColumn: 0, .int64)
@@ -307,7 +314,7 @@ final class PipelineTests: XCTestCase {
 		try! db.execute(sql: "create table t1(a);")
 
 		for i in  0..<10 {
-			try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [i])
+			try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.int(i)])
 		}
 
 		let s = try! db.prepare(sql: "select integer_sum(a) OVER (ORDER BY a ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) from t1;")
@@ -366,17 +373,17 @@ final class PipelineTests: XCTestCase {
 
 		try! db.execute(sql: "create virtual table t1 USING fts5(a, tokenize = 'word');")
 
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: ["quick brown"]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: ["fox"]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: ["jumps over"]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: ["the lazy dog"]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: ["🦊🐶"]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [""]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("quick brown")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("fox")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("jumps over")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("the lazy dog")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("🦊🐶")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("")]).execute()
 		try! db.prepare(sql: "insert into t1(a) values (NULL);").execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: ["quick"]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: ["brown fox"]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: ["jumps over the"]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: ["lazy dog"]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("quick")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("brown fox")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("jumps over the")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("lazy dog")]).execute()
 
 		let s = try! db.prepare(sql: "select count(*) from t1 where t1 match 'o*';")
 		let count = try! s.nextRow()!.value(forColumn: 0, .int)
@@ -395,7 +402,7 @@ final class PipelineTests: XCTestCase {
 		try! db.execute(sql: "create table t1(a, b);")
 
 		for i in 0..<10 {
-			try! db.prepare(sql: "insert into t1(a, b) values (?, ?);").bind(parameterValues: [i, nil]).execute()
+			try! db.prepare(sql: "insert into t1(a, b) values (?, ?);").bind(parameterValues: [.int(i), .null()]).execute()
 		}
 
 		let statement = try! db.prepare(sql: "select * from t1 where a = ?")
@@ -416,7 +423,7 @@ final class PipelineTests: XCTestCase {
 		try! db.execute(sql: "create table t1(a, b);")
 
 		for i in 0..<10 {
-			try! db.execute(sql: "insert into t1(a, b) values (:b, :a);", parameters: [":a": nil, ":b": i])
+			try! db.execute(sql: "insert into t1(a, b) values (:b, :a);", parameters: [":a": .null(), ":b": .int(i)])
 		}
 
 		let statement = try! db.prepare(sql: "select * from t1 where a = :a")
@@ -437,7 +444,7 @@ final class PipelineTests: XCTestCase {
 		try! db.execute(sql: "create table t1(a, b, c);")
 
 		for i in 0..<3 {
-			try! db.prepare(sql: "insert into t1(a, b, c) values (?,?,?);").bind(parameterValues: [i, i * 3, i * 5]).execute()
+			try! db.prepare(sql: "insert into t1(a, b, c) values (?,?,?);").bind(parameterValues: [.int(i), .int(i * 3), .int(i * 5)]).execute()
 		}
 
 		let statement = try! db.prepare(sql: "select * from t1")
@@ -456,7 +463,7 @@ final class PipelineTests: XCTestCase {
 		}
 
 		let statement = try! db.prepare(sql: "select v1 from t1;")
-		let uuids = try! statement.values(forColumn: 0, .uuid)
+		let uuids = try! statement.values(forColumn: 0, .uuidWithString)
 
 		struct UUIDHolder: RowMapping {
 			let u: UUID
