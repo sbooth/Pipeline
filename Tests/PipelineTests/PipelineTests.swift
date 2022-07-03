@@ -146,12 +146,7 @@ final class PipelineTests: XCTestCase {
 
 		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.json(a)])
 
-		let conv = ColumnValueConverter<TestStruct> { row, index in
-			let b = try row.blob(forColumn: index)
-			return try JSONDecoder().decode(TestStruct.self, from: b)
-		}
-
-		let b = try! db.prepare(sql: "select * from t1 limit 1;").nextRow()!.value(forColumn: 0, conv)
+		let b = try! db.prepare(sql: "select * from t1 limit 1;").nextRow()!.value(forColumn: 0, .json(as: TestStruct.self))
 
 		XCTAssertEqual(a.a, b.a)
 		XCTAssertEqual(a.c, b.c)
