@@ -9,7 +9,7 @@ import CSQLite
 
 /// A type that may be serialized to and deserialized from a database.
 ///
-/// This is a more general method for database storage than `ParameterValueBinder` and `ColumnValueConverter`
+/// This is a more general method for database storage than `ParameterValue` and `ColumnValueConverter`
 /// because it allows types to customize their behavior based on the database value's data type.
 /// A database value's data type is the value returned by the `sqlite3_column_type()` before any
 /// type conversions have taken place.
