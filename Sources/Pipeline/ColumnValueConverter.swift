@@ -353,3 +353,18 @@ extension ColumnValueConverter where T: Decodable {
 		}
 	}
 }
+
+extension ColumnValueConverter where T == NSNumber {
+	/// Converts the signed integer or floating-point value of a column to `NSNumber`.
+	public static var nsNumber = ColumnValueConverter {
+		let type = try $0.type(ofColumn: $1)
+		switch type {
+		case .integer:
+			return NSNumber(value: try $0.integer(forColumn: $1))
+		case .real:
+			return NSNumber(value: try $0.real(forColumn: $1))
+		default:
+			throw DatabaseError(message: "\(type) is not a number")
+		}
+	}
+}

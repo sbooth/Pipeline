@@ -411,3 +411,20 @@ extension ParameterValue {
 		}
 	}
 }
+
+extension ParameterValue {
+	/// Binds an `NSNumber` as a signed integer or floating-point value.
+	public static func nsNumber(_ value: NSNumber) -> ParameterValue {
+		ParameterValue { statement, index in
+			switch CFNumberGetType(value as CFNumber) {
+			case .sInt8Type, .sInt16Type, .sInt32Type, .charType, .shortType, .intType,
+					.sInt64Type, .longType, .longLongType, .cfIndexType, .nsIntegerType:
+				try statement.bind(integer: value.int64Value, toParameter: index)
+			case .float32Type, .float64Type, .floatType, .doubleType, .cgFloatType:
+				try statement.bind(real: value.doubleValue, toParameter: index)
+			@unknown default:
+				fatalError("Unexpected CFNumber type")
+			}
+		}
+	}
+}
