@@ -27,4 +27,4 @@ publisher
 
 ## License
 
-Pipeline is released under the [MIT License](https://github.com/sbooth/Pipeline/blob/master/LICENSE.txt).
+Pipeline is released under the [MIT License](https://github.com/sbooth/Pipeline/blob/main/LICENSE.txt).
