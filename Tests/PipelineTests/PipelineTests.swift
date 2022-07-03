@@ -88,7 +88,7 @@ final class PipelineTests: XCTestCase {
 		let rowCount = 10
 
 		for i in 0..<rowCount {
-			try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: .int(i)).execute()
+			try! db.prepare(sql: "insert into t1(a) values (?);").bind(.int(i)).execute()
 		}
 
 		let s = try! db.prepare(sql: "select * from t1;")
@@ -109,9 +109,9 @@ final class PipelineTests: XCTestCase {
 
 		try! db.execute(sql: "create table t1(a,b,c,d);")
 
-		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(parameterValues: 1,2,.int(3),.int(4)).execute()
-		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(parameterValues: .text("a"),.text("b"),.text("c"),.text("d")).execute()
-		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(parameterValues: .text("a"),2,.text("c"),.int(4)).execute()
+		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(1,2,.int(3),.int(4)).execute()
+		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(.text("a"),.text("b"),.text("c"),.text("d")).execute()
+		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(.text("a"),2,.text("c"),.int(4)).execute()
 
 		do {
 			let s = try! db.prepare(sql: "select * from t1 limit 1 offset 0;")
@@ -362,17 +362,17 @@ final class PipelineTests: XCTestCase {
 
 		try! db.execute(sql: "create virtual table t1 USING fts5(a, tokenize = 'word');")
 
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: ["quick brown"]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.string("fox")]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.string("jumps over")]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("the lazy dog")]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: ["🦊🐶"]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(["quick brown"]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.string("fox")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.string("jumps over")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("the lazy dog")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(["🦊🐶"]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("")]).execute()
 		try! db.prepare(sql: "insert into t1(a) values (NULL);").execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("quick")]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("brown fox")]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("jumps over the")]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("lazy dog")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("quick")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("brown fox")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("jumps over the")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("lazy dog")]).execute()
 
 		let s = try! db.prepare(sql: "select count(*) from t1 where t1 match 'o*';")
 		let count = try! s.nextRow()!.value(forColumn: 0, .integer)
@@ -391,7 +391,7 @@ final class PipelineTests: XCTestCase {
 		try! db.execute(sql: "create table t1(a, b);")
 
 		for i in 0..<10 {
-			try! db.prepare(sql: "insert into t1(a, b) values (?, ?);").bind(parameterValues: [.int(i), .null]).execute()
+			try! db.prepare(sql: "insert into t1(a, b) values (?, ?);").bind([.int(i), .null]).execute()
 		}
 
 		let statement = try! db.prepare(sql: "select * from t1 where a = ?")
@@ -433,7 +433,7 @@ final class PipelineTests: XCTestCase {
 		try! db.execute(sql: "create table t1(a, b, c);")
 
 		for i in 0..<3 {
-			try! db.prepare(sql: "insert into t1(a, b, c) values (?,?,?);").bind(parameterValues: [.int(i), .int(i * 3), .int(i * 5)]).execute()
+			try! db.prepare(sql: "insert into t1(a, b, c) values (?,?,?);").bind([.int(i), .int(i * 3), .int(i * 5)]).execute()
 		}
 
 		let statement = try! db.prepare(sql: "select * from t1")
