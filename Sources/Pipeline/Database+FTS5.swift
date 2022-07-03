@@ -51,8 +51,7 @@ extension Database {
 		/// Creates a new FTS5TokenizerCreator.
 		///
 		/// - parameter construct: A closure that creates the tokenizer
-		init(_ construct: @escaping (_ arguments: [String]) -> FTS5Tokenizer)
-		{
+		init(_ construct: @escaping (_ arguments: [String]) -> FTS5Tokenizer) {
 			self.construct = construct
 		}
 	}
@@ -108,7 +107,7 @@ extension Database {
 	/// 		var bytesConverted = 0
 	/// 		let charsConverted = CFStringGetBytes(text, tokenRange, CFStringBuiltInEncodings.UTF8.rawValue, 0, false, buffer, capacity, &bytesConverted)
 	/// 		guard charsConverted > 0 else {
-	/// 			throw Database.Error(message: "Insufficient buffer size")
+	/// 			throw DatabaseError(message: "Insufficient buffer size")
 	/// 		}
 	/// 		return bytesConverted
 	/// 	}

@@ -153,6 +153,23 @@ extension Database {
 		sqlite3_interrupt(databaseConnection)
 	}
 
+	/// Returns the name of the *n*th attached database.
+	///
+	/// - note: 0 is the main database file and is named *main*
+	/// - note: 1 is the temporary schema and is named *temp*
+	///
+	/// - parameter n: The index of the desired attached database.
+	///
+	/// - throws: An error if there is no attached database with the specified index
+	///
+	/// - returns: The name of the *n*th attached database
+	public func name(ofDatabase n: Int32) throws -> String {
+		guard let name = sqlite3_db_name(databaseConnection, n) else {
+			throw DatabaseError(message: "The database at index \(n) does not exist")
+		}
+		return String(cString: name)
+	}
+
 	/// Returns the location of the file associated with database `name`.
 	///
 	/// - note: The main database file has the name *main*
@@ -270,6 +287,15 @@ extension Database {
 	/// Returns the result or error message associated with the most recent `sqlite3_` API call
 	public var errorMessage: String {
 		String(cString: sqlite3_errmsg(databaseConnection))
+	}
+
+	/// Returns the offset in the input SQL of the token referenced by the most recent error or `nil` if none
+	public var errorOffset: Int? {
+		let offset = sqlite3_error_offset(databaseConnection)
+		guard offset != -1 else {
+			return nil
+		}
+		return Int(offset)
 	}
 }
 

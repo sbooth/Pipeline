@@ -276,7 +276,7 @@ extension Statement: Sequence {
 	///
 	/// - returns: An iterator over the result rows.
 	public func makeIterator() -> Statement {
-		return self
+		self
 	}
 }
 
@@ -288,7 +288,7 @@ extension Statement: IteratorProtocol {
 	///
 	/// - returns: The next result row of returned data.
 	public func next() -> Row? {
-		return try? nextRow()
+		try? nextRow()
 	}
 }
 

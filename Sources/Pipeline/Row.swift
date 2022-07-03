@@ -166,7 +166,7 @@ extension Row {
 	///
 	/// - returns: The column's value.
 	public func value(ofColumn name: String) throws -> DatabaseValue {
-		return try value(ofColumn: statement.index(ofColumn: name))
+		try value(ofColumn: statement.index(ofColumn: name))
 	}
 }
 
@@ -188,7 +188,7 @@ extension Row {
 	///
 	/// - returns: A dictionary of the row's values keyed by column name.
 	public func valueDictionary() throws -> [String: DatabaseValue] {
-		return try Dictionary(uniqueKeysWithValues: statement.columnNames.enumerated().map({ ($0.element, try value(ofColumn: $0.offset)) }))
+		try Dictionary(uniqueKeysWithValues: statement.columnNames.enumerated().map({ ($0.element, try value(ofColumn: $0.offset)) }))
 	}
 }
 
@@ -201,7 +201,7 @@ extension Row {
 	///
 	/// - returns: The column's value or `nil` if the column doesn't exist.
 	public subscript(ofColumn index: Int) -> DatabaseValue? {
-		return try? value(ofColumn: index)
+		try? value(ofColumn: index)
 	}
 
 	/// Returns the value of the column with `name`.
@@ -210,7 +210,7 @@ extension Row {
 	///
 	/// - returns: The column's value or `nil` if the column doesn't exist.
 	public subscript(ofColumn name: String) -> DatabaseValue? {
-		return try? value(ofColumn: name)
+		try? value(ofColumn: name)
 	}
 }
 

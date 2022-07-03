@@ -118,6 +118,6 @@ extension Database {
 	///
 	/// - returns: An initialized `BLOB` for incremental reading.
 	public func openBLOB(schema: String, table: String, column: String, row: Int64, readOny: Bool) throws -> BLOB {
-		return try BLOB(database: self, schema: schema, table: table, column: column, row: row, readOnly: readOny)
+		try BLOB(database: self, schema: schema, table: table, column: column, row: row, readOnly: readOny)
 	}
 }

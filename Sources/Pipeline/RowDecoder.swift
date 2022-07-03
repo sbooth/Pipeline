@@ -364,51 +364,51 @@ private struct UnkeyedContainer: UnkeyedDecodingContainer {
 	}
 
 	mutating func decode(_ type: Double.Type) throws -> Double {
-		return try decodeFloatingPoint()
+		try decodeFloatingPoint()
 	}
 
 	mutating func decode(_ type: Float.Type) throws -> Float {
-		return try decodeFloatingPoint()
+		try decodeFloatingPoint()
 	}
 
 	mutating func decode(_ type: Int.Type) throws -> Int {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	mutating func decode(_ type: Int8.Type) throws -> Int8 {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	mutating func decode(_ type: Int16.Type) throws -> Int16 {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	mutating func decode(_ type: Int32.Type) throws -> Int32 {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	mutating func decode(_ type: Int64.Type) throws -> Int64 {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	mutating func decode(_ type: UInt.Type) throws -> UInt {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	mutating func decode(_ type: UInt8.Type) throws -> UInt8 {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	mutating func decode(_ type: UInt16.Type) throws -> UInt16 {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	mutating func decode(_ type: UInt32.Type) throws -> UInt32 {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	mutating func decode(_ type: UInt64.Type) throws -> UInt64 {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
@@ -482,39 +482,39 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
 	}
 
 	func decode(_ type: Double.Type) throws -> Double {
-		return try decodeFloatingPoint()
+		try decodeFloatingPoint()
 	}
 
 	func decode(_ type: Float.Type) throws -> Float {
-		return try decodeFloatingPoint()
+		try decodeFloatingPoint()
 	}
 
 	func decode(_ type: Int.Type) throws -> Int {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	func decode(_ type: Int8.Type) throws -> Int8 {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	func decode(_ type: Int16.Type) throws -> Int16 {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	func decode(_ type: Int32.Type) throws -> Int32 {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	func decode(_ type: Int64.Type) throws -> Int64 {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	func decode(_ type: UInt.Type) throws -> UInt {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	func decode(_ type: UInt8.Type) throws -> UInt8 {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	func decode(_ type: UInt16.Type) throws -> UInt16 {
@@ -522,23 +522,23 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
 	}
 
 	func decode(_ type: UInt32.Type) throws -> UInt32 {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	func decode(_ type: UInt64.Type) throws -> UInt64 {
-		return try decodeFixedWidthInteger()
+		try decodeFixedWidthInteger()
 	}
 
 	func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
-		return try decoder.decode(value, as: type)
+		try decoder.decode(value, as: type)
 	}
 
 	private func decodeFixedWidthInteger<T>() throws -> T where T: FixedWidthInteger {
-		return try decoder.decodeFixedWidthInteger(value)
+		try decoder.decodeFixedWidthInteger(value)
 	}
 
 	private func decodeFloatingPoint<T>() throws -> T where T: BinaryFloatingPoint {
-		return try decoder.decodeFloatingPoint(value)
+		try decoder.decodeFloatingPoint(value)
 	}
 }
 

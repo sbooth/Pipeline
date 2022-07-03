@@ -64,7 +64,7 @@ extension Database {
 	///
 	/// - seealso: [Record A Database Snapshot](https://www.sqlite.org/c3ref/snapshot_get.html)
 	public func takeSnapshot(schema: String = "main") throws -> Snapshot {
-		return try Snapshot(database: self, schema: schema)
+		try Snapshot(database: self, schema: schema)
 	}
 
 	/// Starts or upgrades a read transaction for a database schema to a specific snapshot.

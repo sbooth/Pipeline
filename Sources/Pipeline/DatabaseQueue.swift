@@ -86,8 +86,8 @@ public final class DatabaseQueue {
 	///
 	/// - returns: The value returned by `block`.
 	public func sync<T>(block: (_ database: Database) throws -> (T)) rethrows -> T {
-		return try queue.sync {
-			return try block(self.database)
+		try queue.sync {
+			try block(self.database)
 		}
 	}
 

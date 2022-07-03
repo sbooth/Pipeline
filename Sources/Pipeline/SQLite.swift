@@ -48,14 +48,14 @@ public struct SQLite {
 
 	/// The number of bytes of memory `malloc`ed but not yet `free`d by SQLite
 	public static var memoryUsed: Int64 {
-		return sqlite3_memory_used()
+		sqlite3_memory_used()
 	}
 
 	/// Returns the maximum amount of memory used by SQLite since the memory highwater mark was last reset.
 	///
 	/// - parameter reset: If `true` the memory highwater mark is reset to the value of `memoryUsed`
 	public static func memoryHighwater(reset: Bool = false) -> Int64 {
-		return sqlite3_memory_highwater(reset ? 1 : 0)
+		sqlite3_memory_highwater(reset ? 1 : 0)
 	}
 
 	/// The keywords understood by SQLite.
@@ -130,6 +130,6 @@ public struct SQLite {
 	///
 	/// - seealso: [Run-Time Library Compilation Options Diagnostics](https://sqlite.org/c3ref/compileoption_get.html)
 	public static func compileOptionUsed(_ option: String) -> Bool {
-		return sqlite3_compileoption_used(option) != 0
+		sqlite3_compileoption_used(option) != 0
 	}
 }

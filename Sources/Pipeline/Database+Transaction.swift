@@ -95,7 +95,7 @@ extension Database {
 	///
 	/// - seealso: [Test For Auto-Commit Mode](https://www.sqlite.org/c3ref/get_autocommit.html)
 	public var isInAutocommitMode: Bool {
-		return sqlite3_get_autocommit(databaseConnection) != 0
+		sqlite3_get_autocommit(databaseConnection) != 0
 	}
 
 	/// Possible ways to complete a transaction.

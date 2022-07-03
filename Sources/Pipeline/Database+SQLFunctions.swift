@@ -153,7 +153,7 @@ extension Database {
 	///             case .integer(let i):
 	///                 sum += i
 	///             default:
-	///                 throw Database.Error(message: "Only integer values supported")
+	///                 throw DatabaseError(message: "Only integer values supported")
 	///         }
 	///     }
 	///
@@ -221,7 +221,7 @@ extension Database {
 	///             case .integer(let i):
 	///                 sum += i
 	///             default:
-	///                 throw Database.Error(message: "Only integer values supported")
+	///                 throw DatabaseError(message: "Only integer values supported")
 	///         }
 	///     }
 	///
@@ -231,7 +231,7 @@ extension Database {
 	///             case .integer(let i):
 	///                 sum -= i
 	///             default:
-	///                 throw Database.Error(message: "Only integer values supported")
+	///                 throw DatabaseError(message: "Only integer values supported")
 	///         }
 	///     }
 	///
