@@ -417,6 +417,14 @@ extension ParameterValue {
 			try statement.bind(real: value.timeIntervalSinceReferenceDate, toParameter: index)
 		}
 	}
+
+	/// Binds a `Date` as a text value.
+	/// - parameter formatter: The formatter to use to generate the ISO 8601 date representation.
+	public static func iso8601DateString(_ value: Date, formatter: ISO8601DateFormatter = ISO8601DateFormatter()) -> ParameterValue {
+		ParameterValue { statement, index in
+			try statement.bind(text	: formatter.string(from: value), toParameter: index)
+		}
+	}
 }
 
 extension ParameterValue {

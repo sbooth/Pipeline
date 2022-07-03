@@ -361,13 +361,25 @@ extension ColumnValueConverter where T == Date {
 	public static var dateWithTimeIntervalSinceReferenceDate = ColumnValueConverter {
 		Date(timeIntervalSinceReferenceDate: try $0.real(forColumn: $1))
 	}
+
+	/// Converts the text value of a column to `Date`.
+	/// - note: The text value is interpreted as an ISO 8601 date representation.
+	public static func iso8601DateString(formatter: ISO8601DateFormatter = ISO8601DateFormatter()) -> ColumnValueConverter {
+		ColumnValueConverter { row, index in
+			let t = try row.text(forColumn: index)
+			guard let date = formatter.date(from: t) else {
+				throw DatabaseError(message: "text \"\(t)\" isn't a valid ISO 8601 date representation")
+			}
+			return date
+		}
+	}
 }
 
 extension ColumnValueConverter where T: Decodable {
 	/// Converts the BLOB value of a column to a `Decodable` instance.
 	/// - note: The BLOB value is interpreted  as encoded JSON data of `type`.
 	public static func json(_ type: T.Type = T.self, decoder: JSONDecoder = JSONDecoder()) -> ColumnValueConverter {
-		ColumnValueConverter { row,index in
+		ColumnValueConverter { row, index in
 			let b = try row.blob(forColumn: index)
 			return try decoder.decode(type, from: b)
 		}
@@ -392,7 +404,7 @@ extension ColumnValueConverter where T == NSNumber {
 extension ColumnValueConverter where T: NSObject, T: NSCoding {
 	/// Converts the BLOB value of a column to an `NSCoding` instance using `NSKeyedUnarchiver`.
 	public static func nsKeyedArchive(_ type: T.Type = T.self) -> ColumnValueConverter {
-		ColumnValueConverter { row,index in
+		ColumnValueConverter { row, index in
 			let b = try row.blob(forColumn: index)
 			guard let result = try NSKeyedUnarchiver.unarchivedObject(ofClass: type, from: b) else {
 				throw DatabaseError(message: "\(b) is not a valid instance of \(type)")
