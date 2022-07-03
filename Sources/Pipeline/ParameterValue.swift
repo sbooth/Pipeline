@@ -428,3 +428,13 @@ extension ParameterValue {
 		}
 	}
 }
+
+extension ParameterValue {
+	/// Binds an `NSCoding` instance as keyed archive data using `NSKeyedArchiver`.
+	public static func nsKeyedArchive<T>(_ value: T) throws -> ParameterValue where T: NSObject, T: NSCoding {
+		let b = try NSKeyedArchiver.archivedData(withRootObject: value, requiringSecureCoding: true)
+		return ParameterValue { statement, index in
+			try statement.bind(blob: b, toParameter: index)
+		}
+	}
+}
