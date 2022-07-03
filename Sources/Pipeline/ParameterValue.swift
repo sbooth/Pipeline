@@ -13,12 +13,12 @@ import CSQLite
 /// `bind(text:toParameter:)`, or`bind(blob:toParameter:)` but lower-level SQLite
 /// operations are also possible.
 ///
-/// For example, an implementation for binding a`UUID` as text is:
+/// For example, an implementation for binding a `UUID` as text is:
 ///
 /// ```swift
-/// extension ParameterValueBinder {
-/// 	public static func uuidString(_ value: UUID) -> SQLParameter {
-///			SQLParameter { statement, index in
+/// extension ParameterValue {
+/// 	public static func uuidString(_ value: UUID) -> ParameterValue {
+///			ParameterValue { statement, index in
 ///				try statement.bind(text: value.uuidString.lowercased(), toParameter: index)
 /// 		}
 /// 	}
