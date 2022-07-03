@@ -16,10 +16,8 @@ extension ParameterValue {
 		ParameterValue { statement, index in
 			let mem = UnsafeMutableBufferPointer<Int32>.allocate(capacity: values.count)
 			_ = mem.initialize(from: values)
-			try statement.withUnsafeSQLitePreparedStatement { preparedStatement in
-				guard sqlite3_carray_bind(preparedStatement, Int32(index), mem.baseAddress, Int32(values.count), CARRAY_INT32, { $0?.deallocate() }) == SQLITE_OK else {
-					throw SQLiteError(fromPreparedStatement: preparedStatement)
-				}
+			guard sqlite3_carray_bind(statement.preparedStatement, Int32(index), mem.baseAddress, Int32(values.count), CARRAY_INT32, { $0?.deallocate() }) == SQLITE_OK else {
+				throw SQLiteError(fromPreparedStatement: statement.preparedStatement)
 			}
 		}
 	}
@@ -30,10 +28,8 @@ extension ParameterValue {
 		ParameterValue { statement, index in
 			let mem = UnsafeMutableBufferPointer<Int64>.allocate(capacity: values.count)
 			_ = mem.initialize(from: values)
-			try statement.withUnsafeSQLitePreparedStatement { preparedStatement in
-				guard sqlite3_carray_bind(preparedStatement, Int32(index), mem.baseAddress, Int32(values.count), CARRAY_INT64, { $0?.deallocate() }) == SQLITE_OK else {
-					throw SQLiteError(fromPreparedStatement: preparedStatement)
-				}
+			guard sqlite3_carray_bind(statement.preparedStatement, Int32(index), mem.baseAddress, Int32(values.count), CARRAY_INT64, { $0?.deallocate() }) == SQLITE_OK else {
+				throw SQLiteError(fromPreparedStatement: statement.preparedStatement)
 			}
 		}
 	}
@@ -44,10 +40,8 @@ extension ParameterValue {
 		ParameterValue { statement, index in
 			let mem = UnsafeMutableBufferPointer<Double>.allocate(capacity: values.count)
 			_ = mem.initialize(from: values)
-			try statement.withUnsafeSQLitePreparedStatement { preparedStatement in
-				guard sqlite3_carray_bind(preparedStatement, Int32(index), mem.baseAddress, Int32(values.count), CARRAY_DOUBLE, { $0?.deallocate() }) == SQLITE_OK else {
-					throw SQLiteError(fromPreparedStatement: preparedStatement)
-				}
+			guard sqlite3_carray_bind(statement.preparedStatement, Int32(index), mem.baseAddress, Int32(values.count), CARRAY_DOUBLE, { $0?.deallocate() }) == SQLITE_OK else {
+				throw SQLiteError(fromPreparedStatement: statement.preparedStatement)
 			}
 		}
 	}
@@ -76,10 +70,8 @@ extension ParameterValue {
 				memcpy(pos, s, utf8_offsets[i + 1] - utf8_offsets[i])
 			}
 
-			try statement.withUnsafeSQLitePreparedStatement { preparedStatement in
-				guard sqlite3_carray_bind(preparedStatement, Int32(index), mem, Int32(values.count), CARRAY_TEXT, { $0?.deallocate() }) == SQLITE_OK else {
-					throw SQLiteError(fromPreparedStatement: preparedStatement)
-				}
+			guard sqlite3_carray_bind(statement.preparedStatement, Int32(index), mem, Int32(values.count), CARRAY_TEXT, { $0?.deallocate() }) == SQLITE_OK else {
+				throw SQLiteError(fromPreparedStatement: statement.preparedStatement)
 			}
 		}
 	}
