@@ -149,6 +149,7 @@ final class PipelineTests: XCTestCase {
 		let b = try! db.prepare(sql: "select * from t1 limit 1;").nextRow()!.value(forColumn: 0, .json(TestStruct.self))
 
 		XCTAssertEqual(a.a, b.a)
+		XCTAssertEqual(a.b, b.b)
 		XCTAssertEqual(a.c, b.c)
 		XCTAssertEqual(a.d, b.d)
 	}
@@ -361,9 +362,9 @@ final class PipelineTests: XCTestCase {
 
 		try! db.execute(sql: "create virtual table t1 USING fts5(a, tokenize = 'word');")
 
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("quick brown")]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("fox")]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("jumps over")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.string("quick brown")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.string("fox")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.string("jumps over")]).execute()
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("the lazy dog")]).execute()
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("🦊🐶")]).execute()
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("")]).execute()
@@ -374,7 +375,7 @@ final class PipelineTests: XCTestCase {
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("lazy dog")]).execute()
 
 		let s = try! db.prepare(sql: "select count(*) from t1 where t1 match 'o*';")
-		let count = try! s.nextRow()!.value(forColumn: 0, .int)
+		let count = try! s.nextRow()!.value(forColumn: 0, .integer)
 		XCTAssertEqual(count, 2)
 
 		let statement = try! db.prepare(sql: "select * from t1 where t1 match 'o*';")
