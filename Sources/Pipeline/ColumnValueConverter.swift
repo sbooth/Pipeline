@@ -364,7 +364,7 @@ extension ColumnValueConverter where T == Date {
 
 	/// Converts the text value of a column to `Date`.
 	/// - note: The text value is interpreted as an ISO 8601 date representation.
-	public static func iso8601DateString(formatter: ISO8601DateFormatter = ISO8601DateFormatter()) -> ColumnValueConverter {
+	public static func dateWithISO8601DateString(formatter: ISO8601DateFormatter = ISO8601DateFormatter()) -> ColumnValueConverter {
 		ColumnValueConverter { row, index in
 			let t = try row.text(forColumn: index)
 			guard let date = formatter.date(from: t) else {
