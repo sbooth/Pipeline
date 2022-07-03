@@ -344,7 +344,9 @@ extension ColumnValueConverter where T == Date {
 }
 
 extension ColumnValueConverter where T: Decodable {
-	public static func json(as type: T.Type = T.self, _ decoder: JSONDecoder = JSONDecoder()) -> ColumnValueConverter {
+	/// Converts the BLOB value of a column to a `Decodable` instance.
+	/// - note: The BLOB value is interpreted  as encoded JSON data of `type`.
+	public static func json(_ type: T.Type = T.self, decoder: JSONDecoder = JSONDecoder()) -> ColumnValueConverter {
 		ColumnValueConverter { row,index in
 			let b = try row.blob(forColumn: index)
 			return try decoder.decode(type, from: b)
