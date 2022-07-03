@@ -371,7 +371,7 @@ extension ColumnValueConverter where T == NSNumber {
 
 extension ColumnValueConverter where T: NSObject, T: NSCoding {
 	/// Converts the BLOB value of a column to an `NSCoding` instance using `NSKeyedUnarchiver`.
-	public static func nsKeyedArchive(as type: T.Type = T.self) throws -> ColumnValueConverter {
+	public static func nsKeyedArchive(_ type: T.Type = T.self) throws -> ColumnValueConverter {
 		ColumnValueConverter { row,index in
 			let b = try row.blob(forColumn: index)
 			guard let result = try NSKeyedUnarchiver.unarchivedObject(ofClass: type, from: b) else {
