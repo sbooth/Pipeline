@@ -227,6 +227,15 @@ extension ParameterValue {
 		}
 	}
 
+	/// Binds a text value.
+	public static func string(_ value: String) -> ParameterValue {
+		ParameterValue { statement, index in
+			try statement.bind(text: value, toParameter: index)
+		}
+	}
+}
+
+extension ParameterValue {
 	/// Binds a BLOB value.
 	public static func blob(_ value: Data) -> ParameterValue {
 		ParameterValue { statement, index in
@@ -234,6 +243,15 @@ extension ParameterValue {
 		}
 	}
 
+	/// Binds a BLOB value.
+	public static func data(_ value: Data) -> ParameterValue {
+		ParameterValue { statement, index in
+			try statement.bind(blob: value, toParameter: index)
+		}
+	}
+}
+
+extension ParameterValue {
 	/// Binds a SQL NULL value.
 	public static var null = ParameterValue { statement, index in
 		try statement.bindNull(toParameter: index)
@@ -404,9 +422,10 @@ extension ParameterValue {
 
 extension ParameterValue {
 	/// Binds an `Encodable` instance as encoded JSON data.
-	public static func json<T>(_ value: T, encoder: JSONEncoder = JSONEncoder()) throws -> ParameterValue where T: Encodable {
-		let b = try encoder.encode(value)
+	/// - parameter encoder: The encoder to use to generate the encoded JSON data.
+	public static func json<T>(_ value: T, encoder: JSONEncoder = JSONEncoder()) -> ParameterValue where T: Encodable {
 		return ParameterValue { statement, index in
+			let b = try encoder.encode(value)
 			try statement.bind(blob: b, toParameter: index)
 		}
 	}
@@ -431,9 +450,9 @@ extension ParameterValue {
 
 extension ParameterValue {
 	/// Binds an `NSCoding` instance as keyed archive data using `NSKeyedArchiver`.
-	public static func nsKeyedArchive<T>(_ value: T) throws -> ParameterValue where T: NSObject, T: NSCoding {
-		let b = try NSKeyedArchiver.archivedData(withRootObject: value, requiringSecureCoding: true)
-		return ParameterValue { statement, index in
+	public static func nsKeyedArchive<T>(_ value: T) -> ParameterValue where T: NSObject, T: NSCoding {
+		ParameterValue { statement, index in
+			let b = try NSKeyedArchiver.archivedData(withRootObject: value, requiringSecureCoding: true)
 			try statement.bind(blob: b, toParameter: index)
 		}
 	}

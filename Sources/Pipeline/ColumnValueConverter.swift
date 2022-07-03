@@ -189,11 +189,21 @@ extension ColumnValueConverter where T == String {
 	public static var string = ColumnValueConverter {
 		try $0.text(forColumn: $1)
 	}
+
+	/// Returns the text value of a column.
+	public static var text = ColumnValueConverter {
+		try $0.text(forColumn: $1)
+	}
 }
 
 extension ColumnValueConverter where T == Data {
 	/// Returns the BLOB value of a column.
 	public static var data = ColumnValueConverter {
+		try $0.blob(forColumn: $1)
+	}
+
+	/// Returns the BLOB value of a column.
+	public static var blob = ColumnValueConverter {
 		try $0.blob(forColumn: $1)
 	}
 }
@@ -260,6 +270,11 @@ extension ColumnValueConverter where T == Int64 {
 	public static var int64 = ColumnValueConverter {
 		try $0.integer(forColumn: $1)
 	}
+
+	/// Returns the signed integer value of a column.
+	public static var integer = ColumnValueConverter {
+		try $0.integer(forColumn: $1)
+	}
 }
 
 extension ColumnValueConverter where T == UInt64 {
@@ -280,6 +295,11 @@ extension ColumnValueConverter where T == Float {
 extension ColumnValueConverter where T == Double {
 	/// Returns the floating-point value of a column.
 	public static var double = ColumnValueConverter {
+		try $0.real(forColumn: $1)
+	}
+
+	/// Returns the floating-point value of a column.
+	public static var real = ColumnValueConverter {
 		try $0.real(forColumn: $1)
 	}
 }
@@ -371,7 +391,7 @@ extension ColumnValueConverter where T == NSNumber {
 
 extension ColumnValueConverter where T: NSObject, T: NSCoding {
 	/// Converts the BLOB value of a column to an `NSCoding` instance using `NSKeyedUnarchiver`.
-	public static func nsKeyedArchive(_ type: T.Type = T.self) throws -> ColumnValueConverter {
+	public static func nsKeyedArchive(_ type: T.Type = T.self) -> ColumnValueConverter {
 		ColumnValueConverter { row,index in
 			let b = try row.blob(forColumn: index)
 			guard let result = try NSKeyedUnarchiver.unarchivedObject(ofClass: type, from: b) else {
