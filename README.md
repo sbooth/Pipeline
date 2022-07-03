@@ -24,3 +24,7 @@ let publisher = database.rowPublisher(sql: "select uuid from table_one where dat
 publisher
 	.mapRows(type: UUIDHolder.self)
 ```
+
+## License
+
+Pipeline is released under the [MIT License](https://github.com/sbooth/Pipeline/blob/master/LICENSE.txt).
