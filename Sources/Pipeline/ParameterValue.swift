@@ -235,10 +235,8 @@ extension ParameterValue {
 	}
 
 	/// Binds a SQL NULL value.
-	public static func null() -> ParameterValue {
-		ParameterValue { statement, index in
-			try statement.bindNull(toParameter: index)
-		}
+	public static var null = ParameterValue { statement, index in
+		try statement.bindNull(toParameter: index)
 	}
 }
 

@@ -77,7 +77,7 @@ final class PipelineTests: XCTestCase {
 		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.uuidString(UUID())])
 		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.timeIntervalSinceReferenceDate(Date())])
 
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.null()])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.null])
 	}
 
 	func testIteration() {
@@ -390,7 +390,7 @@ final class PipelineTests: XCTestCase {
 		try! db.execute(sql: "create table t1(a, b);")
 
 		for i in 0..<10 {
-			try! db.prepare(sql: "insert into t1(a, b) values (?, ?);").bind(parameterValues: [.int(i), .null()]).execute()
+			try! db.prepare(sql: "insert into t1(a, b) values (?, ?);").bind(parameterValues: [.int(i), .null]).execute()
 		}
 
 		let statement = try! db.prepare(sql: "select * from t1 where a = ?")
@@ -411,7 +411,7 @@ final class PipelineTests: XCTestCase {
 		try! db.execute(sql: "create table t1(a, b);")
 
 		for i in 0..<10 {
-			try! db.execute(sql: "insert into t1(a, b) values (:b, :a);", parameters: [":a": .null(), ":b": .int(i)])
+			try! db.execute(sql: "insert into t1(a, b) values (:b, :a);", parameters: [":a": .null, ":b": .int(i)])
 		}
 
 		let statement = try! db.prepare(sql: "select * from t1 where a = :a")
