@@ -218,7 +218,6 @@ extension Database {
 	}
 }
 
-
 extension ParameterValue {
 	/// Binds a text value.
 	public static func text(_ value: String) -> ParameterValue {
@@ -428,6 +427,42 @@ extension ParameterValue {
 			let b = try encoder.encode(value)
 			try statement.bind(blob: b, toParameter: index)
 		}
+	}
+}
+
+extension ParameterValue: ExpressibleByNilLiteral {
+	/// Binds a SQL NULL value.
+	public init(nilLiteral: ()) {
+		self = .null
+	}
+}
+
+extension ParameterValue: ExpressibleByIntegerLiteral {
+	/// Binds a signed integer value.
+	public init(integerLiteral value: IntegerLiteralType) {
+		self = .integer(Int64(value))
+	}
+}
+
+extension ParameterValue: ExpressibleByFloatLiteral {
+	/// Binds a floating-point value.
+	public init(floatLiteral value: FloatLiteralType) {
+		self = .real(value)
+	}
+}
+
+extension ParameterValue: ExpressibleByStringLiteral {
+	/// Binds a text value.
+	public init(stringLiteral value: StringLiteralType) {
+		self = .text(value)
+	}
+}
+
+extension ParameterValue: ExpressibleByBooleanLiteral {
+	/// Binds a boolean value as a signed integer.
+	/// - note: True is bound as 1 while false is bound as 0.
+	public init(booleanLiteral value: BooleanLiteralType) {
+		self = .integer(value ? 1 : 0)
 	}
 }
 

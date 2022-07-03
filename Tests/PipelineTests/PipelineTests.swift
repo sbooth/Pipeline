@@ -109,9 +109,9 @@ final class PipelineTests: XCTestCase {
 
 		try! db.execute(sql: "create table t1(a,b,c,d);")
 
-		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(parameterValues: .int(1),.int(2),.int(3),.int(4)).execute()
+		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(parameterValues: 1,2,.int(3),.int(4)).execute()
 		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(parameterValues: .text("a"),.text("b"),.text("c"),.text("d")).execute()
-		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(parameterValues: .text("a"),.int(2),.text("c"),.int(4)).execute()
+		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(parameterValues: .text("a"),2,.text("c"),.int(4)).execute()
 
 		do {
 			let s = try! db.prepare(sql: "select * from t1 limit 1 offset 0;")
@@ -362,11 +362,11 @@ final class PipelineTests: XCTestCase {
 
 		try! db.execute(sql: "create virtual table t1 USING fts5(a, tokenize = 'word');")
 
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.string("quick brown")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: ["quick brown"]).execute()
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.string("fox")]).execute()
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.string("jumps over")]).execute()
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("the lazy dog")]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("🦊🐶")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: ["🦊🐶"]).execute()
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("")]).execute()
 		try! db.prepare(sql: "insert into t1(a) values (NULL);").execute()
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind(parameterValues: [.text("quick")]).execute()
