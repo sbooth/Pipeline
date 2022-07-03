@@ -340,7 +340,7 @@ extension ColumnValueConverter where T == UUID {
 extension ColumnValueConverter where T == URL {
 	/// Converts the text value of a column to `URL`.
 	/// - note: The text value is interpreted as a URL string.
-	public static var url = ColumnValueConverter { row, index in
+	public static var urlWithString = ColumnValueConverter { row, index in
 		let t = try row.text(forColumn: index)
 		guard let u = URL(string: t) else {
 			throw DatabaseError(message: "text \"\(t)\" isn't a valid URL")
