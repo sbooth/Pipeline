@@ -191,7 +191,7 @@ extension ColumnValueConverter where T == String {
 	}
 
 	/// Returns the text value of a column.
-	public static var text = Self.string
+	public static let text = Self.string
 }
 
 extension ColumnValueConverter where T == Data {
@@ -201,7 +201,7 @@ extension ColumnValueConverter where T == Data {
 	}
 
 	/// Returns the BLOB value of a column.
-	public static var blob = Self.data
+	public static let blob = Self.data
 }
 
 extension ColumnValueConverter where T == Int {
@@ -268,7 +268,7 @@ extension ColumnValueConverter where T == Int64 {
 	}
 
 	/// Returns the signed integer value of a column.
-	public static var integer = Self.int64
+	public static let integer = Self.int64
 }
 
 extension ColumnValueConverter where T == UInt64 {
@@ -293,7 +293,7 @@ extension ColumnValueConverter where T == Double {
 	}
 
 	/// Returns the floating-point value of a column.
-	public static var real = Self.double
+	public static let real = Self.double
 }
 
 extension ColumnValueConverter where T == Bool {
