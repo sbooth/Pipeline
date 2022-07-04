@@ -186,7 +186,7 @@ extension ParameterValue {
 
 extension ParameterValue {
 	/// Binds a SQL NULL value.
-	public static var null = ParameterValue { statement, index in
+	public static let null = ParameterValue { statement, index in
 		try statement.bindNull(toParameter: index)
 	}
 }
