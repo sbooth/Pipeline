@@ -224,3 +224,106 @@ extension Statement {
 		try bindNull(toParameter: indexOfParameter(name))
 	}
 }
+
+extension Statement {
+	/// Binds the *n* parameters in `values` to the first *n* SQL parameters of `self`.
+	///
+	/// - requires: `values.count <= self.parameterCount`
+	///
+	/// - parameter values: A collection of values to bind to SQL parameters.
+	///
+	/// - throws: An error if one of `values` couldn't be bound.
+	///
+	/// - returns: `self`
+	@discardableResult public func bind<C: Collection>(values: C) throws -> Statement where C.Element == DatabaseValue {
+		var index = 1
+		for value in values {
+			try bind(value: value, toParameter: index)
+			index += 1
+		}
+		return self
+	}
+
+	/// Binds *value* to SQL parameter *name* for each (*name*, *value*) in `values`.
+	///
+	/// - requires: `values.count <= self.parameterCount`
+	///
+	/// - parameter values: A collection of name and value pairs to bind to SQL parameters.
+	///
+	/// - throws: An error if the SQL parameter *name* doesn't exist or *value* couldn't be bound.
+	///
+	/// - returns: `self`
+	@discardableResult public func bind<C: Collection>(values: C) throws -> Statement where C.Element == (key: String, value: DatabaseValue) {
+		for (name, value) in values {
+			try bind(value: value, toParameter: indexOfParameter(name))
+		}
+		return self
+	}
+}
+
+extension Statement {
+	/// Binds the *n* parameters in `values` to the first *n* SQL parameters of `self`.
+	///
+	/// - requires: `values.count <= self.parameterCount`
+	///
+	/// - parameter values: A collection of values to bind to SQL parameters.
+	///
+	/// - throws: An error if one of `values` couldn't be bound.
+	///
+	/// - returns: `self`
+	@discardableResult public func bind(values: DatabaseValue...) throws -> Statement {
+		try bind(values: values)
+	}
+}
+
+extension Database {
+	/// Executes `sql` with the *n* parameters in `values` bound to the first *n* SQL parameters of `sql` and applies `block` to each result row.
+	///
+	/// - parameter sql: The SQL statement to execute.
+	/// - parameter values: A collection of values to bind to SQL parameters.
+	/// - parameter block: A closure called for each result row.
+	/// - parameter row: A result row of returned data.
+	///
+	/// - throws: Any error thrown in `block` or an error if `sql` couldn't be compiled, `values` couldn't be bound, or the statement couldn't be executed.
+	public func execute<C: Collection>(sql: String, parameterValues values: C, _ block: ((_ row: Row) throws -> ())? = nil) throws where C.Element == DatabaseValue {
+		let statement = try prepare(sql: sql)
+		try statement.bind(values: values)
+		if let block = block {
+			try statement.results(block)
+		} else {
+			try statement.execute()
+		}
+	}
+
+	/// Executes `sql` with *value* bound to SQL parameter *name* for each (*name*, *value*) in `parameters` and applies `block` to each result row.
+	///
+	/// - parameter sql: The SQL statement to execute.
+	/// - parameter parameters: A collection of name and value pairs to bind to SQL parameters.
+	/// - parameter block: A closure called for each result row.
+	/// - parameter row: A result row of returned data.
+	///
+	/// - throws: Any error thrown in `block` or an error if `sql` couldn't be compiled, `parameters` couldn't be bound, or the statement couldn't be executed.
+	public func execute<C: Collection>(sql: String, parameterValues parameters: C, _ block: ((_ row: Row) throws -> ())? = nil) throws where C.Element == (key: String, value: DatabaseValue) {
+		let statement = try prepare(sql: sql)
+		try statement.bind(values: parameters)
+		if let block = block {
+			try statement.results(block)
+		} else {
+			try statement.execute()
+		}
+	}
+}
+
+extension Database {
+	/// Executes `sql` with the *n* parameters in `values` bound to the first *n* SQL parameters of `sql` and applies `block` to each result row.
+	///
+	/// - parameter sql: The SQL statement to execute.
+	/// - parameter values: A series of values to bind to SQL parameters.
+	/// - parameter block: A closure called for each result row.
+	/// - parameter row: A result row of returned data.
+	///
+	/// - throws: Any error thrown in `block` or an error if `sql` couldn't be compiled, `values` couldn't be bound, or the statement couldn't be executed.
+	public func execute(sql: String, parameterValues values: DatabaseValue..., block: ((_ row: Row) throws -> ())? = nil) throws {
+		try execute(sql: sql, parameterValues: values, block)
+	}
+}
