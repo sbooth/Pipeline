@@ -85,41 +85,7 @@ extension Statement {
 	/// - throws: An error if the SQL parameter *name* doesn't exist or *value* couldn't be bound.
 	///
 	/// - returns: `self`
-	@discardableResult public func bind<C: Collection>(_ parameters: C) throws -> Statement where C.Element == (String, ParameterValue) {
-		for (name, value) in parameters {
-			try value.bind(self, indexOfParameter(name))
-		}
-		return self
-	}
-}
-
-extension Statement {
-	/// Binds the *n* parameters in `values` to the first *n* SQL parameters of `self`.
-	///
-	/// - requires: `values.count <= self.parameterCount`
-	///
-	/// - parameter values: A series of values to bind to SQL parameters.
-	///
-	/// - throws: An error if one of `values` couldn't be bound.
-	///
-	/// - returns: `self`
-	@discardableResult public func bind(_ values: [ParameterValue]) throws -> Statement {
-		var index = 1
-		for value in values {
-			try value.bind(self, index)
-			index += 1
-		}
-		return self
-	}
-
-	/// Binds *value* to SQL parameter *name* for each (*name*, *value*) in `parameters`.
-	///
-	/// - parameter parameters: A series of name and value pairs to bind to SQL parameters
-	///
-	/// - throws: An error if the SQL parameter *name* doesn't exist or *value* couldn't be bound
-	///
-	/// - returns: `self`
-	@discardableResult public func bind(_ parameters: [String: ParameterValue]) throws -> Statement {
+	@discardableResult public func bind<C: Collection>(_ parameters: C) throws -> Statement where C.Element == (key: String, value: ParameterValue) {
 		for (name, value) in parameters {
 			try value.bind(self, indexOfParameter(name))
 		}
@@ -169,7 +135,7 @@ extension Database {
 	/// - parameter row: A result row of returned data.
 	///
 	/// - throws: Any error thrown in `block` or an error if `sql` couldn't be compiled, `parameters` couldn't be bound, or the statement couldn't be executed.
-	public func execute<C: Collection>(sql: String, parameters: C, _ block: ((_ row: Row) throws -> ())? = nil) throws where C.Element == (String, ParameterValue) {
+	public func execute<C: Collection>(sql: String, parameters: C, _ block: ((_ row: Row) throws -> ())? = nil) throws where C.Element == (key: String, value: ParameterValue) {
 		let statement = try prepare(sql: sql)
 		try statement.bind(parameters)
 		if let block = block {
@@ -189,32 +155,8 @@ extension Database {
 	/// - parameter row: A result row of returned data.
 	///
 	/// - throws: Any error thrown in `block` or an error if `sql` couldn't be compiled, `values` couldn't be bound, or the statement couldn't be executed.
-	public func execute(sql: String, parameterValues values: [ParameterValue], _ block: ((_ row: Row) throws -> ())? = nil) throws {
-		let statement = try prepare(sql: sql)
-		try statement.bind(values)
-		if let block = block {
-			try statement.results(block)
-		} else {
-			try statement.execute()
-		}
-	}
-
-	/// Executes `sql` with *value* bound to SQL parameter *name* for each (*name*, *value*) in `parameters` and applies `block` to each result row.
-	///
-	/// - parameter sql: The SQL statement to execute.
-	/// - parameter parameters: A dictionary of names and values to bind to SQL parameters.
-	/// - parameter block: A closure called for each result row.
-	/// - parameter row: A result row of returned data.
-	///
-	/// - throws: Any error thrown in `block` or an error if `sql` couldn't be compiled, `parameters` couldn't be bound, or the statement couldn't be executed.
-	public func execute(sql: String, parameters: [String: ParameterValue], _ block: ((_ row: Row) throws -> ())? = nil) throws {
-		let statement = try prepare(sql: sql)
-		try statement.bind(parameters)
-		if let block = block {
-			try statement.results(block)
-		} else {
-			try statement.execute()
-		}
+	public func execute(sql: String, parameterValues values: ParameterValue..., block: ((_ row: Row) throws -> ())? = nil) throws {
+		try execute(sql: sql, parameterValues: values, block)
 	}
 }
 
