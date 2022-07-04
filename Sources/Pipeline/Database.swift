@@ -297,6 +297,15 @@ extension Database {
 		}
 		return Int(offset)
 	}
+
+	/// Returns the error code or error number that caused the most recent I/O error or failure to open a file or `nil` if none
+	public var systemErrno: Int32? {
+		let errno = sqlite3_system_errno(databaseConnection)
+		guard errno != 0 else {
+			return nil
+		}
+		return errno
+	}
 }
 
 extension Database {
