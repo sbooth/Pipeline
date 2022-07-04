@@ -316,7 +316,7 @@ extension Statement {
 	/// - parameter name: The name of the desired column.
 	///
 	/// - throws: An error if the column `name` doesn't exist.
-	public func column(named name: String) throws -> [DatabaseValue] {
+	public func column(_ name: String) throws -> [DatabaseValue] {
 		let index = try indexOfColumn(name)
 		var values = [DatabaseValue]()
 		try results { row in
@@ -348,10 +348,10 @@ extension Statement {
 	/// - parameter names: The names of the desired columns.
 	///
 	/// - throws: An error if a column in `names` doesn't exist.
-	public func columns<S: Collection>(named names: S) throws -> [String: [DatabaseValue]] where S.Element == String {
+	public func columns<S: Collection>(_ names: S) throws -> [String: [DatabaseValue]] where S.Element == String {
 		var values: [String: [DatabaseValue]] = [:]
 		for name in names {
-			values[name] = try self.column(named: name)
+			values[name] = try self.column(name)
 		}
 		return values
 	}
