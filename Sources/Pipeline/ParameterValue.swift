@@ -109,17 +109,17 @@ extension Statement {
 }
 
 extension Database {
-	/// Executes `sql` with the *n* parameters in `values` bound to the first *n* SQL parameters of `sql` and applies `block` to each result row.
+	/// Executes `sql` with the *n* `parameters` bound to the first *n* SQL parameters of `sql` and applies `block` to each result row.
 	///
 	/// - parameter sql: The SQL statement to execute.
-	/// - parameter values: A collection of values to bind to SQL parameters.
+	/// - parameter parameters: A collection of values to bind to SQL parameters.
 	/// - parameter block: A closure called for each result row.
 	/// - parameter row: A result row of returned data.
 	///
 	/// - throws: Any error thrown in `block` or an error if `sql` couldn't be compiled, `values` couldn't be bound, or the statement couldn't be executed.
-	public func execute<C: Collection>(sql: String, parameterValues values: C, _ block: ((_ row: Row) throws -> ())? = nil) throws where C.Element == ParameterValue {
+	public func execute<C: Collection>(sql: String, parameters: C, _ block: ((_ row: Row) throws -> ())? = nil) throws where C.Element == ParameterValue {
 		let statement = try prepare(sql: sql)
-		try statement.bind(values)
+		try statement.bind(parameters)
 		if let block = block {
 			try statement.results(block)
 		} else {
@@ -147,16 +147,16 @@ extension Database {
 }
 
 extension Database {
-	/// Executes `sql` with the *n* parameters in `values` bound to the first *n* SQL parameters of `sql` and applies `block` to each result row.
+	/// Executes `sql` with the *n* `parameters` bound to the first *n* SQL parameters of `sql` and applies `block` to each result row.
 	///
 	/// - parameter sql: The SQL statement to execute.
-	/// - parameter values: A series of values to bind to SQL parameters.
+	/// - parameter parameters: A series of values to bind to SQL parameters.
 	/// - parameter block: A closure called for each result row.
 	/// - parameter row: A result row of returned data.
 	///
 	/// - throws: Any error thrown in `block` or an error if `sql` couldn't be compiled, `values` couldn't be bound, or the statement couldn't be executed.
-	public func execute(sql: String, parameterValues values: ParameterValue..., block: ((_ row: Row) throws -> ())? = nil) throws {
-		try execute(sql: sql, parameterValues: values, block)
+	public func execute(sql: String, parameters: ParameterValue..., block: ((_ row: Row) throws -> ())? = nil) throws {
+		try execute(sql: sql, parameters: parameters, block)
 	}
 }
 
