@@ -70,12 +70,12 @@ final class PipelineTests: XCTestCase {
 
 		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.integer(1)])
 		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.text("feisty")])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.real(2.5)])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.blob(Data(count: 8))])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: .real(2.5))
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: .blob(Data(count: 8)))
 
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.urlString(URL(fileURLWithPath: "/tmp"))])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.uuidString(UUID())])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.timeIntervalSinceReferenceDate(Date())])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameters: [.urlString(URL(fileURLWithPath: "/tmp"))])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameters: [.uuidString(UUID())])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameters: [.timeIntervalSinceReferenceDate(Date())])
 
 		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.null])
 	}
@@ -144,7 +144,7 @@ final class PipelineTests: XCTestCase {
 
 		let a = TestStruct(a: 1, b: 3.14, c: Date(), d: "Lu")
 
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.json(a)])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameters: .json(a))
 
 		let b = try! db.prepare(sql: "select * from t1 limit 1;").step()!.value(forColumn: 0, .json(TestStruct.self))
 
@@ -163,7 +163,7 @@ final class PipelineTests: XCTestCase {
 
 		try! db.execute(sql: "create table t1(a text);")
 
-		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.text("a")])
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: .text("a"))
 		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.text("c")])
 		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.text("z")])
 		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.text("e")])
@@ -247,7 +247,7 @@ final class PipelineTests: XCTestCase {
 		try! db.execute(sql: "create table t1(a);")
 
 		for i in  0..<10 {
-			try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.int(i)])
+			try! db.execute(sql: "insert into t1(a) values (?);", parameters: [.int(i)])
 		}
 
 		let s = try! db.prepare(sql: "select integer_sum(a) from t1;").step()!.value(forColumn: 0, .int64)
@@ -303,7 +303,7 @@ final class PipelineTests: XCTestCase {
 		try! db.execute(sql: "create table t1(a);")
 
 		for i in  0..<10 {
-			try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.int(i)])
+			try! db.execute(sql: "insert into t1(a) values (?);", parameters: [.int(i)])
 		}
 
 		let s = try! db.prepare(sql: "select integer_sum(a) OVER (ORDER BY a ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) from t1;")
