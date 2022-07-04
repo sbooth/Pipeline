@@ -17,7 +17,7 @@ import CSQLite
 ///
 /// ```swift
 /// extension ColumnValueConverter where T == UUID {
-/// 	public static var uuid = ColumnValueConverter { row, index in
+/// 	public static let uuid = ColumnValueConverter { row, index in
 /// 		let t = try row.text(forColumn: index)
 /// 		guard let u = UUID(uuidString: t) else {
 /// 			throw DatabaseError(message: "text \"\(t)\" isn't a valid UUID")
@@ -186,7 +186,7 @@ extension Statement {
 
 extension ColumnValueConverter where T == String {
 	/// Returns the text value of a column.
-	public static var string = ColumnValueConverter {
+	public static let string = ColumnValueConverter {
 		try $0.text(at: $1)
 	}
 
@@ -196,7 +196,7 @@ extension ColumnValueConverter where T == String {
 
 extension ColumnValueConverter where T == Data {
 	/// Returns the BLOB value of a column.
-	public static var data = ColumnValueConverter {
+	public static let data = ColumnValueConverter {
 		try $0.blob(at: $1)
 	}
 
@@ -206,7 +206,7 @@ extension ColumnValueConverter where T == Data {
 
 extension ColumnValueConverter where T == Int {
 	/// Converts the signed integer value of a column to `Int`.
-	public static var int = ColumnValueConverter {
+	public static let int = ColumnValueConverter {
 		Int(try $0.integer(at: $1))
 	}
 }
@@ -214,56 +214,56 @@ extension ColumnValueConverter where T == Int {
 extension ColumnValueConverter where T == UInt {
 	/// Converts the signed integer value of a column to `UInt`.
 	/// - note: The signed integer value is interpreted as a bit pattern.
-	public static var uint = ColumnValueConverter {
+	public static let uint = ColumnValueConverter {
 		UInt(bitPattern: Int(try $0.integer(at: $1)))
 	}
 }
 
 extension ColumnValueConverter where T == Int8 {
 	/// Converts the signed integer value of a column to `Int8`.
-	public static var int8 = ColumnValueConverter {
+	public static let int8 = ColumnValueConverter {
 		Int8(try $0.integer(at: $1))
 	}
 }
 
 extension ColumnValueConverter where T == UInt8 {
 	/// Converts the signed integer value of a column to `UInt8`.
-	public static var uint8 = ColumnValueConverter {
+	public static let uint8 = ColumnValueConverter {
 		UInt8(try $0.integer(at: $1))
 	}
 }
 
 extension ColumnValueConverter where T == Int16 {
 	/// Converts the signed integer value of a column to `Int16`.
-	public static var int16 = ColumnValueConverter {
+	public static let int16 = ColumnValueConverter {
 		Int16(try $0.integer(at: $1))
 	}
 }
 
 extension ColumnValueConverter where T == UInt16 {
 	/// Converts the signed integer value of a column to `UInt16`.
-	public static var uint16 = ColumnValueConverter {
+	public static let uint16 = ColumnValueConverter {
 		UInt16(try $0.integer(at: $1))
 	}
 }
 
 extension ColumnValueConverter where T == Int32 {
 	/// Converts the signed integer value of a column to `Int32`.
-	public static var int32 = ColumnValueConverter {
+	public static let int32 = ColumnValueConverter {
 		Int32(try $0.integer(at: $1))
 	}
 }
 
 extension ColumnValueConverter where T == UInt32 {
 	/// Converts the signed integer value of a column to `UInt32`.
-	public static var uint32 = ColumnValueConverter {
+	public static let uint32 = ColumnValueConverter {
 		UInt32(try $0.integer(at: $1))
 	}
 }
 
 extension ColumnValueConverter where T == Int64 {
 	/// Returns the signed integer value of a column.
-	public static var int64 = ColumnValueConverter {
+	public static let int64 = ColumnValueConverter {
 		try $0.integer(at: $1)
 	}
 
@@ -274,21 +274,21 @@ extension ColumnValueConverter where T == Int64 {
 extension ColumnValueConverter where T == UInt64 {
 	/// Converts the signed integer value of a column to `UInt64`.
 	/// - note: The signed integer value is interpreted as a bit pattern.
-	public static var uint64 = ColumnValueConverter {
+	public static let uint64 = ColumnValueConverter {
 		UInt64(bitPattern: try $0.integer(at: $1))
 	}
 }
 
 extension ColumnValueConverter where T == Float {
 	/// Converts the floating-point value of a column to `Float`.
-	public static var float = ColumnValueConverter {
+	public static let float = ColumnValueConverter {
 		Float(try $0.real(at: $1))
 	}
 }
 
 extension ColumnValueConverter where T == Double {
 	/// Returns the floating-point value of a column.
-	public static var double = ColumnValueConverter {
+	public static let double = ColumnValueConverter {
 		try $0.real(at: $1)
 	}
 
@@ -299,7 +299,7 @@ extension ColumnValueConverter where T == Double {
 extension ColumnValueConverter where T == Bool {
 	/// Converts the signed integer value of a column to `Bool`.
 	/// - note: Non-zero values are interpreted as true.
-	public static var bool = ColumnValueConverter {
+	public static let bool = ColumnValueConverter {
 		try $0.integer(at: $1) != 0
 	}
 }
@@ -307,7 +307,7 @@ extension ColumnValueConverter where T == Bool {
 extension ColumnValueConverter where T == UUID {
 	/// Converts the text value of a column to `UUID`.
 	/// - note: The text value is interpreted as a UUID string.
-	public static var uuidWithString = ColumnValueConverter { row, index in
+	public static let uuidWithString = ColumnValueConverter { row, index in
 		let t = try row.text(at: index)
 		guard let u = UUID(uuidString: t) else {
 			throw DatabaseError(message: "text \"\(t)\" isn't a valid UUID")
@@ -317,7 +317,7 @@ extension ColumnValueConverter where T == UUID {
 
 	/// Converts the BLOB value of a column to `UUID`.
 	/// - note: The BLOB value is interpreted as a 16-byte `uuid_t`.
-	public static var uuidWithBytes = ColumnValueConverter { row, index in
+	public static let uuidWithBytes = ColumnValueConverter { row, index in
 		let b = try row.blob(at: index)
 		guard b.count == 16 else {
 			throw DatabaseError(message: "BLOB '\(b)' isn't a valid UUID")
@@ -332,7 +332,7 @@ extension ColumnValueConverter where T == UUID {
 extension ColumnValueConverter where T == URL {
 	/// Converts the text value of a column to `URL`.
 	/// - note: The text value is interpreted as a URL string.
-	public static var urlWithString = ColumnValueConverter { row, index in
+	public static let urlWithString = ColumnValueConverter { row, index in
 		let t = try row.text(at: index)
 		guard let u = URL(string: t) else {
 			throw DatabaseError(message: "text \"\(t)\" isn't a valid URL")
@@ -344,13 +344,13 @@ extension ColumnValueConverter where T == URL {
 extension ColumnValueConverter where T == Date {
 	/// Converts the floating-point value of a column to `Date`.
 	/// - note: The floating-point value is interpreted as a number of seconds relative to 00:00:00 UTC on 1 January 1970.
-	public static var dateWithTimeIntervalSince1970 = ColumnValueConverter {
+	public static let dateWithTimeIntervalSince1970 = ColumnValueConverter {
 		Date(timeIntervalSince1970: try $0.real(at: $1))
 	}
 
 	/// Converts the floating-point value of a column to `Date`.
 	/// - note: The floating-point value is interpreted as a number of seconds relative to 00:00:00 UTC on 1 January 2001.
-	public static var dateWithTimeIntervalSinceReferenceDate = ColumnValueConverter {
+	public static let dateWithTimeIntervalSinceReferenceDate = ColumnValueConverter {
 		Date(timeIntervalSinceReferenceDate: try $0.real(at: $1))
 	}
 
@@ -380,7 +380,7 @@ extension ColumnValueConverter where T: Decodable {
 
 extension ColumnValueConverter where T == NSNumber {
 	/// Converts the signed integer or floating-point value of a column to `NSNumber`.
-	public static var nsNumber = ColumnValueConverter {
+	public static let nsNumber = ColumnValueConverter {
 		let type = try $0.type(ofColumn: $1)
 		switch type {
 		case .integer:
