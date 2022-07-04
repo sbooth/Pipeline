@@ -114,6 +114,8 @@ public final class Statement {
 		for i in 0 ..< count {
 			if let s = sqlite3_column_name(preparedStatement, i) {
 				names.append(String(cString: s))
+			} else {
+				names.append("")
 			}
 		}
 		return names
@@ -125,7 +127,7 @@ public final class Statement {
 	///
 	/// - parameter index: The index of the desired column.
 	///
-	/// - throws: An error if `index` is out of bounds.
+	/// - throws: An error if `index` is out of bounds or an out-of-memory error occurs.
 	///
 	/// - returns: The name of the column for the specified index.
 	public func nameOfColumn(_ index: Int) throws -> String {
@@ -147,13 +149,15 @@ public final class Statement {
 		return map
 	}()
 
-	/// Returns the index of the column `name`.
+	/// Returns the index of a column with `name`.
+	///
+	/// - note: Column names are not guaranteed to be unique.
 	///
 	/// - parameter name: The name of the desired column.
 	///
 	/// - throws: An error if the column doesn't exist.
 	///
-	/// - returns: The index of the column with the specified name.
+	/// - returns: The index of a column with the specified name.
 	public func indexOfColumn(_ name: String) throws -> Int {
 		guard let index = columnNamesAndIndexes[name] else {
 			throw DatabaseError(message: "Unknown column \"\(name)\"")
