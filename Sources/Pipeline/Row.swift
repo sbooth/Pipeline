@@ -79,7 +79,7 @@ extension Row {
 	/// - note: Column indexes are 0-based.  The leftmost column in a result row has index 0.
 	///
 	/// - requires: `index >= 0`
-	/// - requires: `index < self.columnCount`
+	/// - requires: `index < columnCount`
 	///
 	/// - parameter index: The index of the desired column.
 	///
@@ -117,7 +117,7 @@ extension Row {
 	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
 	///
 	/// - requires: `index >= 0`
-	/// - requires: `index < self.columnCount`
+	/// - requires: `index < columnCount`
 	///
 	/// - parameter index: The index of the desired column.
 	///
@@ -246,7 +246,7 @@ extension Row {
 	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
 	///
 	/// - requires: `index >= 0`
-	/// - requires: `index < self.columnCount`
+	/// - requires: `index < columnCount`
 	///
 	/// - parameter index: The index of the desired column.
 	///
@@ -269,7 +269,7 @@ extension Row {
 	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
 	///
 	/// - requires: `index >= 0`
-	/// - requires: `index < self.columnCount`
+	/// - requires: `index < columnCount`
 	///
 	/// - parameter index: The index of the desired column.
 	///
@@ -292,7 +292,7 @@ extension Row {
 	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
 	///
 	/// - requires: `index >= 0`
-	/// - requires: `index < self.columnCount`
+	/// - requires: `index < columnCount`
 	///
 	/// - parameter index: The index of the desired column.
 	///
@@ -318,7 +318,7 @@ extension Row {
 	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
 	///
 	/// - requires: `index >= 0`
-	/// - requires: `index < self.columnCount`
+	/// - requires: `index < columnCount`
 	///
 	/// - parameter index: The index of the desired column.
 	///
