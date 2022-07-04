@@ -363,7 +363,7 @@ final class PipelineTests: XCTestCase {
 		try! db.execute(sql: "create virtual table t1 USING fts5(a, tokenize = 'word');")
 
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind(["quick brown"]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.string("fox")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind("fox").execute()
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.string("jumps over")]).execute()
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("the lazy dog")]).execute()
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind(["🦊🐶"]).execute()
