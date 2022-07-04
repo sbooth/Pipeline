@@ -121,7 +121,7 @@ extension Row {
 	///
 	/// - parameter index: The index of the desired column.
 	///
-	/// - throws: An error if `index` is out of bounds.
+	/// - throws: An error if `index` is out of bounds or an out-of-memory error occurs.
 	///
 	/// - returns: The column's value.
 	public func value(at index: Int) throws -> DatabaseValue {
@@ -296,7 +296,7 @@ extension Row {
 	///
 	/// - parameter index: The index of the desired column.
 	///
-	/// - throws: An error if `index` is out of bounds.
+	/// - throws: An error if `index` is out of bounds or an out-of-memory error occurs.
 	///
 	/// - returns: The column's text value.
 	///
@@ -322,7 +322,7 @@ extension Row {
 	///
 	/// - parameter index: The index of the desired column.
 	///
-	/// - throws: An error if `index` is out of bounds.
+	/// - throws: An error if `index` is out of bounds or an out-of-memory error occurs.
 	///
 	/// - returns: The column's BLOB value.
 	///
@@ -350,7 +350,7 @@ extension Row {
 	///
 	/// - parameter name: The name of the desired column.
 	///
-	/// - throws: An error if the column doesn't exist or contains an illegal value.
+	/// - throws: An error if the column doesn't exist.
 	///
 	/// - returns: The column's signed integer value.
 	///
@@ -363,7 +363,7 @@ extension Row {
 	///
 	/// - parameter name: The name of the desired column.
 	///
-	/// - throws: An error if the column doesn't exist or contains an illegal value.
+	/// - throws: An error if the column doesn't exist.
 	///
 	/// - returns: The column's floating-point value.
 	///
@@ -376,7 +376,7 @@ extension Row {
 	///
 	/// - parameter name: The name of the desired column.
 	///
-	/// - throws: An error if the column doesn't exist or contains an illegal value.
+	/// - throws: An error if the column doesn't exist or an out-of-memory error occurs.
 	///
 	/// - returns: The column's text value.
 	///
@@ -389,7 +389,7 @@ extension Row {
 	///
 	/// - parameter name: The name of the desired column.
 	///
-	/// - throws: An error if the column doesn't exist or contains an illegal value.
+	/// - throws: An error if the column doesn't exist or an out-of-memory error occurs.
 	///
 	/// - returns: The column's BLOB value.
 	///
