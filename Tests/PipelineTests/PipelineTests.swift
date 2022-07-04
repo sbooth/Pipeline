@@ -45,7 +45,7 @@ final class PipelineTests: XCTestCase {
 			XCTAssertNoThrow(try db.execute(sql: "insert into t1 default values;"))
 		}
 
-		let count = try! db.prepare(sql: "select count(*) from t1;").nextRow()!.value(forColumn: 0, .int)
+		let count = try! db.prepare(sql: "select count(*) from t1;").step()!.value(forColumn: 0, .int)
 		XCTAssertEqual(count, rowCount)
 	}
 
@@ -115,7 +115,7 @@ final class PipelineTests: XCTestCase {
 
 		do {
 			let s = try! db.prepare(sql: "select * from t1 limit 1 offset 0;")
-			let r = try! s.nextRow()!
+			let r = try! s.step()!
 			let v = [DatabaseValue](r)
 
 			XCTAssertEqual(v, [DatabaseValue(1),DatabaseValue(2),DatabaseValue(3),DatabaseValue(4)])
@@ -123,7 +123,7 @@ final class PipelineTests: XCTestCase {
 
 		do {
 			let s = try! db.prepare(sql: "select * from t1 limit 1 offset 1;")
-			let r = try! s.nextRow()!
+			let r = try! s.step()!
 			let v = [DatabaseValue](r)
 
 			XCTAssertEqual(v, [DatabaseValue("a"),DatabaseValue("b"),DatabaseValue("c"),DatabaseValue("d")])
@@ -146,7 +146,7 @@ final class PipelineTests: XCTestCase {
 
 		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.json(a)])
 
-		let b = try! db.prepare(sql: "select * from t1 limit 1;").nextRow()!.value(forColumn: 0, .json(TestStruct.self))
+		let b = try! db.prepare(sql: "select * from t1 limit 1;").step()!.value(forColumn: 0, .json(TestStruct.self))
 
 		XCTAssertEqual(a.a, b.a)
 		XCTAssertEqual(a.b, b.b)
@@ -250,10 +250,10 @@ final class PipelineTests: XCTestCase {
 			try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.int(i)])
 		}
 
-		let s = try! db.prepare(sql: "select integer_sum(a) from t1;").nextRow()!.value(forColumn: 0, .int64)
+		let s = try! db.prepare(sql: "select integer_sum(a) from t1;").step()!.value(forColumn: 0, .int64)
 		XCTAssertEqual(s, 45)
 
-		let ss = try! db.prepare(sql: "select integer_sum(a) from t1;").nextRow()!.value(forColumn: 0, .int64)
+		let ss = try! db.prepare(sql: "select integer_sum(a) from t1;").step()!.value(forColumn: 0, .int64)
 		XCTAssertEqual(ss, 45)
 
 		try! db.removeFunction("integer_sum", arity: 1)
@@ -375,7 +375,7 @@ final class PipelineTests: XCTestCase {
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("lazy dog")]).execute()
 
 		let s = try! db.prepare(sql: "select count(*) from t1 where t1 match 'o*';")
-		let count = try! s.nextRow()!.value(forColumn: 0, .integer)
+		let count = try! s.step()!.value(forColumn: 0, .integer)
 		XCTAssertEqual(count, 2)
 
 		let statement = try! db.prepare(sql: "select * from t1 where t1 match 'o*';")
@@ -457,7 +457,7 @@ final class PipelineTests: XCTestCase {
 		struct UUIDHolder: RowMapping {
 			let u: UUID
 			init(row: Row) throws {
-				u = UUID(uuidString: try row.text(forColumn: 0))!
+				u = UUID(uuidString: try row.text(at: 0))!
 			}
 		}
 
@@ -465,7 +465,7 @@ final class PipelineTests: XCTestCase {
 
 		let publisher = db.rowPublisher(sql: "select v1 from t1;")
 
-		var values: [UUIDHolder] = []
+		var column: [UUIDHolder] = []
 		var error: Error?
 
 		var cancellables = Set<AnyCancellable>()
@@ -483,7 +483,7 @@ final class PipelineTests: XCTestCase {
 
 				expectation.fulfill()
 			} receiveValue: { value in
-				values = value
+				column = value
 			}
 			.store(in: &cancellables)
 
@@ -491,8 +491,8 @@ final class PipelineTests: XCTestCase {
 		waitForExpectations(timeout: 5)
 
 		XCTAssertNil(error)
-		XCTAssertEqual(values.count, rowCount)
-		for (i,value) in values.enumerated() {
+		XCTAssertEqual(column.count, rowCount)
+		for (i,value) in column.enumerated() {
 			XCTAssertEqual(value.u, uuids[i])
 		}
 	}

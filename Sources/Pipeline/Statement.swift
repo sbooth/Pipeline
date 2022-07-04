@@ -214,7 +214,7 @@ extension Statement {
 	/// - returns: The next result row of returned data.
 	///
 	/// - throws: An error if the statement encountered an execution error.
-	public func nextRow() throws -> Row? {
+	public func step() throws -> Row? {
 		switch sqlite3_step(preparedStatement) {
 		case SQLITE_ROW:
 			return Row(statement: self)
@@ -288,7 +288,7 @@ extension Statement: IteratorProtocol {
 	///
 	/// - returns: The next result row of returned data.
 	public func next() -> Row? {
-		try? nextRow()
+		try? step()
 	}
 }
 
@@ -303,10 +303,10 @@ extension Statement {
 	/// - parameter index: The index of the desired column.
 	///
 	/// - throws: An error if `index` is out of bounds.
-	public func values(ofColumn index: Int) throws -> [DatabaseValue] {
+	public func column(_ index: Int) throws -> [DatabaseValue] {
 		var values = [DatabaseValue]()
 		try results { row in
-			values.append(try row.value(ofColumn: index))
+			values.append(try row.value(at: index))
 		}
 		return values
 	}
@@ -316,11 +316,11 @@ extension Statement {
 	/// - parameter name: The name of the desired column.
 	///
 	/// - throws: An error if the column `name` doesn't exist.
-	public func values(ofColumn name: String) throws -> [DatabaseValue] {
+	public func column(named name: String) throws -> [DatabaseValue] {
 		let index = try index(ofColumn: name)
 		var values = [DatabaseValue]()
 		try results { row in
-			values.append(try row.value(ofColumn: index))
+			values.append(try row.value(at: index))
 		}
 		return values
 	}
@@ -335,10 +335,10 @@ extension Statement {
 	/// - parameter indexes: The indexes of the desired columns.
 	///
 	/// - throws: An error if any element of `indexes` is out of bounds.
-	public func values<S: Collection>(ofColumns indexes: S) throws -> [[DatabaseValue]] where S.Element == Int {
+	public func columns<S: Collection>(_ indexes: S) throws -> [[DatabaseValue]] where S.Element == Int {
 		var values = [[DatabaseValue]](repeating: [], count: indexes.count)
 		for (n, x) in indexes.enumerated() {
-			values[n] = try self.values(ofColumn: x)
+			values[n] = try self.column(x)
 		}
 		return values
 	}
@@ -348,10 +348,10 @@ extension Statement {
 	/// - parameter names: The names of the desired columns.
 	///
 	/// - throws: An error if a column in `names` doesn't exist.
-	public func values<S: Collection>(ofColumns names: S) throws -> [String: [DatabaseValue]] where S.Element == String {
+	public func columns<S: Collection>(named names: S) throws -> [String: [DatabaseValue]] where S.Element == String {
 		var values: [String: [DatabaseValue]] = [:]
 		for name in names {
-			values[name] = try self.values(ofColumn: name)
+			values[name] = try self.column(named: name)
 		}
 		return values
 	}
