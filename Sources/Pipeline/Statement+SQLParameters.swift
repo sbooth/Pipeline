@@ -55,6 +55,9 @@ extension Statement {
 	///
 	/// - note: Parameter indexes are 1-based.  The leftmost parameter in a statement has index 1.
 	///
+	/// - requires: `index > 0`
+	/// - requires: `index < parameterCount`
+	///
 	/// - parameter value: The desired value of the SQL parameter.
 	/// - parameter index: The index of the SQL parameter to bind.
 	///
