@@ -220,34 +220,26 @@ extension Database {
 
 extension ParameterValue {
 	/// Binds a text value.
-	public static func text(_ value: String) -> ParameterValue {
+	public static func string(_ value: String) -> ParameterValue {
 		ParameterValue { statement, index in
 			try statement.bind(text: value, toParameter: index)
 		}
 	}
 
 	/// Binds a text value.
-	public static func string(_ value: String) -> ParameterValue {
-		ParameterValue { statement, index in
-			try statement.bind(text: value, toParameter: index)
-		}
-	}
+	public static let text = string
 }
 
 extension ParameterValue {
-	/// Binds a BLOB value.
-	public static func blob(_ value: Data) -> ParameterValue {
-		ParameterValue { statement, index in
-			try statement.bind(blob: value, toParameter: index)
-		}
-	}
-
 	/// Binds a BLOB value.
 	public static func data(_ value: Data) -> ParameterValue {
 		ParameterValue { statement, index in
 			try statement.bind(blob: value, toParameter: index)
 		}
 	}
+
+	/// Binds a BLOB value.
+	public static let blob = data
 }
 
 extension ParameterValue {
@@ -258,13 +250,6 @@ extension ParameterValue {
 }
 
 extension ParameterValue {
-	/// Binds a signed integer value.
-	public static func integer(_ value: Int64) -> ParameterValue {
-		ParameterValue { statement, index in
-			try statement.bind(integer: value, toParameter: index)
-		}
-	}
-
 	/// Binds an `Int` as a signed integer.
 	public static func int(_ value: Int) -> ParameterValue {
 		ParameterValue { statement, index in
@@ -329,6 +314,9 @@ extension ParameterValue {
 		}
 	}
 
+	/// Binds a signed integer value.
+	public static let integer = int64
+
 	/// Binds a `UInt64` as a signed integer.
 	/// - note: The value is bound as an `Int64` bit pattern.
 	public static func uint64(_ value: UInt64) -> ParameterValue {
@@ -339,13 +327,6 @@ extension ParameterValue {
 }
 
 extension ParameterValue {
-	/// Binds a floating-point value.
-	public static func real(_ value: Double) -> ParameterValue {
-		ParameterValue { statement, index in
-			try statement.bind(real: value, toParameter: index)
-		}
-	}
-
 	/// Binds an `Float` as a floating-point value.
 	public static func float(_ value: Float) -> ParameterValue {
 		ParameterValue { statement, index in
@@ -359,6 +340,9 @@ extension ParameterValue {
 			try statement.bind(real: value, toParameter: index)
 		}
 	}
+
+	/// Binds a floating-point value.
+	public static let real = double
 }
 
 extension ParameterValue {

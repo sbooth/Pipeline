@@ -191,9 +191,7 @@ extension ColumnValueConverter where T == String {
 	}
 
 	/// Returns the text value of a column.
-	public static var text = ColumnValueConverter {
-		try $0.text(forColumn: $1)
-	}
+	public static var text = Self.string
 }
 
 extension ColumnValueConverter where T == Data {
@@ -203,9 +201,7 @@ extension ColumnValueConverter where T == Data {
 	}
 
 	/// Returns the BLOB value of a column.
-	public static var blob = ColumnValueConverter {
-		try $0.blob(forColumn: $1)
-	}
+	public static var blob = Self.data
 }
 
 extension ColumnValueConverter where T == Int {
@@ -272,9 +268,7 @@ extension ColumnValueConverter where T == Int64 {
 	}
 
 	/// Returns the signed integer value of a column.
-	public static var integer = ColumnValueConverter {
-		try $0.integer(forColumn: $1)
-	}
+	public static var integer = Self.int64
 }
 
 extension ColumnValueConverter where T == UInt64 {
@@ -299,9 +293,7 @@ extension ColumnValueConverter where T == Double {
 	}
 
 	/// Returns the floating-point value of a column.
-	public static var real = ColumnValueConverter {
-		try $0.real(forColumn: $1)
-	}
+	public static var real = Self.double
 }
 
 extension ColumnValueConverter where T == Bool {
