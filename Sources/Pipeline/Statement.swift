@@ -128,7 +128,7 @@ public final class Statement {
 	/// - throws: An error if `index` is out of bounds.
 	///
 	/// - returns: The name of the column for the specified index.
-	public func name(ofColumn index: Int) throws -> String {
+	public func nameOfColumn(_ index: Int) throws -> String {
 		guard let name = sqlite3_column_name(preparedStatement, Int32(index)) else {
 			throw DatabaseError(message: "Column index \(index) out of bounds")
 		}
@@ -154,7 +154,7 @@ public final class Statement {
 	/// - throws: An error if the column doesn't exist.
 	///
 	/// - returns: The index of the column with the specified name.
-	public func index(ofColumn name: String) throws -> Int {
+	public func indexOfColumn(_ name: String) throws -> Int {
 		guard let index = columnNamesAndIndexes[name] else {
 			throw DatabaseError(message: "Unknown column \"\(name)\"")
 		}
@@ -317,7 +317,7 @@ extension Statement {
 	///
 	/// - throws: An error if the column `name` doesn't exist.
 	public func column(named name: String) throws -> [DatabaseValue] {
-		let index = try index(ofColumn: name)
+		let index = try indexOfColumn(name)
 		var values = [DatabaseValue]()
 		try results { row in
 			values.append(try row.value(at: index))

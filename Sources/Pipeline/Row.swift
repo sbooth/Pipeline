@@ -166,7 +166,7 @@ extension Row {
 	///
 	/// - returns: The column's value.
 	public func value(named name: String) throws -> DatabaseValue {
-		try value(at: statement.index(ofColumn: name))
+		try value(at: statement.indexOfColumn(name))
 	}
 }
 
@@ -334,7 +334,7 @@ extension Row {
 	///
 	/// - seealso: [Result values from a query](https://sqlite.org/c3ref/column_blob.html)
 	public func integer(named name: String) throws -> Int64 {
-		return try integer(at: statement.index(ofColumn: name))
+		return try integer(at: statement.indexOfColumn(name))
 	}
 
 	/// Returns the floating-point value of the column with name `name`.
@@ -347,7 +347,7 @@ extension Row {
 	///
 	/// - seealso: [Result values from a query](https://sqlite.org/c3ref/column_blob.html)
 	public func real(named name: String) throws -> Double {
-		return try real(at: statement.index(ofColumn: name))
+		return try real(at: statement.indexOfColumn(name))
 	}
 
 	/// Returns the text value of the column with name `name`.
@@ -360,7 +360,7 @@ extension Row {
 	///
 	/// - seealso: [Result values from a query](https://sqlite.org/c3ref/column_blob.html)
 	public func text(named name: String) throws -> String {
-		return try text(at: statement.index(ofColumn: name))
+		return try text(at: statement.indexOfColumn(name))
 	}
 
 	/// Returns the BLOB value of the column with name `name`.
@@ -373,6 +373,6 @@ extension Row {
 	///
 	/// - seealso: [Result values from a query](https://sqlite.org/c3ref/column_blob.html)
 	public func blob(named name: String) throws -> Data {
-		return try blob(at: statement.index(ofColumn: name))
+		return try blob(at: statement.indexOfColumn(name))
 	}
 }

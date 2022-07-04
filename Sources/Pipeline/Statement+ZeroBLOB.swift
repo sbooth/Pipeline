@@ -37,6 +37,6 @@ extension Statement {
 	///
 	/// - throws: An error if the SQL parameter `name` doesn't exist or the BLOB couldn't be bound.
 	public func bindZeroBLOB(toParameter name: String, length: Int) throws {
-		try bindZeroBLOB(toParameter: indexOfParameter(named: name), length: length)
+		try bindZeroBLOB(toParameter: indexOfParameter(name), length: length)
 	}
 }

@@ -53,7 +53,7 @@ extension Statement {
 	///
 	/// - throws: An error if the SQL parameter `name` doesn't exist or `value` couldn't be bound.
 	public func bind(_ value: ParameterValue, toParameter name: String) throws {
-		try value.bind(self, indexOfParameter(named: name))
+		try value.bind(self, indexOfParameter(name))
 	}
 }
 
@@ -87,7 +87,7 @@ extension Statement {
 	/// - returns: `self`
 	@discardableResult public func bind<C: Collection>(_ parameters: C) throws -> Statement where C.Element == (String, ParameterValue) {
 		for (name, value) in parameters {
-			try value.bind(self, indexOfParameter(named: name))
+			try value.bind(self, indexOfParameter(name))
 		}
 		return self
 	}
@@ -121,7 +121,7 @@ extension Statement {
 	/// - returns: `self`
 	@discardableResult public func bind(_ parameters: [String: ParameterValue]) throws -> Statement {
 		for (name, value) in parameters {
-			try value.bind(self, indexOfParameter(named: name))
+			try value.bind(self, indexOfParameter(name))
 		}
 		return self
 	}

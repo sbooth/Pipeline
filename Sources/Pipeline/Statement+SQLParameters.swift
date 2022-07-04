@@ -20,7 +20,7 @@ extension Statement {
 	/// - parameter index: The index of the desired SQL parameter.
 	///
 	/// - returns: The name of the specified parameter.
-	public func nameOfParameter(atIndex index: Int) throws -> String {
+	public func nameOfParameter(_ index: Int) throws -> String {
 		guard let name = sqlite3_bind_parameter_name(preparedStatement, Int32(index)) else {
 			throw DatabaseError(message: "SQL parameter at index \(index) not found or nameless")
 		}
@@ -32,7 +32,7 @@ extension Statement {
 	/// - parameter name: The name of the desired SQL parameter.
 	///
 	/// - returns: The index of the specified parameter.
-	public func indexOfParameter(named name: String) throws -> Int {
+	public func indexOfParameter(_ name: String) throws -> Int {
 		let index = sqlite3_bind_parameter_index(preparedStatement, name)
 		guard index != 0 else {
 			throw DatabaseError(message: "SQL parameter \"\(name)\" not found")
@@ -95,7 +95,7 @@ extension Statement {
 	///
 	/// - throws: An error if the SQL parameter `name` doesn't exist or `value` couldn't be bound.
 	public func bind(value: DatabaseValue, toParameter name: String) throws {
-		try bind(value: value, toParameter: indexOfParameter(named: name))
+		try bind(value: value, toParameter: indexOfParameter(name))
 	}
 }
 
@@ -182,7 +182,7 @@ extension Statement {
 	///
 	/// - throws: An error if the SQL parameter `name` doesn't exist or `value` couldn't be bound.
 	public func bind(integer value: Int64, toParameter name: String) throws {
-		try bind(integer: value, toParameter: indexOfParameter(named: name))
+		try bind(integer: value, toParameter: indexOfParameter(name))
 	}
 
 	/// Binds the floating-point `value` to the SQL parameter `name`.
@@ -192,7 +192,7 @@ extension Statement {
 	///
 	/// - throws: An error if the SQL parameter `name` doesn't exist or `value` couldn't be bound.
 	public func bind(real value: Double, toParameter name: String) throws {
-		try bind(real: value, toParameter: indexOfParameter(named: name))
+		try bind(real: value, toParameter: indexOfParameter(name))
 	}
 
 	/// Binds the text `value` to the SQL parameter `name`.
@@ -202,7 +202,7 @@ extension Statement {
 	///
 	/// - throws: An error if the SQL parameter `name` doesn't exist or `value` couldn't be bound.
 	public func bind(text value: String, toParameter name: String) throws {
-		try bind(text: value, toParameter: indexOfParameter(named: name))
+		try bind(text: value, toParameter: indexOfParameter(name))
 	}
 
 	/// Binds the BLOB `value` to the SQL parameter `name`.
@@ -212,7 +212,7 @@ extension Statement {
 	///
 	/// - throws: An error if the SQL parameter `name` doesn't exist or `value` couldn't be bound.
 	public func bind(blob value: Data, toParameter name: String) throws {
-		try bind(blob: value, toParameter: indexOfParameter(named: name))
+		try bind(blob: value, toParameter: indexOfParameter(name))
 	}
 
 	/// Binds an SQL `NULL` value to the SQL parameter `name`.
@@ -221,6 +221,6 @@ extension Statement {
 	///
 	/// - throws: An error if the SQL parameter `name` doesn't exist or SQL `NULL` couldn't be bound.
 	public func bindNull(toParameter name: String) throws {
-		try bindNull(toParameter: indexOfParameter(named: name))
+		try bindNull(toParameter: indexOfParameter(name))
 	}
 }

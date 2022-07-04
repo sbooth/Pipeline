@@ -90,7 +90,7 @@ extension Row {
 	///
 	/// - returns: The column's value as `type`.
 	public func value<T>(forColumn name: String, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> T {
-		try value(forColumn: statement.index(ofColumn: name), as: type, converter)
+		try value(forColumn: statement.indexOfColumn(name), as: type, converter)
 	}
 
 	/// Returns the value of the column with name `name` converted to `type`.
@@ -105,7 +105,7 @@ extension Row {
 	///
 	/// - returns: The column's value as `type` or `nil` if null.
 	public func valueOrNil<T>(forColumn name: String, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> T? {
-		try valueOrNil(forColumn: statement.index(ofColumn: name), as: type, converter)
+		try valueOrNil(forColumn: statement.indexOfColumn(name), as: type, converter)
 	}
 }
 
@@ -139,7 +139,7 @@ extension Statement {
 	///
 	/// - returns: The column's values as an array of `type`.
 	public func values<T>(forColumn name: String, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> [T] {
-		try values(forColumn: try index(ofColumn: name), as: type, converter)
+		try values(forColumn: try indexOfColumn(name), as: type, converter)
 	}
 }
 
