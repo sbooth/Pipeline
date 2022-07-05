@@ -189,9 +189,6 @@ extension ColumnValueConverter where T == String {
 	public static let string = ColumnValueConverter {
 		try $0.text(at: $1)
 	}
-
-	/// Returns the text value of a column.
-	public static let text = Self.string
 }
 
 extension ColumnValueConverter where T == Data {
@@ -199,9 +196,6 @@ extension ColumnValueConverter where T == Data {
 	public static let data = ColumnValueConverter {
 		try $0.blob(at: $1)
 	}
-
-	/// Returns the BLOB value of a column.
-	public static let blob = Self.data
 }
 
 extension ColumnValueConverter where T == Int {
@@ -266,9 +260,6 @@ extension ColumnValueConverter where T == Int64 {
 	public static let int64 = ColumnValueConverter {
 		try $0.integer(at: $1)
 	}
-
-	/// Returns the signed integer value of a column.
-	public static let integer = Self.int64
 }
 
 extension ColumnValueConverter where T == UInt64 {
@@ -291,9 +282,6 @@ extension ColumnValueConverter where T == Double {
 	public static let double = ColumnValueConverter {
 		try $0.real(at: $1)
 	}
-
-	/// Returns the floating-point value of a column.
-	public static let real = Self.double
 }
 
 extension ColumnValueConverter where T == Bool {

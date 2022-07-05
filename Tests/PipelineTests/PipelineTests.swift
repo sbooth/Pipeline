@@ -109,9 +109,10 @@ final class PipelineTests: XCTestCase {
 
 		try! db.execute(sql: "create table t1(a,b,c,d);")
 
-		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(1,2,.int(3),.int(4)).execute()
-		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(.text("a"),.text("b"),.text("c"),.text("d")).execute()
-		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(.text("a"),2,.text("c"),.int(4)).execute()
+		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(1,2,3,.int(4)).execute()
+		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(values: "a","b","c",.text("d")).execute()
+		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind("a",2,"c",4).execute()
+		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(values: "a",2,"c",4).execute()
 
 		do {
 			let s = try! db.prepare(sql: "select * from t1 limit 1 offset 0;")
@@ -365,17 +366,17 @@ final class PipelineTests: XCTestCase {
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind(["quick brown"]).execute()
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind("fox").execute()
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.string("jumps over")]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("the lazy dog")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(values: [.text("the lazy dog")]).execute()
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind(["🦊🐶"]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(values: .text("")).execute()
 		try! db.prepare(sql: "insert into t1(a) values (NULL);").execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("quick")]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("brown fox")]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("jumps over the")]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("lazy dog")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(.string("quick")).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.string("brown fox")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.string("jumps over the")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.string("lazy dog")]).execute()
 
 		let s = try! db.prepare(sql: "select count(*) from t1 where t1 match 'o*';")
-		let count = try! s.step()!.value(forColumn: 0, .integer)
+		let count = try! s.step()!.value(forColumn: 0, .int)
 		XCTAssertEqual(count, 2)
 
 		let statement = try! db.prepare(sql: "select * from t1 where t1 match 'o*';")
@@ -391,7 +392,7 @@ final class PipelineTests: XCTestCase {
 		try! db.execute(sql: "create table t1(a, b);")
 
 		for i in 0..<10 {
-			try! db.prepare(sql: "insert into t1(a, b) values (?, ?);").bind([.int(i), .null]).execute()
+			try! db.prepare(sql: "insert into t1(a, b) values (?, ?);").bind([.int(i), .nil]).execute()
 		}
 
 		let statement = try! db.prepare(sql: "select * from t1 where a = ?")
@@ -412,7 +413,7 @@ final class PipelineTests: XCTestCase {
 		try! db.execute(sql: "create table t1(a, b);")
 
 		for i in 0..<10 {
-			try! db.execute(sql: "insert into t1(a, b) values (:b, :a);", parameters: [":a": .null, ":b": .int(i)])
+			try! db.execute(sql: "insert into t1(a, b) values (:b, :a);", parameters: [":a": .nil, ":b": .int(i)])
 		}
 
 		let statement = try! db.prepare(sql: "select * from t1 where a = :a")

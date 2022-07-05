@@ -167,9 +167,6 @@ extension ParameterValue {
 			try statement.bind(text: value, toParameter: index)
 		}
 	}
-
-	/// Binds a text value.
-	public static let text = string
 }
 
 extension ParameterValue {
@@ -179,14 +176,11 @@ extension ParameterValue {
 			try statement.bind(blob: value, toParameter: index)
 		}
 	}
-
-	/// Binds a BLOB value.
-	public static let blob = data
 }
 
 extension ParameterValue {
 	/// Binds a SQL NULL value.
-	public static let null = ParameterValue { statement, index in
+	public static let `nil` = ParameterValue { statement, index in
 		try statement.bindNull(toParameter: index)
 	}
 }
@@ -256,9 +250,6 @@ extension ParameterValue {
 		}
 	}
 
-	/// Binds a signed integer value.
-	public static let integer = int64
-
 	/// Binds a `UInt64` as a signed integer.
 	/// - note: The value is bound as an `Int64` bit pattern.
 	public static func uint64(_ value: UInt64) -> ParameterValue {
@@ -282,9 +273,6 @@ extension ParameterValue {
 			try statement.bind(real: value, toParameter: index)
 		}
 	}
-
-	/// Binds a floating-point value.
-	public static let real = double
 }
 
 extension ParameterValue {
@@ -367,28 +355,28 @@ extension ParameterValue {
 extension ParameterValue: ExpressibleByNilLiteral {
 	/// Binds a SQL NULL value.
 	public init(nilLiteral: ()) {
-		self = .null
+		self = .nil
 	}
 }
 
 extension ParameterValue: ExpressibleByIntegerLiteral {
 	/// Binds a signed integer value.
 	public init(integerLiteral value: IntegerLiteralType) {
-		self = .integer(Int64(value))
+		self = .int64(Int64(value))
 	}
 }
 
 extension ParameterValue: ExpressibleByFloatLiteral {
 	/// Binds a floating-point value.
 	public init(floatLiteral value: FloatLiteralType) {
-		self = .real(value)
+		self = .double(value)
 	}
 }
 
 extension ParameterValue: ExpressibleByStringLiteral {
 	/// Binds a text value.
 	public init(stringLiteral value: StringLiteralType) {
-		self = .text(value)
+		self = .string(value)
 	}
 }
 
@@ -396,7 +384,7 @@ extension ParameterValue: ExpressibleByBooleanLiteral {
 	/// Binds a boolean value as a signed integer.
 	/// - note: True is bound as 1 while false is bound as 0.
 	public init(booleanLiteral value: BooleanLiteralType) {
-		self = .integer(value ? 1 : 0)
+		self = .int64(value ? 1 : 0)
 	}
 }
 
