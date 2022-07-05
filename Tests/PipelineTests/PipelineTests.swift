@@ -45,7 +45,7 @@ final class PipelineTests: XCTestCase {
 			XCTAssertNoThrow(try db.execute(sql: "insert into t1 default values;"))
 		}
 
-		let count = try! db.prepare(sql: "select count(*) from t1;").step()!.value(forColumn: 0, .int)
+		let count = try! db.prepare(sql: "select count(*) from t1;").step()!.value(at: 0, .int)
 		XCTAssertEqual(count, rowCount)
 	}
 
@@ -96,7 +96,7 @@ final class PipelineTests: XCTestCase {
 
 		for row in s {
 			for _ in row {
-				XCTAssert(try! row.value(forColumn: 0, .int) == count)
+				XCTAssert(try! row.value(at: 0, .int) == count)
 			}
 			count += 1
 		}
@@ -109,9 +109,10 @@ final class PipelineTests: XCTestCase {
 
 		try! db.execute(sql: "create table t1(a,b,c,d);")
 
-		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(1,2,.int(3),.int(4)).execute()
-		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(.text("a"),.text("b"),.text("c"),.text("d")).execute()
-		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(.text("a"),2,.text("c"),.int(4)).execute()
+		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(1,2,3,.int(4)).execute()
+		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(values: "a","b","c",.text("d")).execute()
+		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind("a",2,"c",4).execute()
+		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(values: "a",2,"c",4).execute()
 
 		do {
 			let s = try! db.prepare(sql: "select * from t1 limit 1 offset 0;")
@@ -146,7 +147,7 @@ final class PipelineTests: XCTestCase {
 
 		try! db.execute(sql: "insert into t1(a) values (?);", parameters: .json(a))
 
-		let b = try! db.prepare(sql: "select * from t1 limit 1;").step()!.value(forColumn: 0, .json(TestStruct.self))
+		let b = try! db.prepare(sql: "select * from t1 limit 1;").step()!.value(at: 0, .json(TestStruct.self))
 
 		XCTAssertEqual(a.a, b.a)
 		XCTAssertEqual(a.b, b.b)
@@ -171,7 +172,7 @@ final class PipelineTests: XCTestCase {
 		var str = ""
 		let s = try! db.prepare(sql: "select * from t1 order by a collate reversed;")
 		try! s.results { row in
-			let c = try row.value(forColumn: 0, .string)
+			let c = try row.value(at: 0, .string)
 			str.append(c)
 		}
 
@@ -210,7 +211,7 @@ final class PipelineTests: XCTestCase {
 		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: [.text("test")])
 
 		let s = try! db.prepare(sql: "select rot13(a) from t1;")
-		let results = s.map { try! $0.value(forColumn: 0, .string) }
+		let results = s.map { try! $0.value(at: 0, .string) }
 
 		XCTAssertEqual(results, ["guvf", "vf", "bayl", "n", "grfg"])
 
@@ -250,10 +251,10 @@ final class PipelineTests: XCTestCase {
 			try! db.execute(sql: "insert into t1(a) values (?);", parameters: [.int(i)])
 		}
 
-		let s = try! db.prepare(sql: "select integer_sum(a) from t1;").step()!.value(forColumn: 0, .int64)
+		let s = try! db.prepare(sql: "select integer_sum(a) from t1;").step()!.value(at: 0, .int64)
 		XCTAssertEqual(s, 45)
 
-		let ss = try! db.prepare(sql: "select integer_sum(a) from t1;").step()!.value(forColumn: 0, .int64)
+		let ss = try! db.prepare(sql: "select integer_sum(a) from t1;").step()!.value(at: 0, .int64)
 		XCTAssertEqual(ss, 45)
 
 		try! db.removeFunction("integer_sum", arity: 1)
@@ -307,7 +308,7 @@ final class PipelineTests: XCTestCase {
 		}
 
 		let s = try! db.prepare(sql: "select integer_sum(a) OVER (ORDER BY a ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) from t1;")
-		let results = s.map { try! $0.value(forColumn: 0, .int64) }
+		let results = s.map { try! $0.value(at: 0, .int64) }
 
 		XCTAssertEqual(results, [1, 3, 6, 9, 12, 15, 18, 21, 24, 17])
 
@@ -365,22 +366,22 @@ final class PipelineTests: XCTestCase {
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind(["quick brown"]).execute()
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind("fox").execute()
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.string("jumps over")]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("the lazy dog")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(values: [.text("the lazy dog")]).execute()
 		try! db.prepare(sql: "insert into t1(a) values (?);").bind(["🦊🐶"]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(values: .text("")).execute()
 		try! db.prepare(sql: "insert into t1(a) values (NULL);").execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("quick")]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("brown fox")]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("jumps over the")]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.text("lazy dog")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind(.string("quick")).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.string("brown fox")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.string("jumps over the")]).execute()
+		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.string("lazy dog")]).execute()
 
 		let s = try! db.prepare(sql: "select count(*) from t1 where t1 match 'o*';")
-		let count = try! s.step()!.value(forColumn: 0, .integer)
+		let count = try! s.step()!.value(at: 0, .int)
 		XCTAssertEqual(count, 2)
 
 		let statement = try! db.prepare(sql: "select * from t1 where t1 match 'o*';")
 		try! statement.results { row in
-			let s = try row.value(forColumn: 0, .string)
+			let s = try row.value(at: 0, .string)
 			XCTAssert(s.starts(with: "jumps over"))
 		}
 	}
@@ -398,8 +399,8 @@ final class PipelineTests: XCTestCase {
 		try! statement.bind(value: 5, toParameter: 1)
 
 		try! statement.results { row in
-			let x = try row.value(forColumn: 0, .int)
-			let y = try row.valueOrNil(forColumn: "b", .int)
+			let x = try row.value(at: 0, .int)
+			let y = try row.valueOrNil(named: "b", .int)
 
 			XCTAssertEqual(x, 5)
 			XCTAssertEqual(y, nil)
@@ -419,8 +420,8 @@ final class PipelineTests: XCTestCase {
 		try! statement.bind(value: 5, toParameter: ":a")
 
 		try! statement.results { row in
-			let x = try row.value(forColumn: 0, .int)
-			let y = try row.valueOrNil(forColumn: 1, .int)
+			let x = try row.value(at: 0, .int)
+			let y = try row.valueOrNil(at: 1, .int)
 
 			XCTAssertEqual(x, 5)
 			XCTAssertEqual(y, nil)
@@ -437,7 +438,7 @@ final class PipelineTests: XCTestCase {
 		}
 
 		let statement = try! db.prepare(sql: "select * from t1")
-		let cols = try! statement.values(forColumns: [0,2], .int)
+		let cols = try! statement.columns([0,2], .int)
 		XCTAssertEqual(cols[0], [0,1,2])
 		XCTAssertEqual(cols[1], [0,5,10])
 	}
@@ -452,7 +453,7 @@ final class PipelineTests: XCTestCase {
 		}
 
 		let statement = try! db.prepare(sql: "select v1 from t1;")
-		let uuids = try! statement.values(forColumn: 0, .uuidWithString)
+		let uuids = try! statement.column(0, .uuidWithString)
 
 		struct UUIDHolder: RowMapping {
 			let u: UUID

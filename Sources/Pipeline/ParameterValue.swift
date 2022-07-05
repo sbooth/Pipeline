@@ -7,7 +7,7 @@
 import Foundation
 import CSQLite
 
-/// A struct responsible for binding a value to an SQL parameter.
+/// A struct responsible for binding a captured value to an SQL parameter.
 ///
 /// The implementation normally uses either `bind(integer:toParameter:)`, `bind(real:toParameter:)`,
 /// `bind(text:toParameter:)`, or`bind(blob:toParameter:)` but lower-level SQLite
@@ -24,7 +24,7 @@ import CSQLite
 /// 	}
 ///  ```
 public struct ParameterValue {
-	/// Binds a value to the SQL parameter at `index` in `statement`.
+	/// Binds a captured value to the SQL parameter at `index` in `statement`.
 	///
 	/// - parameter statement: A `Statement` object to receive the desired parameter.
 	/// - parameter index: The index of the SQL parameter to bind.
@@ -167,9 +167,6 @@ extension ParameterValue {
 			try statement.bind(text: value, toParameter: index)
 		}
 	}
-
-	/// Binds a text value.
-	public static let text = string
 }
 
 extension ParameterValue {
@@ -179,9 +176,6 @@ extension ParameterValue {
 			try statement.bind(blob: value, toParameter: index)
 		}
 	}
-
-	/// Binds a BLOB value.
-	public static let blob = data
 }
 
 extension ParameterValue {
@@ -256,9 +250,6 @@ extension ParameterValue {
 		}
 	}
 
-	/// Binds a signed integer value.
-	public static let integer = int64
-
 	/// Binds a `UInt64` as a signed integer.
 	/// - note: The value is bound as an `Int64` bit pattern.
 	public static func uint64(_ value: UInt64) -> ParameterValue {
@@ -282,9 +273,6 @@ extension ParameterValue {
 			try statement.bind(real: value, toParameter: index)
 		}
 	}
-
-	/// Binds a floating-point value.
-	public static let real = double
 }
 
 extension ParameterValue {
@@ -374,21 +362,21 @@ extension ParameterValue: ExpressibleByNilLiteral {
 extension ParameterValue: ExpressibleByIntegerLiteral {
 	/// Binds a signed integer value.
 	public init(integerLiteral value: IntegerLiteralType) {
-		self = .integer(Int64(value))
+		self = .int64(Int64(value))
 	}
 }
 
 extension ParameterValue: ExpressibleByFloatLiteral {
 	/// Binds a floating-point value.
 	public init(floatLiteral value: FloatLiteralType) {
-		self = .real(value)
+		self = .double(value)
 	}
 }
 
 extension ParameterValue: ExpressibleByStringLiteral {
 	/// Binds a text value.
 	public init(stringLiteral value: StringLiteralType) {
-		self = .text(value)
+		self = .string(value)
 	}
 }
 
@@ -396,7 +384,7 @@ extension ParameterValue: ExpressibleByBooleanLiteral {
 	/// Binds a boolean value as a signed integer.
 	/// - note: True is bound as 1 while false is bound as 0.
 	public init(booleanLiteral value: BooleanLiteralType) {
-		self = .integer(value ? 1 : 0)
+		self = .int64(value ? 1 : 0)
 	}
 }
 
