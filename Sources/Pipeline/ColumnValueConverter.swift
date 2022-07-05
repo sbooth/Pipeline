@@ -50,7 +50,7 @@ extension Row {
 	/// - throws: An error if `index` is out of bounds, the column contains a null value, or type conversion could not be accomplished.
 	///
 	/// - returns: The column's value as `type`.
-	public func value<T>(forColumn index: Int, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> T {
+	public func value<T>(at index: Int, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> T {
 		guard try self.type(ofColumn: index) != .null else {
 			throw DatabaseError(message: "SQL NULL encountered for column \(index)")
 		}
@@ -69,7 +69,7 @@ extension Row {
 	/// - throws: An error if `index` is out of bounds or type conversion could not be accomplished.
 	///
 	/// - returns: The column's value as `type` or `nil` if null.
-	public func valueOrNil<T>(forColumn index: Int, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> T? {
+	public func valueOrNil<T>(at index: Int, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> T? {
 		if try self.type(ofColumn: index) == .null {
 			return nil
 		}
@@ -89,8 +89,8 @@ extension Row {
 	/// - throws: An error if the column doesn't exist, the column contains a null value, or type conversion could not be accomplished.
 	///
 	/// - returns: The column's value as `type`.
-	public func value<T>(forColumn name: String, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> T {
-		try value(forColumn: statement.indexOfColumn(name), as: type, converter)
+	public func value<T>(named name: String, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> T {
+		try value(at: statement.indexOfColumn(name), as: type, converter)
 	}
 
 	/// Returns the value of the column with name `name` converted to `type`.
@@ -104,8 +104,8 @@ extension Row {
 	/// - throws: An error if the column doesn't exist or type conversion could not be accomplished.
 	///
 	/// - returns: The column's value as `type` or `nil` if null.
-	public func valueOrNil<T>(forColumn name: String, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> T? {
-		try valueOrNil(forColumn: statement.indexOfColumn(name), as: type, converter)
+	public func valueOrNil<T>(named name: String, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> T? {
+		try valueOrNil(at: statement.indexOfColumn(name), as: type, converter)
 	}
 }
 
@@ -121,10 +121,10 @@ extension Statement {
 	/// - throws: An error if `index` is out of bounds, the column contains a null value, or type conversion could not be accomplished.
 	///
 	/// - returns: The column's values as an array of `type`.
-	public func values<T>(forColumn index: Int, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> [T] {
+	public func column<T>(_ index: Int, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> [T] {
 		var values = [T]()
 		try results { row in
-			values.append(try row.value(forColumn: index, as: type, converter))
+			values.append(try row.value(at: index, as: type, converter))
 		}
 		return values
 	}
@@ -138,8 +138,8 @@ extension Statement {
 	/// - throws: An error if the column doesn't exist, the column contains a null value, or type conversion could not be accomplished.
 	///
 	/// - returns: The column's values as an array of `type`.
-	public func values<T>(forColumn name: String, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> [T] {
-		try values(forColumn: try indexOfColumn(name), as: type, converter)
+	public func column<T>(_ name: String, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> [T] {
+		try column(try indexOfColumn(name), as: type, converter)
 	}
 }
 
@@ -158,10 +158,10 @@ extension Statement {
 	/// - throws: An error if any element of `indexes` is out of bounds, the column contains a null value, or type conversion could not be accomplished.
 	///
 	/// - returns: The column's values as an array of arrays of `type`.
-	public func values<S: Collection, T>(forColumns indexes: S, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> [[T]] where S.Element == Int {
+	public func columns<S: Collection, T>(_ indexes: S, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> [[T]] where S.Element == Int {
 		var values = [[T]](repeating: [], count: indexes.count)
 		for (n, x) in indexes.enumerated() {
-			values[n] = try self.values(forColumn: x, as: type, converter)
+			values[n] = try column(x, as: type, converter)
 		}
 		return values
 	}
@@ -175,10 +175,10 @@ extension Statement {
 	/// - throws: An error if any element of `names` doesn't exist, the column contains a null value, or type conversion could not be accomplished.
 	///
 	/// - returns: The column's values as a dictionary of arrays of `type` keyed by column name.
-	public func values<S: Collection, T>(forColumns names: S, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> [String: [T]] where S.Element == String {
+	public func columns<S: Collection, T>(_ names: S, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> [String: [T]] where S.Element == String {
 		var values: [String: [T]] = [:]
 		for name in names {
-			values[name] = try self.values(forColumn: name, as: type, converter)
+			values[name] = try column(name, as: type, converter)
 		}
 		return values
 	}
