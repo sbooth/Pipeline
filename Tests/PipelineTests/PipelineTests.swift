@@ -392,7 +392,7 @@ final class PipelineTests: XCTestCase {
 		try! db.execute(sql: "create table t1(a, b);")
 
 		for i in 0..<10 {
-			try! db.prepare(sql: "insert into t1(a, b) values (?, ?);").bind([.int(i), .nil]).execute()
+			try! db.prepare(sql: "insert into t1(a, b) values (?, ?);").bind([.int(i), .null]).execute()
 		}
 
 		let statement = try! db.prepare(sql: "select * from t1 where a = ?")
@@ -413,7 +413,7 @@ final class PipelineTests: XCTestCase {
 		try! db.execute(sql: "create table t1(a, b);")
 
 		for i in 0..<10 {
-			try! db.execute(sql: "insert into t1(a, b) values (:b, :a);", parameters: [":a": .nil, ":b": .int(i)])
+			try! db.execute(sql: "insert into t1(a, b) values (:b, :a);", parameters: [":a": .null, ":b": .int(i)])
 		}
 
 		let statement = try! db.prepare(sql: "select * from t1 where a = :a")

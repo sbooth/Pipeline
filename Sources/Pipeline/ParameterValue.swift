@@ -180,7 +180,7 @@ extension ParameterValue {
 
 extension ParameterValue {
 	/// Binds a SQL NULL value.
-	public static let `nil` = ParameterValue { statement, index in
+	public static let null = ParameterValue { statement, index in
 		try statement.bindNull(toParameter: index)
 	}
 }
@@ -355,7 +355,7 @@ extension ParameterValue {
 extension ParameterValue: ExpressibleByNilLiteral {
 	/// Binds a SQL NULL value.
 	public init(nilLiteral: ()) {
-		self = .nil
+		self = .null
 	}
 }
 
