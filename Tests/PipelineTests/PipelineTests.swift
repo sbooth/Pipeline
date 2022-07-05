@@ -11,6 +11,7 @@ final class PipelineTests: XCTestCase {
 		// It's necessary to call sqlite3_initialize() since SQLITE_OMIT_AUTOINIT is defined
 		XCTAssert(sqlite3_initialize() == SQLITE_OK)
 		XCTAssert(csqlite_sqlite3_auto_extension_uuid() == SQLITE_OK)
+		XCTAssert(csqlite_sqlite3_auto_extension_carray() == SQLITE_OK)
 	}
 
 	override class func tearDown() {
@@ -441,6 +442,33 @@ final class PipelineTests: XCTestCase {
 		let cols = try! statement.columns([0,2], .int)
 		XCTAssertEqual(cols[0], [0,1,2])
 		XCTAssertEqual(cols[1], [0,5,10])
+	}
+
+	func testUUIDExtension() {
+		let db = try! Database()
+		let statement = try! db.prepare(sql: "select uuid();")
+		let s: String = try! statement.step()!.text(at: 0)
+		let u = UUID(uuidString: s)
+		XCTAssertEqual(u?.uuidString.lowercased(), s.lowercased())
+	}
+
+	func testCArrayExtension() {
+		let db = try! Database()
+
+		try! db.execute(sql: "create table animals(kind);")
+
+		try! db.prepare(sql: "insert into animals(kind) values ('dog');").execute()
+		try! db.prepare(sql: "insert into animals(kind) values ('cat');").execute()
+		try! db.prepare(sql: "insert into animals(kind) values ('bird');").execute()
+		try! db.prepare(sql: "insert into animals(kind) values ('hedgehog');").execute()
+
+		let pets = [ "dog", "dragon", "hedgehog" ]
+		let statement = try! db.prepare(sql: "SELECT * FROM animals WHERE kind IN carray(?1);")
+		try! statement.bind(.carray(pets), toParameter: 1)
+
+		let results: [String] = statement.map({try! $0.text(at: 0)})
+
+		XCTAssertEqual([ "dog", "hedgehog" ], results)
 	}
 
 #if canImport(Combine)
