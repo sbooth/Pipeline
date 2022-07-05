@@ -16,9 +16,9 @@ import CSQLite
 /// For example, an implementation for binding a `UUID` as text is:
 ///
 /// ```swift
-/// extension ParameterValue {
-/// 	public static func uuidString(_ value: UUID) -> ParameterValue {
-///			ParameterValue { statement, index in
+/// extension SQLParameter {
+/// 	public static func uuidString(_ value: UUID) -> SQLParameter {
+///			SQLParameter { statement, index in
 ///				try statement.bind(text: value.uuidString.lowercased(), toParameter: index)
 /// 		}
 /// 	}
