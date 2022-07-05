@@ -38,7 +38,7 @@ class PipelinePerformanceTests: XCTestCase {
 			let s = try! db.prepare(sql: "select count(*) from t1;")
 			var count = 0
 			try! s.results { row in
-				count = try row.value(forColumn: 0, .int)
+				count = try row.value(at: 0, .int)
 			}
 
 			XCTAssertEqual(count, rowCount)
@@ -69,7 +69,7 @@ class PipelinePerformanceTests: XCTestCase {
 			stopMeasuring()
 
 			s = try! db.prepare(sql: "select count(*) from t1;")
-			let count = try! s.step()!.value(forColumn: 0, .int)
+			let count = try! s.step()!.value(at: 0, .int)
 
 			XCTAssertEqual(count, rowCount)
 		}
@@ -100,7 +100,7 @@ class PipelinePerformanceTests: XCTestCase {
 			stopMeasuring()
 
 			s = try! db.prepare(sql: "select count(*) from t1;")
-			let count = try! s.step()!.value(forColumn: 0, .int)
+			let count = try! s.step()!.value(at: 0, .int)
 
 			XCTAssertEqual(count, rowCount)
 		}
@@ -131,7 +131,7 @@ class PipelinePerformanceTests: XCTestCase {
 			stopMeasuring()
 
 			s = try! db.prepare(sql: "select count(*) from t1;")
-			let count = try! s.step()!.value(forColumn: 0, .int)
+			let count = try! s.step()!.value(at: 0, .int)
 
 			XCTAssertEqual(count, rowCount)
 		}
@@ -156,8 +156,8 @@ class PipelinePerformanceTests: XCTestCase {
 			startMeasuring()
 
 			try! s.results { row in
-				_ = try row.value(forColumn: 0, .int)
-				_ = try row.value(forColumn: 1, .int)
+				_ = try row.value(at: 0, .int)
+				_ = try row.value(at: 1, .int)
 			}
 
 			stopMeasuring()
