@@ -29,5 +29,8 @@ let package = Package(
 		.testTarget(
 			name: "PipelineTests",
 			dependencies: ["Pipeline"]),
+		.testTarget(
+			name: "PipelinePerformanceTests",
+			dependencies: ["Pipeline"]),
 	]
 )
