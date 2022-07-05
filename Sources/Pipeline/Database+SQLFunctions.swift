@@ -328,7 +328,7 @@ extension Database {
 ///
 /// - parameter sqlite_context: An `sqlite3_context *` object.
 /// - parameter value: The value to pass.
-private func set_sqlite3_result(_ sqlite_context: OpaquePointer!, value: DatabaseValue) {
+func set_sqlite3_result(_ sqlite_context: OpaquePointer!, value: DatabaseValue) {
 	switch value {
 	case .integer(let i):
 		sqlite3_result_int64(sqlite_context, i)
