@@ -7,7 +7,6 @@ class PipelinePerformanceTests: XCTestCase {
 		super.setUp()
 		// It's necessary to call sqlite3_initialize() since SQLITE_OMIT_AUTOINIT is defined
 		XCTAssert(sqlite3_initialize() == SQLITE_OK)
-		XCTAssert(csqlite_sqlite3_auto_extension_uuid() == SQLITE_OK)
 	}
 
 	override func tearDown() {
