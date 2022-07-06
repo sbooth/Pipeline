@@ -16,14 +16,14 @@ import CSQLite
 /// For example, an implementation for binding a `UUID` as text is:
 ///
 /// ```swift
-/// extension ParameterValue {
-/// 	public static func uuidString(_ value: UUID) -> ParameterValue {
-///			ParameterValue { statement, index in
+/// extension SQLParameter {
+/// 	public static func uuidString(_ value: UUID) -> SQLParameter {
+///			SQLParameter { statement, index in
 ///				try statement.bind(text: value.uuidString.lowercased(), toParameter: index)
 /// 		}
 /// 	}
 ///  ```
-public struct ParameterValue {
+public struct SQLParameter {
 	/// Binds a captured value to the SQL parameter at `index` in `statement`.
 	///
 	/// - parameter statement: A `Statement` object to receive the desired parameter.
@@ -42,7 +42,7 @@ extension Statement {
 	/// - parameter index: The index of the SQL parameter to bind.
 	///
 	/// - throws: An error if `value` couldn't be bound.
-	public func bind(_ value: ParameterValue, toParameter index: Int) throws {
+	public func bind(_ value: SQLParameter, toParameter index: Int) throws {
 		try value.bind(self, index)
 	}
 
@@ -52,7 +52,7 @@ extension Statement {
 	/// - parameter name: The name of the SQL parameter to bind.
 	///
 	/// - throws: An error if the SQL parameter `name` doesn't exist or `value` couldn't be bound.
-	public func bind(_ value: ParameterValue, toParameter name: String) throws {
+	public func bind(_ value: SQLParameter, toParameter name: String) throws {
 		try value.bind(self, indexOfParameter(name))
 	}
 }
@@ -67,7 +67,7 @@ extension Statement {
 	/// - throws: An error if one of `values` couldn't be bound.
 	///
 	/// - returns: `self`
-	@discardableResult public func bind<C: Collection>(_ values: C) throws -> Statement where C.Element == ParameterValue {
+	@discardableResult public func bind<C: Collection>(_ values: C) throws -> Statement where C.Element == SQLParameter {
 		var index = 1
 		for value in values {
 			try value.bind(self, index)
@@ -85,7 +85,7 @@ extension Statement {
 	/// - throws: An error if the SQL parameter *name* doesn't exist or *value* couldn't be bound.
 	///
 	/// - returns: `self`
-	@discardableResult public func bind<C: Collection>(_ parameters: C) throws -> Statement where C.Element == (key: String, value: ParameterValue) {
+	@discardableResult public func bind<C: Collection>(_ parameters: C) throws -> Statement where C.Element == (key: String, value: SQLParameter) {
 		for (name, value) in parameters {
 			try value.bind(self, indexOfParameter(name))
 		}
@@ -103,7 +103,7 @@ extension Statement {
 	/// - throws: An error if one of `values` couldn't be bound.
 	///
 	/// - returns: `self`
-	@discardableResult public func bind(_ values: ParameterValue...) throws -> Statement {
+	@discardableResult public func bind(_ values: SQLParameter...) throws -> Statement {
 		try bind(values)
 	}
 }
@@ -117,7 +117,7 @@ extension Database {
 	/// - parameter row: A result row of returned data.
 	///
 	/// - throws: Any error thrown in `block` or an error if `sql` couldn't be compiled, `values` couldn't be bound, or the statement couldn't be executed.
-	public func execute<C: Collection>(sql: String, parameters: C, _ block: ((_ row: Row) throws -> ())? = nil) throws where C.Element == ParameterValue {
+	public func execute<C: Collection>(sql: String, parameters: C, _ block: ((_ row: Row) throws -> ())? = nil) throws where C.Element == SQLParameter {
 		let statement = try prepare(sql: sql)
 		try statement.bind(parameters)
 		if let block = block {
@@ -135,7 +135,7 @@ extension Database {
 	/// - parameter row: A result row of returned data.
 	///
 	/// - throws: Any error thrown in `block` or an error if `sql` couldn't be compiled, `parameters` couldn't be bound, or the statement couldn't be executed.
-	public func execute<C: Collection>(sql: String, parameters: C, _ block: ((_ row: Row) throws -> ())? = nil) throws where C.Element == (key: String, value: ParameterValue) {
+	public func execute<C: Collection>(sql: String, parameters: C, _ block: ((_ row: Row) throws -> ())? = nil) throws where C.Element == (key: String, value: SQLParameter) {
 		let statement = try prepare(sql: sql)
 		try statement.bind(parameters)
 		if let block = block {
@@ -155,149 +155,149 @@ extension Database {
 	/// - parameter row: A result row of returned data.
 	///
 	/// - throws: Any error thrown in `block` or an error if `sql` couldn't be compiled, `values` couldn't be bound, or the statement couldn't be executed.
-	public func execute(sql: String, parameters: ParameterValue..., block: ((_ row: Row) throws -> ())? = nil) throws {
+	public func execute(sql: String, parameters: SQLParameter..., block: ((_ row: Row) throws -> ())? = nil) throws {
 		try execute(sql: sql, parameters: parameters, block)
 	}
 }
 
-extension ParameterValue {
+extension SQLParameter {
 	/// Binds a text value.
-	public static func string(_ value: String) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func string(_ value: String) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(text: value, toParameter: index)
 		}
 	}
 }
 
-extension ParameterValue {
+extension SQLParameter {
 	/// Binds a BLOB value.
-	public static func data(_ value: Data) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func data(_ value: Data) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(blob: value, toParameter: index)
 		}
 	}
 }
 
-extension ParameterValue {
+extension SQLParameter {
 	/// Binds a SQL NULL value.
-	public static let null = ParameterValue { statement, index in
+	public static let null = SQLParameter { statement, index in
 		try statement.bindNull(toParameter: index)
 	}
 }
 
-extension ParameterValue {
+extension SQLParameter {
 	/// Binds an `Int` as a signed integer.
-	public static func int(_ value: Int) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func int(_ value: Int) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(integer: Int64(value), toParameter: index)
 		}
 	}
 
 	/// Binds a `UInt` as a signed integer.
 	/// - note: The value is bound as an `Int` bit pattern.
-	public static func uint(_ value: UInt) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func uint(_ value: UInt) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(integer: Int64(Int(bitPattern: value)), toParameter: index)
 		}
 	}
 
 	/// Binds an `Int8` as a signed integer.
-	public static func int8(_ value: Int8) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func int8(_ value: Int8) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(integer: Int64(value), toParameter: index)
 		}
 	}
 
 	/// Binds a `UInt8` as a signed integer.
-	public static func uint8(_ value: UInt8) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func uint8(_ value: UInt8) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(integer: Int64(value), toParameter: index)
 		}
 	}
 
 	/// Binds an `Int16` as a signed integer.
-	public static func int16(_ value: Int16) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func int16(_ value: Int16) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(integer: Int64(value), toParameter: index)
 		}
 	}
 
 	/// Binds a `UInt16` as a signed integer.
-	public static func uint16(_ value: UInt16) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func uint16(_ value: UInt16) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(integer: Int64(value), toParameter: index)
 		}
 	}
 
 	/// Binds an `Int32` as a signed integer.
-	public static func int32(_ value: Int32) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func int32(_ value: Int32) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(integer: Int64(value), toParameter: index)
 		}
 	}
 
 	/// Binds a `UInt32` as a signed integer.
-	public static func uint32(_ value: UInt32) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func uint32(_ value: UInt32) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(integer: Int64(value), toParameter: index)
 		}
 	}
 
 	/// Binds an `Int64` as a signed integer.
-	public static func int64(_ value: Int64) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func int64(_ value: Int64) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(integer: value, toParameter: index)
 		}
 	}
 
 	/// Binds a `UInt64` as a signed integer.
 	/// - note: The value is bound as an `Int64` bit pattern.
-	public static func uint64(_ value: UInt64) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func uint64(_ value: UInt64) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(integer: Int64(bitPattern: value), toParameter: index)
 		}
 	}
 }
 
-extension ParameterValue {
-	/// Binds an `Float` as a floating-point value.
-	public static func float(_ value: Float) -> ParameterValue {
-		ParameterValue { statement, index in
+extension SQLParameter {
+	/// Binds a `Float` as a floating-point value.
+	public static func float(_ value: Float) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(real: Double(value), toParameter: index)
 		}
 	}
 
-	/// Binds an `Double` as a floating-point value.
-	public static func double(_ value: Double) -> ParameterValue {
-		ParameterValue { statement, index in
+	/// Binds a `Double` as a floating-point value.
+	public static func double(_ value: Double) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(real: value, toParameter: index)
 		}
 	}
 }
 
-extension ParameterValue {
+extension SQLParameter {
 	/// Binds a `Bool` as a signed integer.
 	/// - note: True is bound as 1 while false is bound as 0.
-	public static func bool(_ value: Bool) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func bool(_ value: Bool) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(integer: value ? 1 : 0, toParameter: index)
 		}
 	}
 }
 
-extension ParameterValue {
+extension SQLParameter {
 	/// Binds a `UUID` as text.
 	/// - note: The value is bound as a lower case UUID string.
-	public static func uuidString(_ value: UUID) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func uuidString(_ value: UUID) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(text: value.uuidString.lowercased(), toParameter: index)
 		}
 	}
 
 	/// Binds a `UUID` as a BLOB.
 	/// - note: The value is bound as a 16-byte `uuid_t`.
-	public static func uuidBytes(_ value: UUID) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func uuidBytes(_ value: UUID) -> SQLParameter {
+		SQLParameter { statement, index in
 			let b = withUnsafeBytes(of: value.uuid) {
 				Data($0)
 			}
@@ -306,81 +306,81 @@ extension ParameterValue {
 	}
 }
 
-extension ParameterValue {
+extension SQLParameter {
 	/// Binds a `URL` as text.
-	public static func urlString(_ value: URL) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func urlString(_ value: URL) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(text: value.absoluteString, toParameter: index)
 		}
 	}
 }
 
-extension ParameterValue {
+extension SQLParameter {
 	/// Binds a `Date` as a floating-point value.
 	/// - note: The value is bound as the number of seconds relative to 00:00:00 UTC on 1 January 1970.
-	public static func timeIntervalSince1970(_ value: Date) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func timeIntervalSince1970(_ value: Date) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(real: value.timeIntervalSince1970, toParameter: index)
 		}
 	}
 
 	/// Binds a `Date` as a floating-point value.
 	/// - note: The value is bound as the number of seconds relative to 00:00:00 UTC on 1 January 2001.
-	public static func timeIntervalSinceReferenceDate(_ value: Date) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func timeIntervalSinceReferenceDate(_ value: Date) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(real: value.timeIntervalSinceReferenceDate, toParameter: index)
 		}
 	}
 
 	/// Binds a `Date` as a text value.
 	/// - parameter formatter: The formatter to use to generate the ISO 8601 date representation.
-	public static func iso8601DateString(_ value: Date, formatter: ISO8601DateFormatter = ISO8601DateFormatter()) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func iso8601DateString(_ value: Date, formatter: ISO8601DateFormatter = ISO8601DateFormatter()) -> SQLParameter {
+		SQLParameter { statement, index in
 			try statement.bind(text	: formatter.string(from: value), toParameter: index)
 		}
 	}
 }
 
-extension ParameterValue {
+extension SQLParameter {
 	/// Binds an `Encodable` instance as encoded JSON data.
 	/// - parameter encoder: The encoder to use to generate the encoded JSON data.
-	public static func json<T>(_ value: T, encoder: JSONEncoder = JSONEncoder()) -> ParameterValue where T: Encodable {
-		return ParameterValue { statement, index in
+	public static func json<T>(_ value: T, encoder: JSONEncoder = JSONEncoder()) -> SQLParameter where T: Encodable {
+		return SQLParameter { statement, index in
 			let b = try encoder.encode(value)
 			try statement.bind(blob: b, toParameter: index)
 		}
 	}
 }
 
-extension ParameterValue: ExpressibleByNilLiteral {
+extension SQLParameter: ExpressibleByNilLiteral {
 	/// Binds a SQL NULL value.
 	public init(nilLiteral: ()) {
 		self = .null
 	}
 }
 
-extension ParameterValue: ExpressibleByIntegerLiteral {
+extension SQLParameter: ExpressibleByIntegerLiteral {
 	/// Binds a signed integer value.
 	public init(integerLiteral value: IntegerLiteralType) {
 		self = .int64(Int64(value))
 	}
 }
 
-extension ParameterValue: ExpressibleByFloatLiteral {
+extension SQLParameter: ExpressibleByFloatLiteral {
 	/// Binds a floating-point value.
 	public init(floatLiteral value: FloatLiteralType) {
 		self = .double(value)
 	}
 }
 
-extension ParameterValue: ExpressibleByStringLiteral {
+extension SQLParameter: ExpressibleByStringLiteral {
 	/// Binds a text value.
 	public init(stringLiteral value: StringLiteralType) {
 		self = .string(value)
 	}
 }
 
-extension ParameterValue: ExpressibleByBooleanLiteral {
+extension SQLParameter: ExpressibleByBooleanLiteral {
 	/// Binds a boolean value as a signed integer.
 	/// - note: True is bound as 1 while false is bound as 0.
 	public init(booleanLiteral value: BooleanLiteralType) {
@@ -388,10 +388,10 @@ extension ParameterValue: ExpressibleByBooleanLiteral {
 	}
 }
 
-extension ParameterValue {
+extension SQLParameter {
 	/// Binds an `NSNumber` as a signed integer or floating-point value.
-	public static func nsNumber(_ value: NSNumber) -> ParameterValue {
-		ParameterValue { statement, index in
+	public static func nsNumber(_ value: NSNumber) -> SQLParameter {
+		SQLParameter { statement, index in
 			switch CFNumberGetType(value as CFNumber) {
 			case .sInt8Type, .sInt16Type, .sInt32Type, .charType, .shortType, .intType,
 					.sInt64Type, .longType, .longLongType, .cfIndexType, .nsIntegerType:
@@ -405,10 +405,10 @@ extension ParameterValue {
 	}
 }
 
-extension ParameterValue {
+extension SQLParameter {
 	/// Binds an `NSCoding` instance as keyed archive data using `NSKeyedArchiver`.
-	public static func nsKeyedArchive<T>(_ value: T) -> ParameterValue where T: NSObject, T: NSCoding {
-		ParameterValue { statement, index in
+	public static func nsKeyedArchive<T>(_ value: T) -> SQLParameter where T: NSObject, T: NSCoding {
+		SQLParameter { statement, index in
 			let b = try NSKeyedArchiver.archivedData(withRootObject: value, requiringSecureCoding: true)
 			try statement.bind(blob: b, toParameter: index)
 		}

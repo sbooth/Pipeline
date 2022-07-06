@@ -792,7 +792,127 @@ final class PipelineTests: XCTestCase {
 		XCTAssertEqual(results.sorted(), [1,2,3,4,5])
 	}
 
+#if SQLITE_ENABLE_PREUPDATE_HOOK
+
+	func testPreUpdateHook() {
+		let db = try! Database()
+
+		try! db.execute(sql: "create table t1(a,b);")
+
+		try! db.execute(sql: "insert into t1(a,b) values (?,?);", parameterValues: ["alpha","start"])
+		try! db.execute(sql: "insert into t1(a,b) values (?,?);", parameterValues: ["beta",123])
+		try! db.execute(sql: "insert into t1(a,b) values (?,?);", parameterValues: ["gamma","gamma value"])
+		try! db.execute(sql: "insert into t1(a,b) values (?,?);", parameterValues: ["epsilon","epsilon value"])
+		try! db.execute(sql: "insert into t1(a,b) values (?,?);", parameterValues: ["phi",123.456])
+
+		db.setPreUpdateHook { change in
+			guard case .insert(_) = change.changeType else {
+				XCTFail("pre-update hook incorrect changeType")
+				return
+			}
+
+			let value = try! change.newValue(at: 0)
+			guard case .text(let s) = value, s == "skeleton" else {
+				XCTFail("pre-update hook insert fail")
+				return
+			}
+
+			do {
+				XCTAssertThrowsError(try change.oldValue(at: 0))
+			}
+			catch {}
+		}
+		try! db.execute(sql: "insert into t1(a) values (?);", parameterValues: ["skeleton"])
+
+		db.setPreUpdateHook { change in
+			guard case .update(_, _) = change.changeType else {
+				XCTFail("pre-update hook incorrect changeType")
+				return
+			}
+
+			var value = try! change.newValue(at: 1)
+			guard case .integer(let i) = value, i == 999 else {
+				XCTFail("pre-update hook update fail")
+				return
+			}
+
+			value = try! change.oldValue(at: 1)
+			guard case .integer(let i2) = value, i2 == 123 else {
+				XCTFail("pre-update hook update fail")
+				return
+			}
+		}
+		try! db.execute(sql: "update t1 set b=999 where a='beta';")
+
+		db.setPreUpdateHook { change in
+			guard case .delete(_) = change.changeType else {
+				XCTFail("pre-update hook incorrect changeType")
+				return
+			}
+
+			let value = try! change.oldValue(at: 1)
+			guard case .integer(let i) = value, i == 999 else {
+				XCTFail("pre-update hook update fail")
+				return
+			}
+
+			do {
+				XCTAssertThrowsError(try change.newValue(at: 0))
+			}
+			catch {}
+		}
+		try! db.execute(sql: "delete from t1 where a='beta';")
+
+
+	}
+
+#endif
+
+#if SQLITE_ENABLE_PREUPDATE_HOOK && SQLITE_ENABLE_SESSION
+
+	func testSession() {
+		let db1 = try! Database()
+		let db2 = try! Database()
+
+		let sql = "CREATE TABLE birds(id integer primary key, kind);"
+
+		try! db1.execute(sql: sql)
+		try! db2.execute(sql: sql)
+
+		let session = try! Session(database: db1, schema: "main")
+		try! session.attach("birds")
+
+		try! db1.prepare(sql: "insert into birds(kind) values ('robin');").execute()
+		try! db1.prepare(sql: "insert into birds(kind) values ('cardinal');").execute()
+		try! db1.prepare(sql: "insert into birds(kind) values ('finch');").execute()
+		try! db1.prepare(sql: "insert into birds(kind) values ('sparrow');").execute()
+		try! db1.prepare(sql: "insert into birds(kind) values ('utahraptor');").execute()
+
+		XCTAssertFalse(session.isEmpty)
+
+		let changes = try! session.changeset()
+
+		try! db2.apply(changes) { conflict in
+				.abort
+		}
+
+		let birds: [String] = try! db2.prepare(sql: "select kind from birds;").column(0, .string)
+		XCTAssert(birds == ["robin","cardinal","finch","sparrow","utahraptor"])
+
+		let inverse = try! changes.inverted()
+
+		try! db2.apply(inverse) { conflict in
+				.abort
+		}
+
+		let count: Int = try! db2.prepare(sql: "select count(*) from birds;").step()!.value(at: 0, .int)
+		XCTAssert(count == 0)
+	}
+
+#endif
+
 #if canImport(Combine)
+
 	func testRowPublisher() {
 		let db = try! Database()
 		XCTAssertNoThrow(try db.execute(sql: "create table t1(v1 text default (uuid()));"))
@@ -846,6 +966,7 @@ final class PipelineTests: XCTestCase {
 			XCTAssertEqual(value.u, uuids[i])
 		}
 	}
+
 #endif
 
 	/// Creates a URL for a temporary file on disk. Registers a teardown block to

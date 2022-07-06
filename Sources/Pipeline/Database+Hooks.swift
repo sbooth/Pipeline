@@ -271,3 +271,157 @@ extension Database {
 		}
 	}
 }
+
+// The pre-update hook is not compiled into Pipeline by default
+// because it is not one of the recommended SQLite compile-time
+// options: https://www.sqlite.org/compile.html
+// To enable it uncomment the appropriate lines in Package.swift
+#if SQLITE_ENABLE_PREUPDATE_HOOK
+
+extension Database {
+	/// Information on an insert, update, or delete operation in a pre-update context.
+	///
+	/// - seealso: [The pre-update hook.](https://sqlite.org/c3ref/preupdate_count.html)
+	public struct PreUpdateChange {
+		/// Possible types of pre-update changes with associated rowids.
+		///
+		/// - seealso: [The pre-update hook.](https://sqlite.org/c3ref/preupdate_count.html)
+		public enum	ChangeType {
+			/// A row was inserted.
+			case insert(Int64)
+			/// A row was deleted.
+			case delete(Int64)
+			/// A row was updated.
+			case update(Int64, Int64)
+		}
+
+		/// The underlying `sqlite3 *` database
+		let databaseConnection: SQLiteDatabaseConnection
+
+		/// The type of pre-update change
+		public let changeType: ChangeType
+		/// The name of the database being changed
+		public let database: String
+		/// The name of the table being changed
+		public let table: String
+
+		/// Returns the number of columns in the row that is being inserted, updated, or deleted.
+		public var count: Int {
+			Int(sqlite3_preupdate_count(databaseConnection))
+		}
+
+		/// Returns 0 if the pre-update callback was invoked as a result of a direct insert, update, or delete operation; or 1 for inserts, updates, or deletes invoked by top-level triggers; or 2 for changes resulting from triggers called by top-level triggers; and so forth.
+		public var depth: Int {
+			Int(sqlite3_preupdate_depth(databaseConnection))
+		}
+
+		/// Returns the value for the column at `index` of the table row before it is updated.
+		///
+		/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
+		///
+		/// - requires: `index >= 0`
+		/// - requires: `index < self.count`
+		///
+		/// - note: This is only valid for `.update` and `.delete` change types.
+		///
+		/// - parameter index: The index of the desired column
+		///
+		/// - throws: An error if `index` is out of bounds or an other error occurs.
+		public func oldValue(at index: Int) throws -> DatabaseValue {
+			if case .insert(_) = changeType {
+				throw DatabaseError(message: "sqlite3_preupdate_old() is undefined for insertions")
+			}
+			var value: SQLiteValue?
+			guard sqlite3_preupdate_old(databaseConnection, Int32(index), &value) == SQLITE_OK else {
+				throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			}
+			return DatabaseValue(sqliteValue: value.unsafelyUnwrapped)
+		}
+
+		/// Returns the value for the column at `index` of the table row after it is updated.
+		///
+		/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
+		///
+		/// - requires: `index >= 0`
+		/// - requires: `index < self.count`
+		///
+		/// - note: This is only valid for `.update` and `.insert` row change types.
+		///
+		/// - parameter index: The index of the desired column
+		///
+		/// - throws: An error if `index` is out of bounds or an other error occurs.
+		public func newValue(at index: Int) throws -> DatabaseValue {
+			if case .delete(_) = changeType {
+				throw DatabaseError(message: "sqlite3_preupdate_new() is undefined for deletions")
+			}
+			var value: SQLiteValue?
+			guard sqlite3_preupdate_new(databaseConnection, Int32(index), &value) == SQLITE_OK else {
+				throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			}
+			return DatabaseValue(sqliteValue: value.unsafelyUnwrapped)
+		}
+	}
+
+	/// A hook called before a row is inserted, deleted, or updated.
+	///
+	/// - parameter change: The change triggering the pre-update hook.
+	///
+	/// - seealso: [The pre-update hook.](https://sqlite.org/c3ref/preupdate_count.html)
+	public typealias PreUpdateHook = (_ context: PreUpdateChange) -> Void
+
+	/// Sets the hook called before a row is inserted, deleted, or updated.
+	///
+	/// - parameter block: A closure called before a row is inserted, deleted, or updated.
+	///
+	/// - seealso: [The pre-update hook.](https://sqlite.org/c3ref/preupdate_count.html)
+	public func setPreUpdateHook(_ block: @escaping PreUpdateHook) {
+		let context = UnsafeMutablePointer<PreUpdateHook>.allocate(capacity: 1)
+		context.initialize(to: block)
+
+		if let old = sqlite3_preupdate_hook(databaseConnection, { context, db, op, db_name, table_name, existing_rowid, new_rowid in
+			let function_ptr = context.unsafelyUnwrapped.assumingMemoryBound(to: PreUpdateHook.self)
+
+			let changeType = Database.PreUpdateChange.ChangeType(op: op, key1: existing_rowid, key2: new_rowid)
+			let database = String(utf8String: db_name.unsafelyUnwrapped).unsafelyUnwrapped
+			let table = String(utf8String: table_name.unsafelyUnwrapped).unsafelyUnwrapped
+
+			let update = PreUpdateChange(databaseConnection: db.unsafelyUnwrapped, changeType: changeType, database: database, table: table)
+			function_ptr.pointee(update)
+		}, context) {
+			let oldContext = old.assumingMemoryBound(to: PreUpdateHook.self)
+			oldContext.deinitialize(count: 1)
+			oldContext.deallocate()
+		}
+	}
+
+	/// Removes the pre-update hook.
+	public func removePreUpdateHook() {
+		if let old = sqlite3_preupdate_hook(databaseConnection, nil, nil) {
+			let oldContext = old.assumingMemoryBound(to: PreUpdateHook.self)
+			oldContext.deinitialize(count: 1)
+			oldContext.deallocate()
+		}
+	}
+}
+
+extension Database.PreUpdateChange.ChangeType {
+	/// Convenience initializer for conversion of `SQLITE_` values and associated rowids.
+	///
+	/// - parameter op: The third argument to the callback function passed to `sqlite3_preupdate_hook()`
+	/// - parameter key1: The sixth argument to the callback function passed to `sqlite3_preupdate_hook()`
+	/// - parameter key2: The seventh argument to the callback function passed to `sqlite3_preupdate_hook()`
+	init(op: Int32, key1: Int64, key2: Int64) {
+		switch op {
+		case SQLITE_INSERT:
+			self = .insert(key2)
+		case SQLITE_DELETE:
+			self = .delete(key1)
+		case SQLITE_UPDATE:
+			self = .update(key1, key2)
+		default:
+			fatalError("Unexpected pre-update hook row change type \(op)")
+		}
+	}
+}
+
+#endif

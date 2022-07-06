@@ -9,11 +9,11 @@ import CSQLite
 
 //#if CSQLITE_CARRAY
 
-extension ParameterValue {
+extension SQLParameter {
 	/// Binds a `Collection` of `Int32` values using the sqlite3 carray extension..
 	/// - seealso: [The Carray() Table-Valued Function](https://www.sqlite.org/carray.html)
-	public static func carray<C: Collection>(_ values: C) -> ParameterValue where C.Element == Int32 {
-		ParameterValue { statement, index in
+	public static func carray<C: Collection>(_ values: C) -> SQLParameter where C.Element == Int32 {
+		SQLParameter { statement, index in
 			let mem = UnsafeMutableBufferPointer<Int32>.allocate(capacity: values.count)
 			_ = mem.initialize(from: values)
 			guard sqlite3_carray_bind(statement.preparedStatement, Int32(index), mem.baseAddress, Int32(values.count), CARRAY_INT32, { $0?.deallocate() }) == SQLITE_OK else {
@@ -24,8 +24,8 @@ extension ParameterValue {
 
 	/// Binds a `Collection` of `Int64` values using the sqlite3 carray extension..
 	/// - seealso: [The Carray() Table-Valued Function](https://www.sqlite.org/carray.html)
-	public static func carray<C: Collection>(_ values: C) -> ParameterValue where C.Element == Int64 {
-		ParameterValue { statement, index in
+	public static func carray<C: Collection>(_ values: C) -> SQLParameter where C.Element == Int64 {
+		SQLParameter { statement, index in
 			let mem = UnsafeMutableBufferPointer<Int64>.allocate(capacity: values.count)
 			_ = mem.initialize(from: values)
 			guard sqlite3_carray_bind(statement.preparedStatement, Int32(index), mem.baseAddress, Int32(values.count), CARRAY_INT64, { $0?.deallocate() }) == SQLITE_OK else {
@@ -36,8 +36,8 @@ extension ParameterValue {
 
 	/// Binds a `Collection` of `Double` values using the sqlite3 carray extension..
 	/// - seealso: [The Carray() Table-Valued Function](https://www.sqlite.org/carray.html)
-	public static func carray<C: Collection>(_ values: C) -> ParameterValue where C.Element == Double {
-		ParameterValue { statement, index in
+	public static func carray<C: Collection>(_ values: C) -> SQLParameter where C.Element == Double {
+		SQLParameter { statement, index in
 			let mem = UnsafeMutableBufferPointer<Double>.allocate(capacity: values.count)
 			_ = mem.initialize(from: values)
 			guard sqlite3_carray_bind(statement.preparedStatement, Int32(index), mem.baseAddress, Int32(values.count), CARRAY_DOUBLE, { $0?.deallocate() }) == SQLITE_OK else {
@@ -48,8 +48,8 @@ extension ParameterValue {
 
 	/// Binds a `Collection` of `String` values using the sqlite3 carray extension..
 	/// - seealso: [The Carray() Table-Valued Function](https://www.sqlite.org/carray.html)
-	public static func carray<C: Collection>(_ values: C) -> ParameterValue where C.Element == String {
-		ParameterValue { statement, index in
+	public static func carray<C: Collection>(_ values: C) -> SQLParameter where C.Element == String {
+		SQLParameter { statement, index in
 			let count = values.count
 
 			let utf8_character_counts = values.map { $0.utf8.count + 1 }

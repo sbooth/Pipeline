@@ -3,6 +3,13 @@
 
 import PackageDescription
 
+// For pre-update hook support:
+//  - Uncomment lines containing `SQLITE_ENABLE_PREUPDATE_HOOK`
+//
+// For session support:
+//  - Uncomment lines containing `SQLITE_ENABLE_PREUPDATE_HOOK`
+//  - Uncomment lines containing `SQLITE_ENABLE_SESSION`
+
 let package = Package(
 	name: "Pipeline",
 	platforms: [
@@ -28,9 +35,22 @@ let package = Package(
 			dependencies: ["CSQLite"]),
 		.target(
 			name: "Pipeline",
-			dependencies: ["CSQLite", "CPipeline"]),
+			dependencies: ["CSQLite", "CPipeline"],
+			cSettings: [
+//				.define("SQLITE_ENABLE_PREUPDATE_HOOK", to: "1"),
+//				.define("SQLITE_ENABLE_SESSION", to: "1"),
+			],
+			swiftSettings: [
+//				.define("SQLITE_ENABLE_PREUPDATE_HOOK"),
+//				.define("SQLITE_ENABLE_SESSION"),
+			]),
 		.testTarget(
 			name: "PipelineTests",
-			dependencies: ["Pipeline"]),
-	]
+			dependencies: ["Pipeline"],
+			swiftSettings: [
+//				.define("SQLITE_ENABLE_PREUPDATE_HOOK"),
+//				.define("SQLITE_ENABLE_SESSION"),
+			]),
+	],
+	cLanguageStandard: .gnu11
 )
