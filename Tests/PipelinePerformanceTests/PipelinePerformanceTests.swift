@@ -15,7 +15,7 @@ class PipelinePerformanceTests: XCTestCase {
 		XCTAssert(sqlite3_shutdown() == SQLITE_OK)
 	}
 
-	func testPipelineInsertPerformance() {
+	func testPipelineInsertPerformance_1() {
 		self.measureMetrics(XCTestCase.defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
 			let db = try! Database()
 
@@ -45,7 +45,37 @@ class PipelinePerformanceTests: XCTestCase {
 		}
 	}
 
-	func testPipelineInsertPerformance2() {
+	func testPipelineInsertPerformance_2_1() {
+		self.measureMetrics(XCTestCase.defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
+			let db = try! Database()
+
+			try! db.execute(sql: "create table t1(a, b);")
+
+			var s = try! db.prepare(sql: "insert into t1(a, b) values (?, ?);")
+
+			startMeasuring()
+
+			let rowCount = 50_000
+			for i in 0..<rowCount {
+				try! s.bind(value: .integer(Int64(i*2)), toParameter: 1)
+				try! s.bind(value: .integer(Int64(i*2+1)), toParameter: 2)
+
+				try! s.execute()
+
+				try! s.clearBindings()
+				try! s.reset()
+			}
+
+			stopMeasuring()
+
+			s = try! db.prepare(sql: "select count(*) from t1;")
+			let count = try! s.step()!.value(at: 0, .int)
+
+			XCTAssertEqual(count, rowCount)
+		}
+	}
+
+	func testPipelineInsertPerformance_2_2() {
 		self.measureMetrics(XCTestCase.defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
 			let db = try! Database()
 
@@ -75,7 +105,7 @@ class PipelinePerformanceTests: XCTestCase {
 		}
 	}
 
-	func testPipelineInsertPerformance31() {
+	func testPipelineInsertPerformance_3_1() {
 		self.measureMetrics(XCTestCase.defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
 			let db = try! Database()
 
@@ -106,7 +136,7 @@ class PipelinePerformanceTests: XCTestCase {
 		}
 	}
 
-	func testPipelineInsertPerformance32() {
+	func testPipelineInsertPerformance_3_2() {
 		self.measureMetrics(XCTestCase.defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
 			let db = try! Database()
 
@@ -137,7 +167,7 @@ class PipelinePerformanceTests: XCTestCase {
 		}
 	}
 
-	func testPipelineSelectPerformance() {
+	func testPipelineSelectPerformance_1() {
 		self.measureMetrics(XCTestCase.defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
 			let db = try! Database()
 

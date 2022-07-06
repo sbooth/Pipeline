@@ -13,7 +13,7 @@ class CSQLitePerformanceTests: XCTestCase {
 		XCTAssert(sqlite3_shutdown() == SQLITE_OK)
 	}
 
-	func testSQLiteInsertPerformance() {
+	func testSQLiteInsertPerformance_1() {
 		self.measureMetrics(XCTestCase.defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
 			var db: OpaquePointer?
 			sqlite3_open_v2(":memory:", &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil)
@@ -48,7 +48,7 @@ class CSQLitePerformanceTests: XCTestCase {
 		}
 	}
 
-	func testSQLiteInsertPerformance2() {
+	func testSQLiteInsertPerformance_2() {
 		self.measureMetrics(XCTestCase.defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
 			var db: OpaquePointer?
 			sqlite3_open_v2(":memory:", &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil)
@@ -86,7 +86,7 @@ class CSQLitePerformanceTests: XCTestCase {
 		}
 	}
 
-	func testSQLiteSelectPerformance() {
+	func testSQLiteSelectPerformance_1() {
 		self.measureMetrics(XCTestCase.defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
 			var db: OpaquePointer?
 			sqlite3_open_v2(":memory:", &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil)
