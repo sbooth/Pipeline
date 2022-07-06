@@ -48,8 +48,8 @@ let package = Package(
 			name: "PipelineTests",
 			dependencies: ["Pipeline"],
 			swiftSettings: [
-				//				.define("SQLITE_ENABLE_PREUPDATE_HOOK"),
-				//				.define("SQLITE_ENABLE_SESSION"),
+//				.define("SQLITE_ENABLE_PREUPDATE_HOOK"),
+//				.define("SQLITE_ENABLE_SESSION"),
 			]),
 		.testTarget(
 			name: "PipelinePerformanceTests",
