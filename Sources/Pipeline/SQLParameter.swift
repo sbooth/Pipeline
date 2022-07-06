@@ -60,13 +60,13 @@ extension Statement {
 extension Statement {
 	/// Binds the *n* parameters in `values` to the first *n* SQL parameters of `self`.
 	///
-	/// - requires: `values.count <= self.parameterCount`
+	/// - requires: `values.count <= self.parameterCount`.
 	///
 	/// - parameter values: A collection of values to bind to SQL parameters.
 	///
 	/// - throws: An error if one of `values` couldn't be bound.
 	///
-	/// - returns: `self`
+	/// - returns: `self`.
 	@discardableResult public func bind<C: Collection>(_ values: C) throws -> Statement where C.Element == SQLParameter {
 		var index = 1
 		for value in values {
@@ -78,13 +78,13 @@ extension Statement {
 
 	/// Binds *value* to SQL parameter *name* for each (*name*, *value*) in `parameters`.
 	///
-	/// - requires: `parameters.count <= self.parameterCount`
+	/// - requires: `parameters.count <= self.parameterCount`.
 	///
 	/// - parameter parameters: A collection of name and value pairs to bind to SQL parameters.
 	///
 	/// - throws: An error if the SQL parameter *name* doesn't exist or *value* couldn't be bound.
 	///
-	/// - returns: `self`
+	/// - returns: `self`.
 	@discardableResult public func bind<C: Collection>(_ parameters: C) throws -> Statement where C.Element == (key: String, value: SQLParameter) {
 		for (name, value) in parameters {
 			try value.bind(self, indexOfParameter(name))
@@ -96,13 +96,13 @@ extension Statement {
 extension Statement {
 	/// Binds the *n* parameters in `values` to the first *n* SQL parameters of `self`.
 	///
-	/// - requires: `values.count <= self.parameterCount`
+	/// - requires: `values.count <= self.parameterCount`.
 	///
 	/// - parameter values: A collection of values to bind to SQL parameters.
 	///
 	/// - throws: An error if one of `values` couldn't be bound.
 	///
-	/// - returns: `self`
+	/// - returns: `self`.
 	@discardableResult public func bind(_ values: SQLParameter...) throws -> Statement {
 		try bind(values)
 	}
