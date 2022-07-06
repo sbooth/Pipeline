@@ -12,11 +12,11 @@ extension Database {
 	///
 	/// - seealso: [Transactions in SQLite](https://sqlite.org/lang_transaction.html)
 	public enum TransactionType {
-		/// A deferred transaction
+		/// A deferred transaction.
 		case deferred
-		/// An immediate transaction
+		/// An immediate transaction.
 		case immediate
-		/// An exclusive transaction
+		/// An exclusive transaction.
 		case exclusive
 	}
 
@@ -60,13 +60,13 @@ extension Database {
 		}
 	}
 
-	/// Possible transaction states for a database
+	/// Possible transaction states for a database.
 	public enum TransactionState {
-		/// No transaction is currently pending
+		/// No transaction is currently pending.
 		case none
-		/// The database is currently in a read transaction
+		/// The database is currently in a read transaction.
 		case read
-		/// The database is currently in a write transaction
+		/// The database is currently in a write transaction.
 		case write
 	}
 

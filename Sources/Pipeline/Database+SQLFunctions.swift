@@ -12,9 +12,9 @@ extension Database {
 	///
 	/// - parameter values: The SQL function parameters.
 	///
-	/// - throws: `Error`
+	/// - throws: `Error`.
 	///
-	/// - returns: The result of applying the function to `values`
+	/// - returns: The result of applying the function to `values`.
 	public typealias SQLFunction = (_ values: [DatabaseValue]) throws -> DatabaseValue
 
 	/// Custom SQL function flags.
@@ -28,7 +28,7 @@ extension Database {
 
 		/// The function gives the same output when the input parameters are the same.
 		public static let deterministic = SQLFunctionFlags(rawValue: 1 << 0)
-		/// The function may only be invoked from top-level SQL, and cannot be used in views or triggers
+		/// The function may only be invoked from top-level SQL, and cannot be used in views or triggers.
 		/// nor in schema structures such as `CHECK` constraints, `DEFAULT` clauses, expression indexes, partial indexes, or generated columns.
 		public static let directOnly = SQLFunctionFlags(rawValue: 1 << 1)
 		/// Indicates to SQLite that a function may call `sqlite3_value_subtype() `to inspect the sub-types of its arguments.
@@ -328,7 +328,7 @@ extension Database {
 ///
 /// - parameter sqlite_context: An `sqlite3_context *` object.
 /// - parameter value: The value to pass.
-private func set_sqlite3_result(_ sqlite_context: OpaquePointer!, value: DatabaseValue) {
+func set_sqlite3_result(_ sqlite_context: OpaquePointer!, value: DatabaseValue) {
 	switch value {
 	case .integer(let i):
 		sqlite3_result_int64(sqlite_context, i)

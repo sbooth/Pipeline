@@ -55,9 +55,9 @@ public typealias SQLitePreparedStatement = OpaquePointer
 /// It is generally preferred to use the block-based method because any errors may be explicitly handled instead of
 /// silently discarded.
 public final class Statement {
-	/// The owning database
+	/// The owning database.
 	public let database: Database
-	/// The underlying `sqlite3_stmt *` object
+	/// The underlying `sqlite3_stmt *` object.
 	let preparedStatement: SQLitePreparedStatement
 
 	/// Creates a compiled SQL statement.
@@ -67,7 +67,7 @@ public final class Statement {
 	/// - parameter database: The owning database.
 	/// - parameter preparedStatement: An `sqlite3_stmt *` prepared statement object..
 	///
-	/// - throws: An error if `sql` could not be compiled
+	/// - throws: An error if `sql` could not be compiled.
 	public init(database: Database, preparedStatement: SQLitePreparedStatement) {
 		precondition(sqlite3_db_handle(preparedStatement) == database.databaseConnection)
 		self.database = database
@@ -137,7 +137,7 @@ public final class Statement {
 		return String(cString: name)
 	}
 
-	/// The mapping of column names to indexes
+	/// The mapping of column names to indexes.
 	lazy var columnNamesAndIndexes: [String: Int] = {
 		let count = sqlite3_column_count(preparedStatement)
 		var map = [String: Int](minimumCapacity: Int(count))
@@ -201,7 +201,7 @@ extension Statement {
 	/// - parameter block: A closure applied to each result row.
 	/// - parameter row: A result row of returned data.
 	///
-	/// - throws: Any error thrown in `block` or an error if the statement did not successfully run to completion
+	/// - throws: Any error thrown in `block` or an error if the statement did not successfully run to completion.
 	public func results(_ block: ((_ row: Row) throws -> ())) throws {
 		var result = sqlite3_step(preparedStatement)
 		while result == SQLITE_ROW {
@@ -301,8 +301,8 @@ extension Statement {
 	///
 	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
 	///
-	/// - requires: `index >= 0`
-	/// - requires: `index < self.columnCount`
+	/// - requires: `index >= 0`.
+	/// - requires: `index < self.columnCount`.
 	///
 	/// - parameter index: The index of the desired column.
 	///
@@ -333,8 +333,8 @@ extension Statement {
 	///
 	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
 	///
-	/// - requires: `indexes.min() >= 0`
-	/// - requires: `indexes.max() < self.columnCount`
+	/// - requires: `indexes.min() >= 0`.
+	/// - requires: `indexes.max() < self.columnCount`.
 	///
 	/// - parameter indexes: The indexes of the desired columns.
 	///

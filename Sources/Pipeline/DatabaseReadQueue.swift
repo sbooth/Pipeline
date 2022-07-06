@@ -24,9 +24,9 @@ import CSQLite
 /// The interface is similar to `DispatchQueue` and a dispatch queue is used
 /// internally for work item management.
 public final class DatabaseReadQueue {
-	/// The underlying database
+	/// The underlying database.
 	let database: Database
-	/// The dispatch queue used to serialize access to the underlying database connection
+	/// The dispatch queue used to serialize access to the underlying database connection.
 	public let queue: DispatchQueue
 
 	/// Creates a database read queue for serialized read access to a database from a file.

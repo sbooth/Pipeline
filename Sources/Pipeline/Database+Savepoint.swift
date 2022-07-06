@@ -25,9 +25,9 @@ extension Database {
 
 	/// Rolls back a database savepoint transaction.
 	///
-	/// - parameter name: The name of the savepoint transaction
+	/// - parameter name: The name of the savepoint transaction.
 	///
-	/// - throws: An error if the savepoint transaction couldn't be rolled back or doesn't exist
+	/// - throws: An error if the savepoint transaction couldn't be rolled back or doesn't exist.
 	public func rollback(to name: String) throws {
 		guard sqlite3_exec(databaseConnection, "ROLLBACK TO '\(name)';", nil, nil, nil) == SQLITE_OK else {
 			throw SQLiteError(fromDatabaseConnection: databaseConnection)

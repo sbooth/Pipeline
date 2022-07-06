@@ -7,9 +7,9 @@
 import Foundation
 import Combine
 
-/// A decoder for `Row` for  Combine's `.decode(type:decoder:)` operator
+/// A decoder for `Row` for  Combine's `.decode(type:decoder:)` operator.
 public class RowDecoder: TopLevelDecoder {
-	/// A method  used to translate `DatabaseValue` into `Date`
+	/// A method  used to translate `DatabaseValue` into `Date`.
 	public enum DateDecodingMethod {
 		/// Defer to `Date` for decoding.
 		case deferredToDate
@@ -40,10 +40,10 @@ public class RowDecoder: TopLevelDecoder {
 		Options(dateDecodingStrategy: dateDecodingMethod, userInfo: userInfo)
 	}
 
-	/// Decodes and returns an instance of `type` using the column values from `row`.
+	/// Decodes and returns an object of `type` using the column values from `row`.
 	///
 	/// - parameter type: The type of object to decode.
-	/// - parameter row: The database row used to populate
+	/// - parameter row: The database row used to populate.
 	///
 	/// - throws: An error if decoding was unsuccessful.
 	///
@@ -543,7 +543,7 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
 }
 
 private extension RangeReplaceableCollection {
-	/// Returns a new collection by adding `element` to the end of the collection
+	/// Returns a new collection by adding `element` to the end of the collection.
 	func appending(_ element: Element) -> Self {
 		var mutable = Self(self)
 		mutable.append(element)

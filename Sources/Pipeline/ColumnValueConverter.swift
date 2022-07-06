@@ -28,11 +28,11 @@ import CSQLite
 public struct ColumnValueConverter<T> {
 	/// Converts the value at `index` in `row` to `T` and returns the result.
 	///
-	/// - precondition: `row.type(ofColumn: index) != .null`
+	/// - precondition: `row.type(ofColumn: index) != .null`.
 	///
 	/// - parameter row: A `Row` object containing the desired value.
 	/// - parameter index: The index of the desired column.
-	/// 
+	///
 	/// - throws: An error if the type conversion could not be accomplished.
 	public let convert: (_ row: Row, _ index: Int) throws -> T
 }
@@ -148,8 +148,8 @@ extension Statement {
 	///
 	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
 	///
-	/// - requires: `indexes.min() >= 0`
-	/// - requires: `indexes.max() < self.columnCount`
+	/// - requires: `indexes.min() >= 0`.
+	/// - requires: `indexes.max() < columnCount`.
 	///
 	/// - parameter indexes: The indexes of the desired column.
 	/// - parameter type: The desired value type.

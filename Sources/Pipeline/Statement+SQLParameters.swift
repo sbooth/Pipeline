@@ -55,8 +55,8 @@ extension Statement {
 	///
 	/// - note: Parameter indexes are 1-based.  The leftmost parameter in a statement has index 1.
 	///
-	/// - requires: `index > 0`
-	/// - requires: `index < parameterCount`
+	/// - requires: `index > 0`.
+	/// - requires: `index < parameterCount`.
 	///
 	/// - parameter value: The desired value of the SQL parameter.
 	/// - parameter index: The index of the SQL parameter to bind.
@@ -231,13 +231,13 @@ extension Statement {
 extension Statement {
 	/// Binds the *n* parameters in `values` to the first *n* SQL parameters of `self`.
 	///
-	/// - requires: `values.count <= self.parameterCount`
+	/// - requires: `values.count <= self.parameterCount`.
 	///
 	/// - parameter values: A collection of values to bind to SQL parameters.
 	///
 	/// - throws: An error if one of `values` couldn't be bound.
 	///
-	/// - returns: `self`
+	/// - returns: `self`.
 	@discardableResult public func bind<C: Collection>(values: C) throws -> Statement where C.Element == DatabaseValue {
 		var index = 1
 		for value in values {
@@ -249,13 +249,13 @@ extension Statement {
 
 	/// Binds *value* to SQL parameter *name* for each (*name*, *value*) in `values`.
 	///
-	/// - requires: `values.count <= self.parameterCount`
+	/// - requires: `values.count <= self.parameterCount`.
 	///
 	/// - parameter values: A collection of name and value pairs to bind to SQL parameters.
 	///
 	/// - throws: An error if the SQL parameter *name* doesn't exist or *value* couldn't be bound.
 	///
-	/// - returns: `self`
+	/// - returns: `self`.
 	@discardableResult public func bind<C: Collection>(values: C) throws -> Statement where C.Element == (key: String, value: DatabaseValue) {
 		for (name, value) in values {
 			try bind(value: value, toParameter: indexOfParameter(name))
@@ -267,13 +267,13 @@ extension Statement {
 extension Statement {
 	/// Binds the *n* parameters in `values` to the first *n* SQL parameters of `self`.
 	///
-	/// - requires: `values.count <= self.parameterCount`
+	/// - requires: `values.count <= self.parameterCount`.
 	///
 	/// - parameter values: A collection of values to bind to SQL parameters.
 	///
 	/// - throws: An error if one of `values` couldn't be bound.
 	///
-	/// - returns: `self`
+	/// - returns: `self`.
 	@discardableResult public func bind(values: DatabaseValue...) throws -> Statement {
 		try bind(values: values)
 	}
