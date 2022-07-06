@@ -9,49 +9,49 @@ import Foundation
 import CSQLite
 import CPipeline
 
-/// A cursor for an SQLite virtual table
+/// A cursor for an SQLite virtual table.
 public protocol VirtualTableCursor {
-	/// Returns the value of  column `index` in the row at which the cursor is pointing
+	/// Returns the value of  column `index` in the row at which the cursor is pointing.
 	///
-	/// - note: Column indexes are 0-based
+	/// - note: Column indexes are 0-based.
 	///
-	/// - parameter index: The desired column
+	/// - parameter index: The desired column.
 	///
-	/// - returns: The value of column `index` in the current row
+	/// - returns: The value of column `index` in the current row.
 	///
-	/// - throws: `SQLiteError` if an error occurs
+	/// - throws: `SQLiteError` if an error occurs.
 	func column(_ index: Int32) throws -> DatabaseValue
 
-	/// Advances the cursor to the next row of output
+	/// Advances the cursor to the next row of output.
 	///
-	/// - throws: `SQLiteError` if an error occurs
+	/// - throws: `SQLiteError` if an error occurs.
 	func next() throws
 
-	/// Returns the rowid for the current row
+	/// Returns the rowid for the current row.
 	///
-	/// - returns: The rowid of the current row
+	/// - returns: The rowid of the current row.
 	///
-	/// - throws: `SQLiteError` if an error occurs
+	/// - throws: `SQLiteError` if an error occurs.
 	func rowid() throws -> Int64
 
-	/// Applies a filter to the virtual table
+	/// Applies a filter to the virtual table.
 	///
-	/// - parameter arguments: Arguments applicable to the query plan made in `VirtualTableModule.bestIndex()`
-	/// - parameter indexNumber: The index number returned by `VirtualTableModule.bestIndex()`
-	/// - parameter indexName: The index name returned by `VirtualTableModule.bestIndex()`
+	/// - parameter arguments: Arguments applicable to the query plan made in `VirtualTableModule.bestIndex()`.
+	/// - parameter indexNumber: The index number returned by `VirtualTableModule.bestIndex()`.
+	/// - parameter indexName: The index name returned by `VirtualTableModule.bestIndex()`.
 	///
-	/// - throws: `SQLiteError` if an error occurs
+	/// - throws: `SQLiteError` if an error occurs.
 	func filter(_ arguments: [DatabaseValue], indexNumber: Int32, indexName: String?) throws
 
-	/// `true` if the cursor has been moved off the last row of output
+	/// `true` if the cursor has been moved off the last row of output.
 	var eof: Bool { get }
 }
 
-/// Possible results for the `VirtualTableModule.bestIndex()` function
+/// Possible results for the `VirtualTableModule.bestIndex()` function.
 public enum VirtualTableModuleBestIndexResult {
-	/// Success
+	/// Success.
 	case ok
-	/// No usable query plan exists
+	/// No usable query plan exists.
 	case constraint
 }
 
@@ -76,10 +76,10 @@ public protocol VirtualTableModule {
 	/// - parameter create: Whether the virtual table module is being initialized as the result of a `CREATE VIRTUAL TABLE` statement
 	/// and should create any persistent state.
 	///
-	/// - throws: `SQLiteError` if the module could not be created
+	/// - throws: `SQLiteError` if the module could not be created.
 	init(database: Database, arguments: [String], create: Bool) throws
 
-	/// The options supported by this virtual table module
+	/// The options supported by this virtual table module.
 	var options: Database.VirtualTableModuleOptions { get }
 
 	/// The SQL `CREATE TABLE` statement used to tell SQLite about the virtual table's columns and datatypes.
@@ -87,25 +87,25 @@ public protocol VirtualTableModule {
 	/// - note: The name of the table and any constraints are ignored.
 	var declaration: String { get }
 
-	/// Destroys any persistent state associated with the virtual table module
+	/// Destroys any persistent state associated with the virtual table module.
 	///
 	/// - note: This is only called as the result of a `DROP TABLE` statement.
 	func destroy() throws;
 
-	/// Determines the query plan to use for a given query
+	/// Determines the query plan to use for a given query.
 	///
-	/// - parameter indexInfo: An `sqlite3_index_info` struct containing information on the query
+	/// - parameter indexInfo: An `sqlite3_index_info` struct containing information on the query.
 	///
-	/// - returns: `.ok` on success or `.constraint` if the configuration of unusable flags in `indexInfo` cannot result in a usable query plan
+	/// - returns: `.ok` on success or `.constraint` if the configuration of unusable flags in `indexInfo` cannot result in a usable query plan.
 	///
-	/// - throws: `SQLiteError` if an error occurs
+	/// - throws: `SQLiteError` if an error occurs.
 	func bestIndex(_ indexInfo: inout sqlite3_index_info) throws -> VirtualTableModuleBestIndexResult
 
-	/// Opens and returns a cursor for the virtual table
+	/// Opens and returns a cursor for the virtual table.
 	///
-	/// - returns: An initalized cursor for the virtual table
+	/// - returns: An initalized cursor for the virtual table.
 	///
-	/// - throws: `SQLiteError` error if the cursor could not be created
+	/// - throws: `SQLiteError` error if the cursor could not be created.
 	func openCursor() throws -> VirtualTableCursor
 }
 
@@ -129,7 +129,7 @@ public protocol EponymousVirtualTableModule: VirtualTableModule {
 	/// - parameter arguments: The arguments used to create the virtual table module. The first argument is the name of the module being invoked.
 	/// The second argument is the name of the database in which the virtual table is being created. The third argument is the name of the new virtual table.
 	///
-	/// - throws: `SQLiteError` if the module could not be created
+	/// - throws: `SQLiteError` if the module could not be created.
 	init(database: Database, arguments: [String]) throws
 }
 
@@ -142,15 +142,15 @@ extension VirtualTableModule where Self: EponymousVirtualTableModule {
 }
 
 extension Database {
-	/// Glue for creating a generic Swift type in a C callback
+	/// Glue for creating a generic Swift type in a C callback.
 	final class VirtualTableModuleClientData {
-		/// The constructor closure
+		/// The constructor closure.
 		let construct: (_ arguments : [String], _ create: Bool) throws -> VirtualTableModule
 
-		/// Persistent sqlite3_module instance
+		/// Persistent sqlite3_module instance.
 		let module: UnsafeMutablePointer<sqlite3_module>
 
-		/// Creates client data for a module
+		/// Creates client data for a module.
 		init(module: inout sqlite3_module, _ construct: @escaping (_ arguments: [String], _ create: Bool) throws -> VirtualTableModule) {
 			let module_ptr = UnsafeMutablePointer<sqlite3_module>.allocate(capacity: 1)
 			module_ptr.assign(from: &module, count: 1)
@@ -163,7 +163,7 @@ extension Database {
 		}
 	}
 
-	/// Virtual table module options
+	/// Virtual table module options.
 	///
 	/// - seealso: [Virtual Table Configuration Options](https://sqlite.org/c3ref/c_vtab_constraint_support.html)
 	public struct VirtualTableModuleOptions: OptionSet {
@@ -173,20 +173,20 @@ extension Database {
 			self.rawValue = rawValue
 		}
 
-		/// Indicates whether the virtual table module supports constraints
+		/// Indicates whether the virtual table module supports constraints.
 		public static let constraintSupport = VirtualTableModuleOptions(rawValue: 1 << 0)
 		/// The virtual table module is unlikely to cause problems even if misused.
 		public static let innocuous = VirtualTableModuleOptions(rawValue: 1 << 2)
-		/// The virtual table module is prohibited from use in triggers or views
+		/// The virtual table module is prohibited from use in triggers or views.
 		public static let directOnly = VirtualTableModuleOptions(rawValue: 1 << 3)
 	}
 
 	/// Adds a virtual table module to the database.
 	///
-	/// - parameter name: The name of the virtual table module
-	/// - parameter type: The class implementing the virtual table module
+	/// - parameter name: The name of the virtual table module.
+	/// - parameter type: The class implementing the virtual table module.
 	///
-	/// - throws:  An error if the virtual table module can't be registered
+	/// - throws:  An error if the virtual table module can't be registered.
 	///
 	/// - seealso: [Register A Virtual Table Implementation](https://www.sqlite.org/c3ref/create_module.html)
 	/// - seealso: [The Virtual Table Mechanism Of SQLite](https://sqlite.org/vtab.html)
@@ -266,10 +266,10 @@ extension Database {
 	/// }
 	/// ```
 	///
-	/// - parameter name: The name of the virtual table module
-	/// - parameter type: The class implementing the virtual table module
+	/// - parameter name: The name of the virtual table module.
+	/// - parameter type: The class implementing the virtual table module.
 	///
-	/// - throws:  An error if the virtual table module can't be registered
+	/// - throws:  An error if the virtual table module can't be registered.
 	///
 	/// - seealso: [Register A Virtual Table Implementation](https://www.sqlite.org/c3ref/create_module.html)
 	/// - seealso: [The Virtual Table Mechanism Of SQLite](https://sqlite.org/vtab.html)
@@ -297,9 +297,9 @@ extension Database {
 
 	/// Removes a virtual table module from the database.
 	///
-	/// - parameter name: The name of the virtual table module
+	/// - parameter name: The name of the virtual table module.
 	///
-	/// - throws: An error if the virtual table module couldn't be removed
+	/// - throws: An error if the virtual table module couldn't be removed.
 	public func removeModule(_ name: String) throws {
 		guard sqlite3_create_module(databaseConnection, name, nil, nil) == SQLITE_OK else {
 			throw SQLiteError(fromDatabaseConnection: databaseConnection)
@@ -308,9 +308,9 @@ extension Database {
 
 	/// Removes all virtual table modules from the database.
 	///
-	/// - parameter except: An array containing the names of virtual table modules to keep
+	/// - parameter except: An array containing the names of virtual table modules to keep.
 	///
-	/// - throws: An error if the virtual table modules couldn't be removed
+	/// - throws: An error if the virtual table modules couldn't be removed.
 	public func removeAllModules(except: [String] = []) throws {
 		if except.isEmpty {
 			guard sqlite3_drop_modules(databaseConnection, nil) == SQLITE_OK else {
