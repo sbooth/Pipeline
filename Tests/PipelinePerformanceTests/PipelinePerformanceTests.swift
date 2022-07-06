@@ -167,7 +167,7 @@ class PipelinePerformanceTests: XCTestCase {
 		}
 	}
 
-	func testPipelineSelectPerformance_1() {
+	func testPipelineSelectPerformance_1_1() {
 		self.measureMetrics(XCTestCase.defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
 			let db = try! Database()
 
@@ -188,6 +188,33 @@ class PipelinePerformanceTests: XCTestCase {
 			try! s.results { row in
 				_ = try row.value(at: 0, .int)
 				_ = try row.value(at: 1, .int)
+			}
+
+			stopMeasuring()
+		}
+	}
+
+	func testPipelineSelectPerformance_1_2() {
+		self.measureMetrics(XCTestCase.defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
+			let db = try! Database()
+
+			try! db.execute(sql: "create table t1(a, b);")
+
+			var s = try! db.prepare(sql: "insert into t1(a, b) values (1, 2);")
+
+			let rowCount = 50_000
+			for _ in 0..<rowCount {
+				try! s.execute()
+				try! s.reset()
+			}
+
+			s = try! db.prepare(sql: "select a, b from t1;")
+
+			startMeasuring()
+
+			try! s.results { row in
+				_ = try row.value(at: 0)
+				_ = try row.value(at: 1)
 			}
 
 			stopMeasuring()
