@@ -378,14 +378,14 @@ extension Database {
 		let context = UnsafeMutablePointer<PreUpdateHook>.allocate(capacity: 1)
 		context.initialize(to: block)
 
-		if let old = sqlite3_preupdate_hook(databaseConnection, { context, db, op, db_name, table_name, old_rowid, new_rowid in
+		if let old = sqlite3_preupdate_hook(databaseConnection, { context, db, op, db_name, table_name, existing_rowid, new_rowid in
 			let function_ptr = context.unsafelyUnwrapped.assumingMemoryBound(to: PreUpdateHook.self)
 
-			let changeType = Database.PreUpdateChange.ChangeType(op, old_rowid, new_rowid)
+			let changeType = Database.PreUpdateChange.ChangeType(op: op, key1: existing_rowid, key2: new_rowid)
 			let database = String(utf8String: db_name.unsafelyUnwrapped).unsafelyUnwrapped
 			let table = String(utf8String: table_name.unsafelyUnwrapped).unsafelyUnwrapped
 
-			let update = PreUpdateChange(db: db.unsafelyUnwrapped, changeType: changeType, database: database, table: table)
+			let update = PreUpdateChange(databaseConnection: db.unsafelyUnwrapped, changeType: changeType, database: database, table: table)
 			function_ptr.pointee(update)
 		}, context) {
 			let oldContext = old.assumingMemoryBound(to: PreUpdateHook.self)
@@ -408,18 +408,18 @@ extension Database.PreUpdateChange.ChangeType {
 	/// Convenience initializer for conversion of `SQLITE_` values and associated rowids.
 	///
 	/// - parameter op: The third argument to the callback function passed to `sqlite3_preupdate_hook()`
-	/// - parameter iKey1: The sixth argument to the callback function passed to `sqlite3_preupdate_hook()`
-	/// - parameter iKey2: The seventh argument to the callback function passed to `sqlite3_preupdate_hook()`
-	init(_ op: Int32, _ iKey1: Int64, _ iKey2: Int64) {
+	/// - parameter key1: The sixth argument to the callback function passed to `sqlite3_preupdate_hook()`
+	/// - parameter key2: The seventh argument to the callback function passed to `sqlite3_preupdate_hook()`
+	init(op: Int32, key1: Int64, key2: Int64) {
 		switch op {
 		case SQLITE_INSERT:
-			self = .insert(iKey2)
+			self = .insert(key2)
 		case SQLITE_DELETE:
-			self = .delete(iKey1)
+			self = .delete(key1)
 		case SQLITE_UPDATE:
-			self = .update(iKey1, iKey2)
+			self = .update(key1, key2)
 		default:
-			fatalError("Unexpected row change type \(op)")
+			fatalError("Unexpected pre-update hook row change type \(op)")
 		}
 	}
 }
