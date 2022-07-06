@@ -10,8 +10,8 @@ Pipeline is a powerful and performant Swift interface to [SQLite](https://sqlite
 - Custom commit, rollback, update, and busy handler hooks.
 - Custom virtual tables.
 - Custom FTS5 tokenizers.
-- Optional support for pre-update hooks and [sessions](https://www.sqlite.org/sessionintro.html)
-- [Combine](#combine) support
+- Optional support for pre-update hooks and [sessions](https://www.sqlite.org/sessionintro.html).
+- [Combine](#combine) support.
 
 Pipeline allows fast, easy database access with robust error handling.  It is not a general-purpose object-relational mapper.
 
