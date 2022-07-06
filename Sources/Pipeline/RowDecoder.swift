@@ -40,7 +40,7 @@ public class RowDecoder: TopLevelDecoder {
 		Options(dateDecodingStrategy: dateDecodingMethod, userInfo: userInfo)
 	}
 
-	/// Decodes and returns an instance of `type` using the column values from `row`.
+	/// Decodes and returns an object of `type` using the column values from `row`.
 	///
 	/// - parameter type: The type of object to decode.
 	/// - parameter row: The database row used to populate

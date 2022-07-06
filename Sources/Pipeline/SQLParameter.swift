@@ -260,14 +260,14 @@ extension SQLParameter {
 }
 
 extension SQLParameter {
-	/// Binds an `Float` as a floating-point value.
+	/// Binds a `Float` as a floating-point value.
 	public static func float(_ value: Float) -> SQLParameter {
 		SQLParameter { statement, index in
 			try statement.bind(real: Double(value), toParameter: index)
 		}
 	}
 
-	/// Binds an `Double` as a floating-point value.
+	/// Binds a `Double` as a floating-point value.
 	public static func double(_ value: Double) -> SQLParameter {
 		SQLParameter { statement, index in
 			try statement.bind(real: value, toParameter: index)

@@ -8,7 +8,7 @@ import Foundation
 
 /// A type that can be initialized from a result row.
 public protocol RowMapping {
-	/// Creates an instance mapping some or all values in `row` to `self`.
+	/// Creates an object mapping some or all values in `row` to `self`.
 	///
 	/// - parameter row: A `Row` object.
 	///
