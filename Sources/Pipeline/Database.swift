@@ -28,10 +28,10 @@ public let SQLiteTransientStorage = unsafeBitCast(-1, to: sqlite3_destructor_typ
 
 /// An [SQLite](https://sqlite.org) database.
 public final class Database {
-	/// The underlying `sqlite3 *` database
+	/// The underlying `sqlite3 *` database.
 	let databaseConnection: SQLiteDatabaseConnection
 
-	/// The database's custom busy handler
+	/// The database's custom busy handler.
 	var busyHandler: UnsafeMutablePointer<BusyHandler>?
 
 	/// Creates a database from an existing `sqlite3 *` database connection handle.
@@ -155,14 +155,14 @@ extension Database {
 
 	/// Returns the name of the *n*th attached database.
 	///
-	/// - note: 0 is the main database file and is named *main*
-	/// - note: 1 is the temporary schema and is named *temp*
+	/// - note: 0 is the main database file and is named *main*.
+	/// - note: 1 is the temporary schema and is named *temp*.
 	///
 	/// - parameter n: The index of the desired attached database.
 	///
-	/// - throws: An error if there is no attached database with the specified index
+	/// - throws: An error if there is no attached database with the specified index.
 	///
-	/// - returns: The name of the *n*th attached database
+	/// - returns: The name of the *n*th attached database.
 	public func name(ofDatabase n: Int32) throws -> String {
 		guard let name = sqlite3_db_name(databaseConnection, n) else {
 			throw DatabaseError(message: "The database at index \(n) does not exist")
@@ -172,13 +172,13 @@ extension Database {
 
 	/// Returns the location of the file associated with database `name`.
 	///
-	/// - note: The main database file has the name *main*
+	/// - note: The main database file has the name *main*.
 	///
-	/// - parameter name: The name of the attached database whose location is desired
+	/// - parameter name: The name of the attached database whose location is desired.
 	///
-	/// - throws: An error if there is no attached database with the specified name, or if `name` is a temporary or in-memory database
+	/// - throws: An error if there is no attached database with the specified name, or if `name` is a temporary or in-memory database.
 	///
-	/// - returns: The URL for the file associated with database `name`
+	/// - returns: The URL for the file associated with database `name`.
 	public func url(forDatabase name: String = "main") throws -> URL {
 		guard let path = sqlite3_db_filename(databaseConnection, name) else {
 			throw DatabaseError(message: "The database \"\(name)\" does not exist or is a temporary or in-memory database")
@@ -204,7 +204,7 @@ extension Database {
 extension Database {
 	/// Executes an SQL statement.
 	///
-	/// - parameter sql: The SQL statement to execute
+	/// - parameter sql: The SQL statement to execute.
 	///
 	/// - throws: An error if `sql` could not be compiled or executed.
 	public func execute(sql: String) throws {
@@ -227,13 +227,13 @@ extension Database {
 
 	/// Executes one or more SQL statements and optionally applies `block` to each result row.
 	///
-	/// Multiple SQL statements are separated with a semicolon (`;`)
+	/// Multiple SQL statements are separated with a semicolon (`;`).
 	///
-	/// - parameter sql: The SQL statement or statements to execute
-	/// - parameter block: An optional closure applied to each result row
-	/// - parameter row: A dictionary of returned data keyed by column name
+	/// - parameter sql: The SQL statement or statements to execute.
+	/// - parameter block: An optional closure applied to each result row.
+	/// - parameter row: A dictionary of returned data keyed by column name.
 	///
-	/// - throws: An error if `sql` could not be compiled or executed
+	/// - throws: An error if `sql` could not be compiled or executed.
 	public func batch(sql: String, _ block: ((_ row: [String: String]) -> Void)? = nil) throws {
 		var result: Int32
 		var errmsg: UnsafeMutablePointer<Int8>?
@@ -274,22 +274,22 @@ extension Database {
 }
 
 extension Database {
-	/// Returns the result or error code associated with the most recent `sqlite3_` API call
+	/// Returns the result or error code associated with the most recent `sqlite3_` API call.
 	public var errorCode: Int32 {
 		sqlite3_errcode(databaseConnection) & 0xff
 	}
 
-	/// Returns the result or extended error code associated with the most recent `sqlite3_` API call
+	/// Returns the result or extended error code associated with the most recent `sqlite3_` API call.
 	public var extendedErrorCode: Int32 {
 		sqlite3_extended_errcode(databaseConnection)
 	}
 
-	/// Returns the result or error message associated with the most recent `sqlite3_` API call
+	/// Returns the result or error message associated with the most recent `sqlite3_` API call.
 	public var errorMessage: String {
 		String(cString: sqlite3_errmsg(databaseConnection))
 	}
 
-	/// Returns the offset in the input SQL of the token referenced by the most recent error or `nil` if none
+	/// Returns the offset in the input SQL of the token referenced by the most recent error or `nil` if none.
 	public var errorOffset: Int? {
 		let offset = sqlite3_error_offset(databaseConnection)
 		guard offset != -1 else {
@@ -298,7 +298,7 @@ extension Database {
 		return Int(offset)
 	}
 
-	/// Returns the error code or error number that caused the most recent I/O error or failure to open a file or `nil` if none
+	/// Returns the error code or error number that caused the most recent I/O error or failure to open a file or `nil` if none.
 	public var systemErrno: Int32? {
 		let errno = sqlite3_system_errno(databaseConnection)
 		guard errno != 0 else {
@@ -309,7 +309,7 @@ extension Database {
 }
 
 extension Database {
-	/// Returns `true` if the last `sqlite3_` API call succeeded
+	/// Returns `true` if the last `sqlite3_` API call succeeded.
 	public var success: Bool {
 		let result = sqlite3_errcode(databaseConnection) & 0xff
 		return result == SQLITE_OK || result == SQLITE_ROW || result == SQLITE_DONE

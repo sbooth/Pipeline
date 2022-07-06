@@ -14,10 +14,10 @@ public typealias SQLiteSnapshot = UnsafeMutablePointer<sqlite3_snapshot>
 
 /// The state of a WAL mode database at a specific point in history.
 public final class Snapshot {
-	/// The owning database
+	/// The owning database.
 	public let database: Database
 
-	/// The underlying `sqlite3_snapshot *` object
+	/// The underlying `sqlite3_snapshot *` object.
 	let snapshot: SQLiteSnapshot
 
 	/// A snapshot of the current state of a database schema.

@@ -34,9 +34,9 @@ import CSQLite
 /// }
 /// ```
 public final class DatabaseQueue {
-	/// The underlying database
+	/// The underlying database.
 	let database: Database
-	/// The dispatch queue used to serialize access to the underlying database connection
+	/// The dispatch queue used to serialize access to the underlying database connection.
 	public let queue: DispatchQueue
 
 	/// Creates a database queue for serialized access to an in-memory database.

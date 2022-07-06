@@ -14,12 +14,12 @@ extension Statement {
 	///
 	/// - note: Parameter indexes are 1-based.  The leftmost parameter in a statement has index 1.
 	///
-	/// - requires: `length >= 0`
+	/// - requires: `length >= 0`.
 	///
-	/// - parameter index: The index of the SQL parameter to bind
-	/// - parameter length: The desired length of the BLOB in bytes
+	/// - parameter index: The index of the SQL parameter to bind.
+	/// - parameter length: The desired length of the BLOB in bytes.
 	///
-	/// - throws: An error if the BLOB couldn't be bound
+	/// - throws: An error if the BLOB couldn't be bound.
 	public func bindZeroBLOB(toParameter index: Int, length: Int) throws {
 		guard sqlite3_bind_zeroblob(preparedStatement, Int32(index), Int32(length)) == SQLITE_OK else {
 			throw SQLiteError(fromDatabaseConnection: database.databaseConnection)

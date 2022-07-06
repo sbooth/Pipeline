@@ -16,10 +16,10 @@ public typealias SQLiteBLOB = OpaquePointer
 ///
 /// - seealso: [Open A BLOB For Incremental I/O](https://sqlite.org/c3ref/blob_open.html)
 public final class BLOB {
-	/// The owning database
+	/// The owning database.
 	public let database: Database
 
-	/// The underlying `sqlite3_blob *` object
+	/// The underlying `sqlite3_blob *` object.
 	let blob: SQLiteBLOB
 
 	/// Initializes a new BLOB for incremental I/O.
@@ -48,17 +48,17 @@ public final class BLOB {
 		_ = sqlite3_blob_close(blob);
 	}
 
-	/// The length of the BLOB in bytes
+	/// The length of the BLOB in bytes.
 	public var length: Int {
 		let bytes = sqlite3_blob_bytes(blob)
 		return Int(bytes)
 	}
 
-	/// Reads bytes from a BLOB into a buffer
+	/// Reads bytes from a BLOB into a buffer.
 	///
-	/// - requires: `length >= 0`
-	/// - requires: `offset >= 0`
-	/// - requires: `length + offset <= self.length`
+	/// - requires: `length >= 0`.
+	/// - requires: `offset >= 0`.
+	/// - requires: `length + offset <= self.length`.
 	///
 	/// - parameter buffer: A buffer to hold the bytes.
 	/// - parameter length: The number of bytes to read.
@@ -71,11 +71,11 @@ public final class BLOB {
 		}
 	}
 
-	/// Writes bytes to a BLOB from a buffer
+	/// Writes bytes to a BLOB from a buffer.
 	///
-	/// - requires: `length >= 0`
-	/// - requires: `offset >= 0`
-	/// - requires: `length + offset <= self.length`
+	/// - requires: `length >= 0`.
+	/// - requires: `offset >= 0`.
+	/// - requires: `length + offset <= self.length`.
 	///
 	/// - note: This function may only modify the contents of the BLOB; it is not possible to increase the size of a BLOB.
 	///

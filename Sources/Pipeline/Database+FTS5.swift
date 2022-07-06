@@ -23,48 +23,48 @@ public protocol FTS5Tokenizer {
 
 	/// Advances the tokenizer to the next token.
 	///
-	/// - returns: `true` if a token was found, `false` otherwise
+	/// - returns: `true` if a token was found, `false` otherwise.
 	func advance() -> Bool
 
 	/// Returns the current token.
 	///
-	/// - returns: The current token or `nil` if none
+	/// - returns: The current token or `nil` if none.
 	func currentToken() -> String?
 
 	/// Copies the current token in UTF-8 to the supplied buffer.
 	///
-	/// - parameter buffer: A buffer to receive the current token encoded in UTF-8
-	/// - parameter capacity: The number of bytes availabe in `buffer`
+	/// - parameter buffer: A buffer to receive the current token encoded in UTF-8.
+	/// - parameter capacity: The number of bytes availabe in `buffer`.
 	///
-	/// - throws: An error if `buffer` has insufficient capacity for the token
+	/// - throws: An error if `buffer` has insufficient capacity for the token.
 	///
-	/// - returns: The number of bytes written to `buffer`
+	/// - returns: The number of bytes written to `buffer`.
 	func copyCurrentToken(to buffer: UnsafeMutablePointer<UInt8>, capacity: Int) throws -> Int
 }
 
 extension Database {
-	/// Glue for creating a generic Swift type in a C callback
+	/// Glue for creating a generic Swift type in a C callback.
 	final class FTS5TokenizerCreator {
-		/// The constructor closure
+		/// The constructor closure.
 		let construct: (_ arguments : [String]) throws -> FTS5Tokenizer
 
 		/// Creates a new FTS5TokenizerCreator.
 		///
-		/// - parameter construct: A closure that creates the tokenizer
+		/// - parameter construct: A closure that creates the tokenizer.
 		init(_ construct: @escaping (_ arguments: [String]) -> FTS5Tokenizer) {
 			self.construct = construct
 		}
 	}
 
-	/// The reasons FTS5 will request tokenization
+	/// The reasons FTS5 will request tokenization.
 	public enum FTS5TokenizationReason {
-		/// A document is being inserted into or removed from the FTS table
+		/// A document is being inserted into or removed from the FTS table.
 		case document
-		/// A `MATCH` query is being executed against the FTS index
+		/// A `MATCH` query is being executed against the FTS index.
 		case query
-		/// Same as `query`, except that the bareword or quoted string is followed by a `*` character
+		/// Same as `query`, except that the bareword or quoted string is followed by a `*` character.
 		case prefix
-		/// The tokenizer is being invoked to satisfy an `fts5_api.xTokenize()` request made by an auxiliary function
+		/// The tokenizer is being invoked to satisfy an `fts5_api.xTokenize()` request made by an auxiliary function.
 		case aux
 	}
 
@@ -114,10 +114,10 @@ extension Database {
 	/// }
 	/// ```
 	///
-	/// - parameter name: The name of the tokenizer
-	/// - parameter type: The class implementing the tokenizer
+	/// - parameter name: The name of the tokenizer.
+	/// - parameter type: The class implementing the tokenizer.
 	///
-	/// - throws:  An error if the tokenizer can't be added
+	/// - throws:  An error if the tokenizer can't be added.
 	///
 	/// - seealso: [Custom Tokenizers](https://www.sqlite.org/fts5.html#custom_tokenizers)
 	public func addTokenizer<T: FTS5Tokenizer>(_ name: String, type: T.Type) throws where T: AnyObject {
@@ -216,27 +216,32 @@ extension Database {
 }
 
 extension Database.FTS5TokenizationReason {
-	/// Convenience initializer for conversion of `FTS5_TOKENIZE_` values
+	/// Convenience initializer for conversion of `FTS5_TOKENIZE_` values.
 	///
-	/// - parameter flags: The flags passed as the second argument of `fts5_tokenizer.xTokenize()`
+	/// - parameter flags: The flags passed as the second argument of `fts5_tokenizer.xTokenize()`.
 	init(_ flags: Int32) {
 		switch flags {
-		case FTS5_TOKENIZE_DOCUMENT: 						self = .document
-		case FTS5_TOKENIZE_QUERY: 							self = .query
-		case FTS5_TOKENIZE_QUERY | FTS5_TOKENIZE_PREFIX: 	self = .prefix
-		case FTS5_TOKENIZE_AUX: 							self = .aux
-		default:											fatalError("Unexpected FTS5 flags")
+		case FTS5_TOKENIZE_DOCUMENT:
+			self = .document
+		case FTS5_TOKENIZE_QUERY:
+			self = .query
+		case FTS5_TOKENIZE_QUERY | FTS5_TOKENIZE_PREFIX:
+			self = .prefix
+		case FTS5_TOKENIZE_AUX:
+			self = .aux
+		default:
+			fatalError("Unexpected FTS5 flags")
 		}
 	}
 }
 
 /// Returns a pointer to the `fts5_api` structure for `databaseConnection`.
 ///
-/// - parameter databaseConnection: The database connection to query
+/// - parameter databaseConnection: The database connection to query.
 ///
-/// - throws:  An error if the `fts5_api` structure couldn't be retrieved
+/// - throws:  An error if the `fts5_api` structure couldn't be retrieved.
 ///
-/// - returns: A pointer to the global `fts5_api` structure for `databaseConnection`
+/// - returns: A pointer to the global `fts5_api` structure for `databaseConnection`.
 private func get_fts5_api(for databaseConnection: SQLiteDatabaseConnection) throws -> UnsafePointer<fts5_api> {
 	var stmt: SQLitePreparedStatement? = nil
 	let sql = "SELECT fts5(?1);"

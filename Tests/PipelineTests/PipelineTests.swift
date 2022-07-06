@@ -318,7 +318,7 @@ final class PipelineTests: XCTestCase {
 
 	func testCustomTokenizer() {
 
-		/// A word tokenizer using CFStringTokenizer
+		/// A word tokenizer using CFStringTokenizer.
 		class WordTokenizer: FTS5Tokenizer {
 			var tokenizer: CFStringTokenizer!
 			var text: CFString!

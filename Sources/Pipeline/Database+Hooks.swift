@@ -142,7 +142,7 @@ extension Database {
 
 	/// Sets the hook called when a row is inserted, deleted, or updated in a rowid table.
 	///
-	/// - parameter updateHook: A closure called when a row is inserted, deleted, or updated
+	/// - parameter updateHook: A closure called when a row is inserted, deleted, or updated.
 	public func setUpdateHook(_ block: @escaping UpdateHook) {
 		let context = UnsafeMutablePointer<UpdateHook>.allocate(capacity: 1)
 		context.initialize(to: block)
@@ -295,14 +295,14 @@ extension Database {
 			case update(Int64, Int64)
 		}
 
-		/// The underlying `sqlite3 *` database
+		/// The underlying `sqlite3 *` database.
 		let databaseConnection: SQLiteDatabaseConnection
 
-		/// The type of pre-update change
+		/// The type of pre-update change.
 		public let changeType: ChangeType
-		/// The name of the database being changed
+		/// The name of the database being changed.
 		public let database: String
-		/// The name of the table being changed
+		/// The name of the table being changed.
 		public let table: String
 
 		/// Returns the number of columns in the row that is being inserted, updated, or deleted.
@@ -319,12 +319,12 @@ extension Database {
 		///
 		/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
 		///
-		/// - requires: `index >= 0`
-		/// - requires: `index < self.count`
+		/// - requires: `index >= 0`.
+		/// - requires: `index < self.count`.
 		///
 		/// - note: This is only valid for `.update` and `.delete` change types.
 		///
-		/// - parameter index: The index of the desired column
+		/// - parameter index: The index of the desired column.
 		///
 		/// - throws: An error if `index` is out of bounds or an other error occurs.
 		public func oldValue(at index: Int) throws -> DatabaseValue {
@@ -342,12 +342,12 @@ extension Database {
 		///
 		/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
 		///
-		/// - requires: `index >= 0`
-		/// - requires: `index < self.count`
+		/// - requires: `index >= 0`.
+		/// - requires: `index < self.count`.
 		///
 		/// - note: This is only valid for `.update` and `.insert` row change types.
 		///
-		/// - parameter index: The index of the desired column
+		/// - parameter index: The index of the desired column.
 		///
 		/// - throws: An error if `index` is out of bounds or an other error occurs.
 		public func newValue(at index: Int) throws -> DatabaseValue {
@@ -407,9 +407,9 @@ extension Database {
 extension Database.PreUpdateChange.ChangeType {
 	/// Convenience initializer for conversion of `SQLITE_` values and associated rowids.
 	///
-	/// - parameter op: The third argument to the callback function passed to `sqlite3_preupdate_hook()`
-	/// - parameter key1: The sixth argument to the callback function passed to `sqlite3_preupdate_hook()`
-	/// - parameter key2: The seventh argument to the callback function passed to `sqlite3_preupdate_hook()`
+	/// - parameter op: The third argument to the callback function passed to `sqlite3_preupdate_hook()`.
+	/// - parameter key1: The sixth argument to the callback function passed to `sqlite3_preupdate_hook()`.
+	/// - parameter key2: The seventh argument to the callback function passed to `sqlite3_preupdate_hook()`.
 	init(op: Int32, key1: Int64, key2: Int64) {
 		switch op {
 		case SQLITE_INSERT:

@@ -22,16 +22,16 @@ public typealias SQLiteSession = OpaquePointer
 /// - seealso: [The Session Extension](https://www.sqlite.org/sessionintro.html)
 /// - seealso: [Introduction](https://www.sqlite.org/session/intro.html)
 public final class Session {
-	/// The owning database
+	/// The owning database.
 	public let database: Database
 
-	/// The underlying `sqlite3_session *` object
+	/// The underlying `sqlite3_session *` object.
 	let session: SQLiteSession
 
 	/// Initializes a new session for `schema` on `database`.
 	///
-	/// - parameter database: The owning database
-	/// - parameter schema: The database schema to track
+	/// - parameter database: The owning database.
+	/// - parameter schema: The database schema to track.
 	///
 	/// - throws: An error if the session could not be created.
 	init(database: Database, schema: String) throws {
@@ -78,10 +78,10 @@ public final class Session {
 
 	/// Attaches a table to the session.
 	///
-	/// - parameter table: The name of the table to attach
+	/// - parameter table: The name of the table to attach.
 	///
 	/// - throws: An error if the table could not be attached to the session.
-	/// 
+	///
 	/// - seealso: [Attach A Table To A Session Object](https://www.sqlite.org/session/sqlite3session_attach.html)
 	func attach(_ table: String) throws {
 		let rc = sqlite3session_attach(session, table)
@@ -126,11 +126,11 @@ public final class Session {
 /// A changeset object.
 typealias SQLiteChangeset = UnsafeMutableRawPointer
 
-/// A changeset
+/// A changeset.
 ///
 /// - seealso: [Generate A Changeset From A Session Object](https://www.sqlite.org/session/sqlite3session_changeset.html)
 public struct Changeset {
-	/// The raw changeset data
+	/// The raw changeset data.
 	public let data: Data
 
 	/// Returns an inverted version of `self`.
@@ -158,7 +158,7 @@ public struct Changeset {
 
 	/// Appends the changes in `other` to self.
 	///
-	/// - parameter other: A changset containing the changes to append
+	/// - parameter other: A changset containing the changes to append.
 	///
 	/// - throws: An error if the changeset could not be appended.
 	///
@@ -187,10 +187,10 @@ public struct Changeset {
 
 	/// Invokes `block` with each operation in the changeset.
 	///
-	/// - parameter block: A closure applied to each changeset operation
-	/// - parameter operation: A changeset operation
+	/// - parameter block: A closure applied to each changeset operation.
+	/// - parameter operation: A changeset operation.
 	///
-	/// - throws: Any error thrown in `block` or an error if the iteratation did not successfully run to completion
+	/// - throws: Any error thrown in `block` or an error if the iteratation did not successfully run to completion.
 	public func operations(_ options: ChangesetIterator.Options = [], _ block: ((_ operation: ChangesetOperation) throws -> ())) throws {
 		let iterator = try ChangesetIterator(self, options)
 		var operation = try iterator.nextOperation()
@@ -207,9 +207,9 @@ public typealias SQLiteChangesetIterator = OpaquePointer
 
 /// An operation in a changeset.
 public struct ChangesetOperation {
-	/// The raw iterator
+	/// The raw iterator.
 	let iterator: SQLiteChangesetIterator
-	/// Whether this operation contains conflicting value information
+	/// Whether this operation contains conflicting value information.
 	let isConflict: Bool
 
 	init(_ iterator: SQLiteChangesetIterator, _ isConflict: Bool = false) throws {
@@ -230,25 +230,25 @@ public struct ChangesetOperation {
 		self.indirect = indirect != 0
 	}
 
-	/// The name of the table
+	/// The name of the table.
 	public let table: String
-	/// The number of columns in `table`
+	/// The number of columns in `table`.
 	public let columnCount: Int
-	/// The operation being performed
+	/// The operation being performed.
 	public let operation: Database.RowChangeType
-	/// True for an indirect change
+	/// True for an indirect change.
 	public let indirect: Bool
 
 	/// Returns the old value for the column at `index` in the current change.
 	///
 	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
 	///
-	/// - requires: `index >= 0`
-	/// - requires: `index < self.count`
+	/// - requires: `index >= 0`.
+	/// - requires: `index < self.count`.
 	///
 	/// - note: This is only valid for `.update` and `.delete` row change types.
 	///
-	/// - parameter index: The index of the desired column
+	/// - parameter index: The index of the desired column.
 	///
 	/// - returns: The old value for column `index`.
 	///
@@ -266,12 +266,12 @@ public struct ChangesetOperation {
 	///
 	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
 	///
-	/// - requires: `index >= 0`
-	/// - requires: `index < self.count`
+	/// - requires: `index >= 0`.
+	/// - requires: `index < self.count`.
 	///
 	/// - note: This is only valid for `.update` and `.insert` row change types.
 	///
-	/// - parameter index: The index of the desired column
+	/// - parameter index: The index of the desired column.
 	///
 	/// - returns: The new value for column `index`.
 	///
@@ -289,12 +289,12 @@ public struct ChangesetOperation {
 	///
 	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
 	///
-	/// - requires: `index >= 0`
-	/// - requires: `index < self.count`
+	/// - requires: `index >= 0`.
+	/// - requires: `index < self.count`.
 	///
 	/// - note: Unless invoked from an object passed to a conflict handler `nil` is returned.
 	///
-	/// - parameter index: The index of the desired column
+	/// - parameter index: The index of the desired column.
 	///
 	/// - returns: The conflicting value for column `index` or `nil` if no conflict.
 	///
@@ -334,7 +334,7 @@ public struct ChangesetOperation {
 	}
 }
 
-/// An iterator over a changeset
+/// An iterator over a changeset.
 public final class ChangesetIterator {
 	/// Flags affecting changeset iteration.
 	///
@@ -350,7 +350,7 @@ public final class ChangesetIterator {
 		public static let invert = Options(rawValue: SQLITE_CHANGESETSTART_INVERT)
 	}
 
-	/// The underlying iterator
+	/// The underlying iterator.
 	var iterator: SQLiteChangesetIterator
 
 	init(_ changeset: Changeset, _ options: Options) throws {
@@ -389,9 +389,9 @@ extension ChangesetIterator: IteratorProtocol {
 	/// Returns the next changeset operation or `nil` if none.
 	///
 	/// Because the iterator discards errors, the preferred way of accessing changeset operations
-	/// is via `nextOperation()` or `operations(_:)`
+	/// is via `nextOperation()` or `operations(_:)`.
 	///
-	/// - returns: The next changeset operation
+	/// - returns: The next changeset operation.
 	public func next() -> ChangesetOperation? {
 		return try? nextOperation()
 	}
@@ -427,7 +427,7 @@ public final class Changegroup {
 
 	/// Adds the changes in `changeset` to `self`.
 	///
-	/// - parameter changeset: A changset containing the changes to add
+	/// - parameter changeset: A changset containing the changes to add.
 	///
 	/// - throws: An error if the changeset could not be added.
 	///
@@ -467,13 +467,13 @@ typealias SQLiteRebaser = UnsafeMutableRawPointer
 
 /// A rebaser.
 struct Rebaser {
-	/// The raw rebaser data
+	/// The raw rebaser data.
 	public let data: Data
 }
 
 /// A closure specifying whether `table` should be included when applying a changeset.
 ///
-/// - parameter table: The name of the table to test for inclusion
+/// - parameter table: The name of the table to test for inclusion.
 ///
 /// - returns: `true` if `table` should be included in the operation, `false` otherwise.
 public typealias ChangesetTableFilter = (_ table: String) -> Bool
@@ -482,11 +482,11 @@ public typealias ChangesetTableFilter = (_ table: String) -> Bool
 ///
 /// - seealso: [Constants Returned By The Conflict Handler](https://www.sqlite.org/session/c_changeset_abort.html)
 public enum ChangesetConflictHandlerResult {
-	/// The change that caused the conflict is not applied
+	/// The change that caused the conflict is not applied.
 	case omit
-	/// The conflicting row is replaced
+	/// The conflicting row is replaced.
 	case replace
-	/// Any changes applied are rolled back and the changeset application is aborted
+	/// Any changes applied are rolled back and the changeset application is aborted.
 	case abort
 }
 
@@ -494,21 +494,21 @@ public enum ChangesetConflictHandlerResult {
 ///
 /// - seealso: [Constants Passed To The Conflict Handler](https://www.sqlite.org/session/c_changeset_conflict.html)
 public enum ChangesetConflictHandlerConflict {
-	/// One or more primary key fields do not contain the expected "before" data
+	/// One or more primary key fields do not contain the expected "before" data.
 	case data(ChangesetOperation)
-	/// The required primary key field was not found in the database
+	/// The required primary key field was not found in the database.
 	case notFound(ChangesetOperation)
-	/// The operation would result in duplicate primary key values
+	/// The operation would result in duplicate primary key values.
 	case conflict(ChangesetOperation)
-	/// A constraint violation occurred
+	/// A constraint violation occurred.
 	case constraint
-	/// The database is left in a state containing foreign key violations
+	/// The database is left in a state containing foreign key violations.
 	case foreignKey(Int)
 }
 
 /// A changeset conflict handler.
 ///
-/// - parameter conflict: A conflict that occurred during changeset application
+/// - parameter conflict: A conflict that occurred during changeset application.
 ///
 /// - returns: The action that should be taken to resolve the conflict.
 public typealias ChangesetConflictHandler = (_ conflict: ChangesetConflictHandlerConflict) -> ChangesetConflictHandlerResult
@@ -523,7 +523,7 @@ public struct ChangesetApplyOptions: OptionSet {
 		self.rawValue = rawValue
 	}
 
-	/// Do not wrap changeset application in a `SAVEPOINT`
+	/// Do not wrap changeset application in a `SAVEPOINT`.
 	public static let noSavepoint = ChangesetApplyOptions(rawValue: SQLITE_CHANGESETAPPLY_NOSAVEPOINT)
 	/// Invert the changeset before applying it.
 	public static let invert = ChangesetApplyOptions(rawValue: SQLITE_CHANGESETAPPLY_INVERT)
@@ -532,10 +532,10 @@ public struct ChangesetApplyOptions: OptionSet {
 extension Database {
 	/// Applies a changeset to the database.
 	///
-	/// - parameter changeset: The changeset to apply
-	/// - parameter options: Options affecting how the changeset is applied
+	/// - parameter changeset: The changeset to apply.
+	/// - parameter options: Options affecting how the changeset is applied.
 	/// - parameter isIncluded: An optional closure returning `true` if changes to the named table should be applied. If `nil`, all tables will be included.
-	/// - parameter onConflict: A closure indicating how conflicts should be handled
+	/// - parameter onConflict: A closure indicating how conflicts should be handled.
 	///
 	/// - throws: An error if the changeset could not be applied.
 	///
