@@ -161,19 +161,39 @@ extension Database {
 }
 
 extension SQLParameter {
-	/// Binds a text value.
+	/// Binds a `String` object as a text value.
 	public static func string(_ value: String) -> SQLParameter {
 		SQLParameter { statement, index in
 			try statement.bind(text: value, toParameter: index)
 		}
 	}
+
+	/// Binds an optional `String` object as a text value or SQL NULL if `nil`.
+	public static func string(_ value: Optional<String>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .string(obj)
+		}
+	}
 }
 
 extension SQLParameter {
-	/// Binds a BLOB value.
+	/// Binds a `Data` object as a BLOB value.
 	public static func data(_ value: Data) -> SQLParameter {
 		SQLParameter { statement, index in
 			try statement.bind(blob: value, toParameter: index)
+		}
+	}
+
+	/// Binds an optional `Data` object as a BLOB value or SQL NULL if `nil`.
+	public static func data(_ value: Optional<Data>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .data(obj)
 		}
 	}
 }
@@ -186,115 +206,224 @@ extension SQLParameter {
 }
 
 extension SQLParameter {
-	/// Binds an `Int` as a signed integer.
+	/// Binds an `Int` object as a signed integer value.
 	public static func int(_ value: Int) -> SQLParameter {
-		SQLParameter { statement, index in
-			try statement.bind(integer: Int64(value), toParameter: index)
-		}
+		.int64(Int64(value))
 	}
 
-	/// Binds a `UInt` as a signed integer.
+	/// Binds a `UInt` object as a signed integer value.
 	/// - note: The value is bound as an `Int` bit pattern.
 	public static func uint(_ value: UInt) -> SQLParameter {
-		SQLParameter { statement, index in
-			try statement.bind(integer: Int64(Int(bitPattern: value)), toParameter: index)
-		}
+		.int64(Int64(Int(bitPattern: value)))
 	}
 
-	/// Binds an `Int8` as a signed integer.
+	/// Binds an `Int8` object as a signed integer value.
 	public static func int8(_ value: Int8) -> SQLParameter {
-		SQLParameter { statement, index in
-			try statement.bind(integer: Int64(value), toParameter: index)
-		}
+		.int64(Int64(value))
 	}
 
-	/// Binds a `UInt8` as a signed integer.
+	/// Binds a `UInt8` object as a signed integer value.
 	public static func uint8(_ value: UInt8) -> SQLParameter {
-		SQLParameter { statement, index in
-			try statement.bind(integer: Int64(value), toParameter: index)
-		}
+		.int64(Int64(value))
 	}
 
-	/// Binds an `Int16` as a signed integer.
+	/// Binds an `Int16` object as a signed integer value.
 	public static func int16(_ value: Int16) -> SQLParameter {
-		SQLParameter { statement, index in
-			try statement.bind(integer: Int64(value), toParameter: index)
-		}
+		.int64(Int64(value))
 	}
 
-	/// Binds a `UInt16` as a signed integer.
+	/// Binds a `UInt16` object as a signed integer value.
 	public static func uint16(_ value: UInt16) -> SQLParameter {
-		SQLParameter { statement, index in
-			try statement.bind(integer: Int64(value), toParameter: index)
-		}
+		.int64(Int64(value))
 	}
 
-	/// Binds an `Int32` as a signed integer.
+	/// Binds an `Int32` object as a signed integer value.
 	public static func int32(_ value: Int32) -> SQLParameter {
-		SQLParameter { statement, index in
-			try statement.bind(integer: Int64(value), toParameter: index)
-		}
+		.int64(Int64(value))
 	}
 
-	/// Binds a `UInt32` as a signed integer.
+	/// Binds a `UInt32` object as a signed integer value.
 	public static func uint32(_ value: UInt32) -> SQLParameter {
-		SQLParameter { statement, index in
-			try statement.bind(integer: Int64(value), toParameter: index)
-		}
+		.int64(Int64(value))
 	}
 
-	/// Binds an `Int64` as a signed integer.
+	/// Binds an `Int64` object as a signed integer value.
 	public static func int64(_ value: Int64) -> SQLParameter {
 		SQLParameter { statement, index in
 			try statement.bind(integer: value, toParameter: index)
 		}
 	}
 
-	/// Binds a `UInt64` as a signed integer.
+	/// Binds a `UInt64` object as a signed integer value.
 	/// - note: The value is bound as an `Int64` bit pattern.
 	public static func uint64(_ value: UInt64) -> SQLParameter {
-		SQLParameter { statement, index in
-			try statement.bind(integer: Int64(bitPattern: value), toParameter: index)
+		.int64(Int64(bitPattern: value))
+	}
+
+	/// Binds an optional `Int` object as a signed integer value or SQL NULL if `nil`.
+	public static func int(_ value: Optional<Int>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .int(obj)
+		}
+	}
+
+	/// Binds an optional `UInt` object as a signed integer value or SQL NULL if `nil`.
+	/// - note: The value is bound as an `Int` bit pattern.
+	public static func uint(_ value: Optional<UInt>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .uint(obj)
+		}
+	}
+
+	/// Binds an optional `Int8` object as a signed integer value or SQL NULL if `nil`.
+	public static func int8(_ value: Optional<Int8>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .int8(obj)
+		}
+	}
+
+	/// Binds an optional `UInt8` object as a signed integer value or SQL NULL if `nil`.
+	public static func uint8(_ value: Optional<UInt8>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .uint8(obj)
+		}
+	}
+
+	/// Binds an optional `Int16` object as a signed integer value or SQL NULL if `nil`.
+	public static func int16(_ value: Optional<Int16>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .int16(obj)
+		}
+	}
+
+	/// Binds an optional `UInt16` object as a signed integer value or SQL NULL if `nil`.
+	public static func uint16(_ value: Optional<UInt16>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .uint16(obj)
+		}
+	}
+
+	/// Binds an optional `Int32` object as a signed integer value or SQL NULL if `nil`.
+	public static func int32(_ value: Optional<Int32>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .int32(obj)
+		}
+	}
+
+	/// Binds an optional `UInt32` object as a signed integer value or SQL NULL if `nil`.
+	public static func uint32(_ value: Optional<UInt32>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .uint32(obj)
+		}
+	}
+
+	/// Binds an optional `Int64` object as a signed integer value or SQL NULL if `nil`.
+	public static func int64(_ value: Optional<Int64>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .int64(obj)
+		}
+	}
+
+	/// Binds an optional `UInt64` object as a signed integer value or SQL NULL if `nil`.
+	/// - note: The value is bound as an `Int64` bit pattern.
+	public static func uint(_ value: Optional<UInt64>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .uint64(obj)
 		}
 	}
 }
 
 extension SQLParameter {
-	/// Binds a `Float` as a floating-point value.
+	/// Binds a `Float` object as a floating-point value.
 	public static func float(_ value: Float) -> SQLParameter {
-		SQLParameter { statement, index in
-			try statement.bind(real: Double(value), toParameter: index)
-		}
+		.double(Double(value))
 	}
 
-	/// Binds a `Double` as a floating-point value.
+	/// Binds a `Double` object as a floating-point value.
 	public static func double(_ value: Double) -> SQLParameter {
 		SQLParameter { statement, index in
 			try statement.bind(real: value, toParameter: index)
 		}
 	}
+
+	/// Binds an optional `Float` object as a floating-point value or SQL NULL if `nil`.
+	public static func float(_ value: Optional<Float>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .float(obj)
+		}
+	}
+
+	/// Binds an optional `Double` object as a floating-point value or SQL NULL if `nil`.
+	public static func double(_ value: Optional<Double>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .double(obj)
+		}
+	}
 }
 
 extension SQLParameter {
-	/// Binds a `Bool` as a signed integer.
+	/// Binds a `Bool` object as a signed integer value.
 	/// - note: True is bound as 1 while false is bound as 0.
 	public static func bool(_ value: Bool) -> SQLParameter {
-		SQLParameter { statement, index in
-			try statement.bind(integer: value ? 1 : 0, toParameter: index)
+		.int64(value ? 1 : 0)
+	}
+
+	/// Binds an optional `Bool` object as a signed integer value or SQL NULL if `nil`.
+	/// - note: True is bound as 1 while false is bound as 0.
+	public static func bool(_ value: Optional<Bool>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .bool(obj)
 		}
 	}
 }
 
 extension SQLParameter {
-	/// Binds a `UUID` as text.
+	/// Binds a `UUID` object as a text value.
 	/// - note: The value is bound as a lower case UUID string.
 	public static func uuidString(_ value: UUID) -> SQLParameter {
-		SQLParameter { statement, index in
-			try statement.bind(text: value.uuidString.lowercased(), toParameter: index)
-		}
+		.string(value.uuidString.lowercased())
 	}
 
-	/// Binds a `UUID` as a BLOB.
+	/// Binds a `UUID` object as a BLOB value.
 	/// - note: The value is bound as a 16-byte `uuid_t`.
 	public static func uuidBytes(_ value: UUID) -> SQLParameter {
 		SQLParameter { statement, index in
@@ -304,39 +433,96 @@ extension SQLParameter {
 			try statement.bind(blob: b, toParameter: index)
 		}
 	}
-}
 
-extension SQLParameter {
-	/// Binds a `URL` as text.
-	public static func urlString(_ value: URL) -> SQLParameter {
-		SQLParameter { statement, index in
-			try statement.bind(text: value.absoluteString, toParameter: index)
+	/// Binds an optional `UUID` object as a text value or SQL NULL if `nil`.
+	/// - note: The value is bound as a lower case UUID string.
+	public static func uuidString(_ value: Optional<UUID>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .uuidString(obj)
+		}
+	}
+
+	/// Binds an optional `UUID` object as a BLOB value or SQL NULL if `nil`.
+	/// - note: The value is bound as a lower case UUID string.
+	public static func uuidBytes(_ value: Optional<UUID>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .uuidBytes(obj)
 		}
 	}
 }
 
 extension SQLParameter {
-	/// Binds a `Date` as a floating-point value.
+	/// Binds a `URL` object as a text value.
+	public static func urlString(_ value: URL) -> SQLParameter {
+		.string(value.absoluteString)
+	}
+
+	/// Binds an optional `URL` object as a text value or SQL NULL if `nil`.
+	public static func urlString(_ value: Optional<URL>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .urlString(obj)
+		}
+	}
+}
+
+extension SQLParameter {
+	/// Binds a `Date` object as a floating-point value.
 	/// - note: The value is bound as the number of seconds relative to 00:00:00 UTC on 1 January 1970.
 	public static func timeIntervalSince1970(_ value: Date) -> SQLParameter {
-		SQLParameter { statement, index in
-			try statement.bind(real: value.timeIntervalSince1970, toParameter: index)
-		}
+		.double(value.timeIntervalSince1970)
 	}
 
-	/// Binds a `Date` as a floating-point value.
+	/// Binds a `Date` object as a floating-point value.
 	/// - note: The value is bound as the number of seconds relative to 00:00:00 UTC on 1 January 2001.
 	public static func timeIntervalSinceReferenceDate(_ value: Date) -> SQLParameter {
-		SQLParameter { statement, index in
-			try statement.bind(real: value.timeIntervalSinceReferenceDate, toParameter: index)
+		.double(value.timeIntervalSinceReferenceDate)
+	}
+
+	/// Binds a `Date` object as a text value.
+	/// - parameter formatter: The formatter to use to generate the ISO 8601 date representation.
+	public static func iso8601DateString(_ value: Date, formatter: ISO8601DateFormatter = ISO8601DateFormatter()) -> SQLParameter {
+		.string(formatter.string(from: value))
+	}
+
+	/// Binds an optional `Date` object as a floating-point value or SQL NULL if `nil`.
+	/// - note: The value is bound as the number of seconds relative to 00:00:00 UTC on 1 January 1970.
+	public static func timeIntervalSince1970(_ value: Optional<Date>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .timeIntervalSince1970(obj)
 		}
 	}
 
-	/// Binds a `Date` as a text value.
+	/// Binds an optional `Date` object as a floating-point value or SQL NULL if `nil`.
+	/// - note: The value is bound as the number of seconds relative to 00:00:00 UTC on 1 January 2001.
+	public static func timeIntervalSinceReferenceDate(_ value: Optional<Date>) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .timeIntervalSinceReferenceDate(obj)
+		}
+	}
+
+	/// Binds an optional `Date` object as a text value or SQL NULL if `nil`.
 	/// - parameter formatter: The formatter to use to generate the ISO 8601 date representation.
-	public static func iso8601DateString(_ value: Date, formatter: ISO8601DateFormatter = ISO8601DateFormatter()) -> SQLParameter {
-		SQLParameter { statement, index in
-			try statement.bind(text	: formatter.string(from: value), toParameter: index)
+	public static func iso8601DateString(_ value: Optional<Date>, formatter: ISO8601DateFormatter = ISO8601DateFormatter()) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .iso8601DateString(obj, formatter: formatter)
 		}
 	}
 }
@@ -381,7 +567,7 @@ extension SQLParameter: ExpressibleByStringLiteral {
 }
 
 extension SQLParameter: ExpressibleByBooleanLiteral {
-	/// Binds a boolean value as a signed integer.
+	/// Binds a boolean value as a signed integer value.
 	/// - note: True is bound as 1 while false is bound as 0.
 	public init(booleanLiteral value: BooleanLiteralType) {
 		self = .int64(value ? 1 : 0)
@@ -389,7 +575,7 @@ extension SQLParameter: ExpressibleByBooleanLiteral {
 }
 
 extension SQLParameter {
-	/// Binds an `NSNumber` as a signed integer or floating-point value.
+	/// Binds an `NSNumber` object as a signed integer or floating-point value.
 	public static func nsNumber(_ value: NSNumber) -> SQLParameter {
 		SQLParameter { statement, index in
 			switch CFNumberGetType(value as CFNumber) {

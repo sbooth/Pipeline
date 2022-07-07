@@ -408,6 +408,27 @@ final class PipelineTests: XCTestCase {
 		}
 	}
 
+	func testDatabaseBindings2() {
+		let db = try! Database()
+
+		try! db.execute(sql: "create table t1(a, b);")
+
+		let int = 5
+		let optionalInt: Int? = nil
+		try! db.prepare(sql: "insert into t1(a, b) values (?, ?);").bind(.int(int), .int(optionalInt)).execute()
+
+		let statement = try! db.prepare(sql: "select * from t1 where a = ?")
+		try! statement.bind(value: 5, toParameter: 1)
+
+		try! statement.results { row in
+			let x = try row.value(at: 0, .int)
+			let y = try row.valueOrNil(named: "b", .int)
+
+			XCTAssertEqual(x, 5)
+			XCTAssertEqual(y, nil)
+		}
+	}
+
 	func testDatabaseNamedBindings() {
 		let db = try! Database()
 
