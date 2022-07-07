@@ -487,6 +487,12 @@ extension SQLParameter {
 		.double(value.timeIntervalSinceReferenceDate)
 	}
 
+	/// Binds a `Date` object as a text value.
+	/// - parameter formatter: The formatter to use to generate the ISO 8601 date representation.
+	public static func iso8601DateString(_ value: Date, formatter: ISO8601DateFormatter = ISO8601DateFormatter()) -> SQLParameter {
+		.string(formatter.string(from: value))
+	}
+
 	/// Binds an optional `Date` object as a floating-point value or SQL NULL if `nil`.
 	/// - note: The value is bound as the number of seconds relative to 00:00:00 UTC on 1 January 1970.
 	public static func timeIntervalSince1970(_ value: Optional<Date>) -> SQLParameter {
@@ -509,10 +515,15 @@ extension SQLParameter {
 		}
 	}
 
-	/// Binds a `Date` object as a text value.
+	/// Binds an optional `Date` object as a text value or SQL NULL if `nil`.
 	/// - parameter formatter: The formatter to use to generate the ISO 8601 date representation.
-	public static func iso8601DateString(_ value: Date, formatter: ISO8601DateFormatter = ISO8601DateFormatter()) -> SQLParameter {
-		.string(formatter.string(from: value))
+	public static func iso8601DateString(_ value: Optional<Date>, formatter: ISO8601DateFormatter = ISO8601DateFormatter()) -> SQLParameter {
+		switch value {
+		case .none:
+			return .null
+		case .some(let obj):
+			return .iso8601DateString(obj, formatter: formatter)
+		}
 	}
 }
 
