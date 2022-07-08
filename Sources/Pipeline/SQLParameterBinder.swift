@@ -9,16 +9,15 @@ import CSQLite
 
 /// A struct responsible for binding a value to an SQL parameter in a `Statement` object.
 ///
-/// The implementation normally uses either `bind(integer:toParameter:)`, `bind(real:toParameter:)`,
-/// `bind(text:toParameter:)`, `bind(blob:toParameter:)`, or `bindNull(toParameter:)` but lower-level SQLite
-/// operations are also possible.
+/// The implementation normally uses one of the `bind(_:toParameter:)` functions  or `bindNull(toParameter:)`
+/// but lower-level SQLite operations are also possible.
 ///
 /// For example, an implementation for binding a `UUID` object as text is:
 ///
 /// ```swift
 /// extension SQLParameterBinder where T == UUID {
 /// 	public static let uuidString = SQLParameterBinder {
-/// 		try $0.bind(text: $1.uuidString.lowercased(), toParameter: $2)
+/// 		try $0.bind($1.uuidString.lowercased(), toParameter: $2)
 /// 	}
 ///  ```
 public struct SQLParameterBinder<T> {
