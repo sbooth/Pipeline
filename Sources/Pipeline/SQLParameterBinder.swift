@@ -269,7 +269,7 @@ extension SQLParameterBinder where T == UUID {
 		try $0.bind($1.uuidString.lowercased(), toParameter: $2)
 	}
 
-	/// Binds a `UUID` object as a text value.
+	/// Binds a `UUID` object as a BLOB value.
 	/// - note: The value is bound as a 16-byte `uuid_t`.
 	public static let uuidBytes = SQLParameterBinder {
 		let b = withUnsafeBytes(of: $1.uuid) {
