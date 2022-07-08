@@ -119,6 +119,8 @@ extension Statement {
 	/// - parameter index: The index of the SQL parameter to bind.
 	///
 	/// - throws: An error if `value` couldn't be bound.
+	///
+	/// - returns: `self`.
 	@discardableResult public func bind(integer value: Int64, toParameter index: Int) throws -> Statement {
 		guard sqlite3_bind_int64(preparedStatement, Int32(index), value) == SQLITE_OK else {
 			throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
@@ -134,6 +136,8 @@ extension Statement {
 	/// - parameter index: The index of the SQL parameter to bind.
 	///
 	/// - throws: An error if `value` couldn't be bound.
+	///
+	/// - returns: `self`.
 	@discardableResult public func bind(real value: Double, toParameter index: Int) throws -> Statement {
 		guard sqlite3_bind_double(preparedStatement, Int32(index), value) == SQLITE_OK else {
 			throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
