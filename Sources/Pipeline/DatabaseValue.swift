@@ -195,7 +195,7 @@ extension DatabaseValue {
 		.integer(value)
 	}
 
-	/// Creates and returns a database value containing a signed integer representation of a 64-bit unsigned integer.
+	/// Creates and returns a database value containing the signed integer representation of a 64-bit unsigned integer.
 	/// - note: The database value contains a bit pattern.
 	public static func uint64(_ value: UInt64) -> DatabaseValue {
 		.integer(Int64(bitPattern: value))
@@ -213,7 +213,8 @@ extension DatabaseValue {
 		}
 	}
 
-	/// Creates a database value initialized to a signed integer value or null.
+	/// Creates a database value initialized to the signed integer value of an unsigned integer or null.
+	/// - note: The database value contains a bit pattern.
 	public static func uint(_ value: UInt?) -> DatabaseValue {
 		switch value {
 		case .none:
@@ -233,7 +234,8 @@ extension DatabaseValue {
 		}
 	}
 
-	/// Creates a database value initialized to a signed integer value or null.
+	/// Creates a database value initialized to the signed integer representation of a 64-bit unsigned integer or null.
+	/// - note: The database value contains a bit pattern.
 	public static func uint64(_ value: UInt64?) -> DatabaseValue {
 		switch value {
 		case .none:
