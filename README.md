@@ -41,7 +41,7 @@ try database.execute(sql: "CREATE TABLE t1(a,b);")
 
 // Insert a row
 try database.execute(sql: "INSERT INTO t1(a,b) VALUES (?,?);", 
-                     parameterValues: 33, "lulu")
+                     parameters: .int(33), "lulu")
 
 // Retrieve the values
 try database.execute(sql: "SELECT a,b FROM t1;") { row in
@@ -95,15 +95,17 @@ The fundamental type for a column value in a result row is `DatabaseValue`.
 
 - `DatabaseValue` objects contain an integer, floating-point, textual, null, or BLOB value.
 
-- `DatabaseValue` objects may be retreived from result rows and bound to SQL parameters.
+- `DatabaseValue` objects may be retrieved from result rows.
 
 Type-safe column value access is provided by specializations of the `ColumnValueConverter` struct.
 
 - `ColumnValueConverter<T>` converts a column value in a result row to an object of type `T`.
 
-Type-safe SQL parameter binding is provided by `SQLParameter` objects.
+Type-safe SQL parameter binding is provided by `DatabaseValue` or `SQLParameterBinder` objects.
 
-- `SQLParameter` objects capture a value and bind it to an SQL parameter.
+- `DatabaseValue` extensions provide database value creation from most common Swift types.
+
+- `SQLParameterBinder` objects capture values not easily represented by `DatabaseValue` and bind them to an SQL parameter.
 
 Thread-safe access to a database is provided by `DatabaseQueue`.
 
@@ -133,14 +135,14 @@ The created table *t1* has two columns, *a* and *b*.
 ```swift
 for i in 0..<5 {
     try database.execute(sql: "INSERT INTO t1(a,b) VALUES (?,?);",
-                         parameterValues: 2*i, 2*i+1)
+                         parameters: .int(2*i), .int(2*i+1))
 }
 ```
 SQL parameters are passed as a sequence or series of values.  Named parameters are also supported.
 
 ```swift
 try database.execute(sql: "INSERT INTO t1(a,b) VALUES (:a,:b);",
-                     parameterValues: [":a": 100, ":b": 404])
+                     parameters: [":a": .int(100), ":b": .int(404)])
 ```
 
 ### Insert Data Efficiently
@@ -150,7 +152,7 @@ Rather than parsing SQL each time a statement is executed, it is more efficient 
 ```swift
 let statement = try database.prepare(sql: "INSERT INTO t1(a,b) VALUES (?,?);")
 for i in 0..<5 {
-    try statement.bind(parameterValues: 2*i, 2*i+1)
+    try statement.bind(.int(2*i), .int(2*i+1))
     try statement.execute()
     try statement.reset()
     try statement.clearBindings()
@@ -234,12 +236,12 @@ Pipeline provides a Combine publisher for SQLite query results, allowing you to 
 
 ```swift
 struct UUIDHolder {
-	let u: UUID
+	let id: UUID
 }
 
 extension UUIDHolder: RowMapping
 	init(row: Row) throws {
-		u = try row.value(forColumn: 0, .uuidWithString)
+		id = try row.value(at: 0, .uuidWithString)
 	}
 }
 
