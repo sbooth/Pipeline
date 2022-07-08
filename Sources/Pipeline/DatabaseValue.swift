@@ -145,57 +145,57 @@ extension DatabaseValue {
 }
 
 extension DatabaseValue {
-	/// Creates and returns  a database value containing a signed integer value.
+	/// Creates and returns a database value containing a signed integer value.
 	public static func int(_ value: Int) -> DatabaseValue {
 		.integer(Int64(value))
 	}
 
-	/// Creates and returns  a database value containing the signed integer value of an unsigned integer.
+	/// Creates and returns a database value containing the signed integer value of an unsigned integer.
 	/// - note: The database value contains a bit pattern.
 	public static func uint(_ value: UInt) -> DatabaseValue {
 		.integer(Int64(Int(bitPattern: value)))
 	}
 
 
-	/// Creates and returns  a database value containing a signed integer value.
+	/// Creates and returns a database value containing a signed integer value.
 	public static func int8(_ value: Int8) -> DatabaseValue {
 		.integer(Int64(value))
 	}
 
-	/// Creates and returns  a database value containing the signed integer value of an unsigned 8-bit integer.
+	/// Creates and returns a database value containing the signed integer value of an unsigned 8-bit integer.
 	public static func uint8(_ value: UInt8) -> DatabaseValue {
 		.integer(Int64(value))
 	}
 
 
-	/// Creates and returns  a database value containing a signed integer value.
+	/// Creates and returns a database value containing a signed integer value.
 	public static func int16(_ value: Int16) -> DatabaseValue {
 		.integer(Int64(value))
 	}
 
-	/// Creates and returns  a database value containing the signed integer value of a 16-bit unsigned integer.
+	/// Creates and returns a database value containing the signed integer value of a 16-bit unsigned integer.
 	public static func uint16(_ value: UInt16) -> DatabaseValue {
 		.integer(Int64(value))
 	}
 
 
-	/// Creates and returns  a database value containing a signed integer value.
+	/// Creates and returns a database value containing a signed integer value.
 	public static func int32(_ value: Int32) -> DatabaseValue {
 		.integer(Int64(value))
 	}
 
-	/// Creates and returns  a database value containing the signed integer value of a 32-bit unsigned integer.
+	/// Creates and returns a database value containing the signed integer value of a 32-bit unsigned integer.
 	public static func uint32(_ value: UInt32) -> DatabaseValue {
 		.integer(Int64(value))
 	}
 
 
-	/// Creates and returns  a database value containing a signed integer value.
+	/// Creates and returns a database value containing a signed integer value.
 	public static func int64(_ value: Int64) -> DatabaseValue {
 		.integer(value)
 	}
 
-	/// Creates and returns  a database value containing a signed integer representation of a 64-bit unsigned integer.
+	/// Creates and returns a database value containing a signed integer representation of a 64-bit unsigned integer.
 	/// - note: The database value contains a bit pattern.
 	public static func uint64(_ value: UInt64) -> DatabaseValue {
 		.integer(Int64(bitPattern: value))
@@ -245,12 +245,12 @@ extension DatabaseValue {
 }
 
 extension DatabaseValue {
-	/// Creates and returns  a database value containing a floating-point value.
+	/// Creates and returns a database value containing a floating-point value.
 	public static func float(_ value: Float) -> DatabaseValue {
 		.real(Double(value))
 	}
 
-	/// Creates and returns  a database value containing a floating-point value.
+	/// Creates and returns a database value containing a floating-point value.
 	public static func double(_ value: Double) -> DatabaseValue {
 		.real(value)
 	}
@@ -279,7 +279,7 @@ extension DatabaseValue {
 }
 
 extension DatabaseValue {
-	/// Creates and returns  a database value containing a signed integer representation of a boolean value.
+	/// Creates and returns a database value containing a signed integer representation of a boolean value.
 	/// - note: True is represented as 1 while false is represented as 0.
 	public static func bool(_ value: Bool) -> DatabaseValue {
 		.integer(value ? 1 : 0)
@@ -287,7 +287,7 @@ extension DatabaseValue {
 }
 
 extension DatabaseValue {
-	/// Creates and returns  a database value containing a signed integer representation of a boolean value or null.
+	/// Creates and returns a database value containing a signed integer representation of a boolean value or null.
 	/// - note: True is represented as 1 while false is represented as 0.
 	public static func bool(_ value: Bool?) -> DatabaseValue {
 		switch value {
@@ -300,13 +300,13 @@ extension DatabaseValue {
 }
 
 extension DatabaseValue {
-	/// Creates and returns  a database value containing a text representation of a UUID.
+	/// Creates and returns a database value containing a text representation of a UUID.
 	/// - note: The database value contains a lower case UUID string.
 	public static func uuidString(_ value: UUID) -> DatabaseValue {
 		.text(value.uuidString.lowercased())
 	}
 
-	/// Creates and returns  a database value containing a BLOB representation of a UUID.
+	/// Creates and returns a database value containing a BLOB representation of a UUID.
 	/// - note: The database value contains a 16-byte `uuid_t`.
 	public static func uuidBytes(_ value: UUID) -> DatabaseValue {
 		let b = withUnsafeBytes(of: value.uuid) {
@@ -317,26 +317,26 @@ extension DatabaseValue {
 }
 
 extension DatabaseValue {
-	/// Creates and returns  a database value containing a text representation of a URL.
+	/// Creates and returns a database value containing a text representation of a URL.
 	public static func urlString(_ value: URL) -> DatabaseValue {
 		.text(value.absoluteString)
 	}
 }
 
 extension DatabaseValue {
-	/// Creates and returns  a database value containing a floating-point representation of a date.
+	/// Creates and returns a database value containing a floating-point representation of a date.
 	/// - note: The database value contains the number of seconds relative to 00:00:00 UTC on 1 January 1970.
 	public static func timeIntervalSince1970(_ value: Date) -> DatabaseValue {
 		.real(value.timeIntervalSince1970)
 	}
 
-	/// Creates and returns  a database value containing a floating-point representation of a date.
+	/// Creates and returns a database value containing a floating-point representation of a date.
 	/// - note: The database value contains the number of seconds relative to 00:00:00 UTC on 1 January 2001.
 	public static func timeIntervalSinceReferenceDate(_ value: Date) -> DatabaseValue {
 		.real(value.timeIntervalSinceReferenceDate)
 	}
 
-	/// Creates and returns  a database value containing a text representation of a date.
+	/// Creates and returns a database value containing a text representation of a date.
 	/// - parameter formatter: The formatter to use to generate the ISO 8601 date representation.
 	public static func iso8601DateString(_ value: Date, _ formatter: ISO8601DateFormatter = ISO8601DateFormatter()) -> DatabaseValue {
 		.text(formatter.string(from: value))
@@ -344,7 +344,7 @@ extension DatabaseValue {
 }
 
 extension DatabaseValue {
-	/// Creates and returns  a database value containing encoded JSON data.
+	/// Creates and returns a database value containing encoded JSON data.
 	/// - parameter encoder: The encoder to use to generate the encoded JSON data.
 	public static func json<T>(_ value: T, _ encoder: JSONEncoder = JSONEncoder()) throws -> DatabaseValue where T: Encodable {
 		try .blob(encoder.encode(value))
@@ -352,7 +352,7 @@ extension DatabaseValue {
 }
 
 extension DatabaseValue {
-	/// Creates and returns  a database value containing a signed integer or floating-point value.
+	/// Creates and returns a database value containing a signed integer or floating-point value.
 	public static func number(_ value: NSNumber) -> DatabaseValue {
 		switch CFNumberGetType(value as CFNumber) {
 		case .sInt8Type, .sInt16Type, .sInt32Type, .charType, .shortType, .intType,
@@ -367,7 +367,7 @@ extension DatabaseValue {
 }
 
 extension DatabaseValue {
-	/// Creates and returns  a database value containing a keyed archive.
+	/// Creates and returns a database value containing a keyed archive.
 	public static func keyedArchive<T>(_ value: T) throws -> DatabaseValue where T: NSObject, T: NSCoding {
 		let b = try NSKeyedArchiver.archivedData(withRootObject: value, requiringSecureCoding: true)
 		return .blob(b)
