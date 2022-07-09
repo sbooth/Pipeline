@@ -46,7 +46,7 @@ extension Database {
 ///
 /// ```swift
 /// let value = try row.value(at: 0)
-/// let uuid: UUID = try row.value(named: "session_uuid")
+/// let uuid = try row.value(named: "session_uuid", .uuidWithString)
 /// ```
 ///
 /// It is also possible to iterate over column values:
