@@ -167,6 +167,15 @@ extension Database {
 }
 
 extension SQLParameter {
+	/// Binds a `DatabaseValue` object.
+	public static func value(_ value: DatabaseValue) -> SQLParameter {
+		SQLParameter { statement, index in
+			try statement.bind(value: value, toParameter: index)
+		}
+	}
+}
+
+extension SQLParameter {
 	/// Binds a `String` object as a text value.
 	public static func string(_ value: String) -> SQLParameter {
 		SQLParameter { statement, index in
