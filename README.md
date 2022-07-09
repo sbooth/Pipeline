@@ -101,11 +101,9 @@ Type-safe column value access is provided by specializations of the `ColumnValue
 
 - `ColumnValueConverter<T>` converts a column value in a result row to an object of type `T`.
 
-Type-safe SQL parameter binding is provided by `DatabaseValue` or `SQLParameterBinder` objects.
+Type-safe SQL parameter binding is provided by `SQLParameter` objects.
 
-- `DatabaseValue` extensions provide database value creation from most common Swift types.
-
-- `SQLParameterBinder` objects capture values not easily represented by `DatabaseValue` and bind them to an SQL parameter.
+- `SQLParameter` objects capture a value and bind it to an SQL parameter.
 
 Thread-safe access to a database is provided by `DatabaseQueue`.
 
