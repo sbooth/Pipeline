@@ -438,7 +438,7 @@ final class PipelineTests: XCTestCase {
 		}
 
 		let statement = try! db.prepare(sql: "select * from t1 where a = :a")
-		try! statement.bind(Int64(5), toParameter: ":a")
+		try! statement.bind(integer: Int64(5), toParameter: ":a")
 
 		try! statement.results { row in
 			let x = try row.value(at: 0, .int)
