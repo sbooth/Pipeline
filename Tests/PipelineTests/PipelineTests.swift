@@ -172,7 +172,7 @@ final class PipelineTests: XCTestCase {
 		var str = ""
 		let s = try! db.prepare(sql: "select * from t1 order by a collate reversed;")
 		try! s.results { row in
-			let c = try row.value(at: 0, .string)
+			let c = try row.string(at: 0)
 			str.append(c)
 		}
 
@@ -251,7 +251,7 @@ final class PipelineTests: XCTestCase {
 			try! db.execute(sql: "insert into t1(a) values (?);", parameters: [.int(i)])
 		}
 
-		let s = try! db.prepare(sql: "select integer_sum(a) from t1;").step()!.value(at: 0, .int64)
+		let s = try! db.prepare(sql: "select integer_sum(a) from t1;").step()!.int64(at: 0)
 		XCTAssertEqual(s, 45)
 
 		let ss = try! db.prepare(sql: "select integer_sum(a) from t1;").step()!.value(at: 0, .int64)
@@ -399,7 +399,7 @@ final class PipelineTests: XCTestCase {
 		try! statement.bind(integer: Int64(5), toParameter: 1)
 
 		try! statement.results { row in
-			let x = try row.value(at: 0, .int)
+			let x = try row.int(at: 0)
 			let y = try row.valueOrNil(named: "b", .int)
 
 			XCTAssertEqual(x, 5)
