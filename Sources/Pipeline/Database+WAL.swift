@@ -35,14 +35,18 @@ extension Database {
 	public func walCheckpoint(type: WALCheckpointType = .passive) throws {
 		let mode: Int32
 		switch type {
-		case .passive:		mode = SQLITE_CHECKPOINT_PASSIVE
-		case .full:			mode = SQLITE_CHECKPOINT_FULL
-		case .restart:		mode = SQLITE_CHECKPOINT_RESTART
-		case .truncate:		mode = SQLITE_CHECKPOINT_TRUNCATE
+		case .passive:
+			mode = SQLITE_CHECKPOINT_PASSIVE
+		case .full:
+			mode = SQLITE_CHECKPOINT_FULL
+		case .restart:
+			mode = SQLITE_CHECKPOINT_RESTART
+		case .truncate:
+			mode = SQLITE_CHECKPOINT_TRUNCATE
 		}
 
 		guard sqlite3_wal_checkpoint_v2(databaseConnection, nil, mode, nil, nil) == SQLITE_OK else {
-			throw SQLiteError("Error performing WAL checkpoint", fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error performing \(type) WAL checkpoint", fromDatabaseConnection: databaseConnection)
 		}
 	}
 }

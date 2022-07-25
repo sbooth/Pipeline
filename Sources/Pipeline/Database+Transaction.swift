@@ -32,13 +32,16 @@ extension Database {
 	public func begin(type: TransactionType = .deferred) throws {
 		let sql: String
 		switch type {
-		case .deferred:		sql = "BEGIN DEFERRED TRANSACTION;"
-		case .immediate:	sql = "BEGIN IMMEDIATE TRANSACTION;"
-		case .exclusive:	sql = "BEGIN EXCLUSIVE TRANSACTION;"
+		case .deferred:
+			sql = "BEGIN DEFERRED TRANSACTION;"
+		case .immediate:
+			sql = "BEGIN IMMEDIATE TRANSACTION;"
+		case .exclusive:
+			sql = "BEGIN EXCLUSIVE TRANSACTION;"
 		}
 
 		guard sqlite3_exec(databaseConnection, sql, nil, nil, nil) == SQLITE_OK else {
-			throw SQLiteError("Error beginning transaction", fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error beginning \(type) transaction", fromDatabaseConnection: databaseConnection)
 		}
 	}
 
