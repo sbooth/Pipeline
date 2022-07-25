@@ -19,7 +19,7 @@ extension Database {
 	/// - seealso: [SAVEPOINT](https://sqlite.org/lang_savepoint.html)
 	public func begin(savepoint name: String) throws {
 		guard sqlite3_exec(databaseConnection, "SAVEPOINT '\(name)';", nil, nil, nil) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error creating savepoint \(name)", fromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -30,7 +30,7 @@ extension Database {
 	/// - throws: An error if the savepoint transaction couldn't be rolled back or doesn't exist.
 	public func rollback(to name: String) throws {
 		guard sqlite3_exec(databaseConnection, "ROLLBACK TO '\(name)';", nil, nil, nil) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error rolling back to savepoint \(name)", fromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -43,7 +43,7 @@ extension Database {
 	/// - throws: An error if the savepoint transaction couldn't be committed or doesn't exist.
 	public func release(savepoint name: String) throws {
 		guard sqlite3_exec(databaseConnection, "RELEASE '\(name)';", nil, nil, nil) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error releasing savepoint \(name)", fromDatabaseConnection: databaseConnection)
 		}
 	}
 

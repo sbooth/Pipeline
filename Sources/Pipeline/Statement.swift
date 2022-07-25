@@ -87,7 +87,7 @@ public final class Statement {
 	public convenience init(database: Database, sql: String) throws {
 		var stmt: SQLitePreparedStatement?
 		guard sqlite3_prepare_v2(database.databaseConnection, sql, -1, &stmt, nil) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
+			throw SQLiteError("Error preparing SQL \"\(sql)\"", fromDatabaseConnection: database.databaseConnection)
 		}
 		precondition(stmt != nil)
 		self.init(database: database, preparedStatement: stmt.unsafelyUnwrapped)
@@ -192,7 +192,7 @@ extension Statement {
 			result = sqlite3_step(preparedStatement)
 		}
 		guard result == SQLITE_DONE else {
-			throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
+			throw SQLiteError("Error evaluating statement", fromDatabaseConnection: database.databaseConnection)
 		}
 	}
 
@@ -209,7 +209,7 @@ extension Statement {
 			result = sqlite3_step(preparedStatement)
 		}
 		guard result == SQLITE_DONE else {
-			throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
+			throw SQLiteError("Error evaluating statement", fromDatabaseConnection: database.databaseConnection)
 		}
 	}
 
@@ -225,7 +225,7 @@ extension Statement {
 		case SQLITE_DONE:
 			return nil
 		default:
-			throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
+			throw SQLiteError("Error evaluating statement", fromDatabaseConnection: database.databaseConnection)
 		}
 	}
 
@@ -236,7 +236,7 @@ extension Statement {
 	/// - throws: An error if the statement could not be reset.
 	public func reset() throws {
 		guard sqlite3_reset(preparedStatement) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
+			throw SQLiteError("Error resetting statement", fromDatabaseConnection: database.databaseConnection)
 		}
 	}
 }

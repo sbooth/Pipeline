@@ -210,7 +210,7 @@ extension Database {
 		}) == SQLITE_OK else {
 			// xDestroy is not called if fts5_api.xCreateTokenizer() fails
 			Unmanaged<FTS5TokenizerCreator>.fromOpaque(user_data_ptr).release()
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error creating FTS5 tokenizer \"\(name)\"", fromDatabaseConnection: databaseConnection)
 		}
 	}
 }
@@ -246,7 +246,7 @@ private func get_fts5_api(for databaseConnection: SQLiteDatabaseConnection) thro
 	var stmt: SQLitePreparedStatement? = nil
 	let sql = "SELECT fts5(?1);"
 	guard sqlite3_prepare_v2(databaseConnection, sql, -1, &stmt, nil) == SQLITE_OK else {
-		throw SQLiteError(fromDatabaseConnection: databaseConnection)
+		throw SQLiteError("Error preparing SQL \"\(sql)\"", fromDatabaseConnection: databaseConnection)
 	}
 
 	defer {
@@ -255,11 +255,11 @@ private func get_fts5_api(for databaseConnection: SQLiteDatabaseConnection) thro
 
 	var api_ptr: UnsafePointer<fts5_api>?
 	guard sqlite3_bind_pointer(stmt, 1, &api_ptr, "fts5_api_ptr", nil) == SQLITE_OK else {
-		throw SQLiteError(fromDatabaseConnection: databaseConnection)
+		throw SQLiteError("Error binding FTS5 API pointer", fromDatabaseConnection: databaseConnection)
 	}
 
 	guard sqlite3_step(stmt) == SQLITE_ROW else {
-		throw SQLiteError(fromDatabaseConnection: databaseConnection)
+		throw SQLiteError("Error retrieving FTS5 API pointer", fromDatabaseConnection: databaseConnection)
 	}
 
 	guard let api = api_ptr else {

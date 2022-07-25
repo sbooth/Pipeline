@@ -208,7 +208,7 @@ extension Database {
 			// Balance the +1 retain above
 			Unmanaged<VirtualTableModuleClientData>.fromOpaque(UnsafeRawPointer(client_data.unsafelyUnwrapped)).release()
 		}) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error adding module \"\(name)\"", fromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -291,7 +291,7 @@ extension Database {
 			// Balance the +1 retain above
 			Unmanaged<VirtualTableModuleClientData>.fromOpaque(UnsafeRawPointer(client_data.unsafelyUnwrapped)).release()
 		}) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error adding module \"\(name)\"", fromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -302,7 +302,7 @@ extension Database {
 	/// - throws: An error if the virtual table module couldn't be removed.
 	public func removeModule(_ name: String) throws {
 		guard sqlite3_create_module(databaseConnection, name, nil, nil) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error removing module \"\(name)\"", fromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -314,10 +314,9 @@ extension Database {
 	public func removeAllModules(except: [String] = []) throws {
 		if except.isEmpty {
 			guard sqlite3_drop_modules(databaseConnection, nil) == SQLITE_OK else {
-				throw SQLiteError(fromDatabaseConnection: databaseConnection)
+				throw SQLiteError("Error removing all modules", fromDatabaseConnection: databaseConnection)
 			}
-		}
-		else {
+		} else {
 			// This could be done more efficiently using something similar to
 			// https://github.com/apple/swift/blob/dc39fc9f244aeb883c26bcd043e895178637fdf8/stdlib/private/SwiftPrivate/SwiftPrivate.swift#L60
 			// to avoid multiple memory allocations
@@ -332,7 +331,7 @@ extension Database {
 			}
 
 			guard sqlite3_drop_modules(databaseConnection, &module_names_to_keep) == SQLITE_OK else {
-				throw SQLiteError(fromDatabaseConnection: databaseConnection)
+				throw SQLiteError("Error removing all modules except \"\(except)\"", fromDatabaseConnection: databaseConnection)
 			}
 		}
 	}

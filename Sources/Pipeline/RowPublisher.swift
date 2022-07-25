@@ -47,7 +47,7 @@ extension Publishers {
 			} catch let error as SQLiteError {
 				Fail<Output, Failure>(error: error).subscribe(subscriber)
 			} catch {
-				Fail<Output, Failure>(error: SQLiteError(code: SQLITE_ERROR, details: "Unknown error creating a row publisher subscription. Did the binding closure throw something other than SQLiteError?")).subscribe(subscriber)
+				Fail<Output, Failure>(error: SQLiteError("Unknown error creating a row publisher subscription. Did the binding closure throw something other than SQLiteError?")).subscribe(subscriber)
 			}
 		}
 	}
@@ -79,7 +79,7 @@ extension Publishers.RowPublisher {
 					subscriber.receive(completion: .finished)
 					self.demand = .none
 				default:
-					subscriber.receive(completion: .failure(SQLiteError(fromPreparedStatement: statement.preparedStatement)))
+					subscriber.receive(completion: .failure(SQLiteError("Error evaluating statement", fromPreparedStatement: statement.preparedStatement)))
 					self.demand = .none
 				}
 			}

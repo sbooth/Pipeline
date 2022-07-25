@@ -38,7 +38,7 @@ extension Database {
 		}
 
 		guard sqlite3_exec(databaseConnection, sql, nil, nil, nil) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error beginning transaction", fromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -47,7 +47,7 @@ extension Database {
 	/// - throws: An error if the transaction couldn't be rolled back or there is no active transaction.
 	public func rollback() throws {
 		guard sqlite3_exec(databaseConnection, "ROLLBACK;", nil, nil, nil) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error rolling back", fromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -56,7 +56,7 @@ extension Database {
 	/// - throws: An error if the transaction couldn't be committed or there is no active transaction.
 	public func commit() throws {
 		guard sqlite3_exec(databaseConnection, "COMMIT;", nil, nil, nil) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error committing", fromDatabaseConnection: databaseConnection)
 		}
 	}
 

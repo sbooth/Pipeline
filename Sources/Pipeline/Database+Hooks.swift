@@ -249,7 +249,7 @@ extension Database {
 			busyHandler = nil
 		}
 		guard sqlite3_busy_handler(databaseConnection, nil, nil) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error removing busy handler", fromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -267,7 +267,7 @@ extension Database {
 			busyHandler = nil
 		}
 		guard sqlite3_busy_timeout(databaseConnection, Int32(ms)) == SQLITE_OK else {
-			throw DatabaseError(message: "Error setting busy timeout")
+			throw SQLiteError("Error setting busy timeout")
 		}
 	}
 }
@@ -333,7 +333,7 @@ extension Database {
 			}
 			var value: SQLiteValue?
 			guard sqlite3_preupdate_old(databaseConnection, Int32(index), &value) == SQLITE_OK else {
-				throw SQLiteError(fromDatabaseConnection: databaseConnection)
+				throw SQLiteError("Unable to retrieve old value at \(index) in pre-update hook", fromDatabaseConnection: databaseConnection)
 			}
 			return DatabaseValue(sqliteValue: value.unsafelyUnwrapped)
 		}
@@ -356,7 +356,7 @@ extension Database {
 			}
 			var value: SQLiteValue?
 			guard sqlite3_preupdate_new(databaseConnection, Int32(index), &value) == SQLITE_OK else {
-				throw SQLiteError(fromDatabaseConnection: databaseConnection)
+				throw SQLiteError("Unable to retrieve new value at \(index) in pre-update hook", fromDatabaseConnection: databaseConnection)
 			}
 			return DatabaseValue(sqliteValue: value.unsafelyUnwrapped)
 		}

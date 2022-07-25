@@ -32,7 +32,7 @@ public final class Snapshot {
 		self.database = database
 		var snapshot: SQLiteSnapshot? = nil
 		guard sqlite3_snapshot_get(database.databaseConnection, schema, &snapshot) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
+			throw SQLiteError("Error getting database snapshot for schema \"\(schema)\"", fromDatabaseConnection: database.databaseConnection)
 		}
 		precondition(snapshot != nil)
 		self.snapshot = snapshot!
@@ -77,7 +77,7 @@ extension Database {
 	/// - seealso: [Start a read transaction on an historical snapshot](https://www.sqlite.org/c3ref/snapshot_open.html)
 	public func openSnapshot(_ snapshot: Snapshot, schema: String = "main") throws {
 		guard sqlite3_snapshot_open(databaseConnection, schema, snapshot.snapshot) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error opening database snapshot for schema \"\(schema)\"", fromDatabaseConnection: databaseConnection)
 		}
 	}
 }

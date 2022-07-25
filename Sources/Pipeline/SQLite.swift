@@ -30,7 +30,7 @@ public struct SQLite {
 	public static func initialize() throws {
 		let rc = sqlite3_initialize()
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Error initializing sqlite3")
+			throw SQLiteError("Error initializing sqlite3", code: rc)
 		}
 	}
 
@@ -42,7 +42,7 @@ public struct SQLite {
 	public static func shutdown() throws {
 		let rc = sqlite3_shutdown()
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Error shutting down sqlite3")
+			throw SQLiteError("Error shutting down sqlite3", code: rc)
 		}
 	}
 

@@ -61,7 +61,7 @@ public final class Database {
 		let result = sqlite3_open_v2(path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil)
 		guard result == SQLITE_OK else {
 			_ = sqlite3_close(db)
-			throw SQLiteError(code: result)
+			throw SQLiteError("Error creating temporary database", code: result)
 		}
 		precondition(db != nil)
 		self.init(databaseConnection: db.unsafelyUnwrapped)
@@ -78,7 +78,7 @@ public final class Database {
 			let result = sqlite3_open_v2(path, &db, SQLITE_OPEN_READONLY, nil)
 			guard result == SQLITE_OK else {
 				_ = sqlite3_close(db)
-				throw SQLiteError(code: result)
+				throw SQLiteError("Error opening database \(url)", code: result)
 			}
 		}
 		precondition(db != nil)
@@ -101,7 +101,7 @@ public final class Database {
 			let result = sqlite3_open_v2(path, &db, flags, nil)
 			guard result == SQLITE_OK else {
 				_ = sqlite3_close(db)
-				throw SQLiteError(code: result)
+				throw SQLiteError("Error opening database \(url)", code: result)
 			}
 		}
 		precondition(db != nil)
@@ -210,7 +210,7 @@ extension Database {
 	public func execute(sql: String) throws {
 		let result = sqlite3_exec(databaseConnection, sql, nil, nil, nil)
 		guard result == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error executing SQL \"\(sql)\"", fromDatabaseConnection: databaseConnection)
 		}
 	}
 

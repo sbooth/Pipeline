@@ -40,7 +40,7 @@ public final class Session {
 		var session: SQLiteSession? = nil
 		let rc = sqlite3session_create(database.databaseConnection, schema, &session)
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Error creating database session for schema \"\(schema)\"")
+			throw SQLiteError("Error creating database session for schema \"\(schema)\"", code: rc)
 		}
 
 		self.session = session!
@@ -86,7 +86,7 @@ public final class Session {
 	func attach(_ table: String) throws {
 		let rc = sqlite3session_attach(session, table)
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Error attaching table \"\(table)\" to database session")
+			throw SQLiteError( "Error attaching table \"\(table)\" to database session", code: rc)
 		}
 	}
 
@@ -98,7 +98,7 @@ public final class Session {
 	func attachAll() throws {
 		let rc = sqlite3session_attach(session, nil)
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Error attaching all tables to database session")
+			throw SQLiteError("Error attaching all tables to database session", code: rc)
 		}
 	}
 
@@ -114,7 +114,7 @@ public final class Session {
 
 		let rc = sqlite3session_changeset(session, &size, &changeset)
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Error creating changeset for database session")
+			throw SQLiteError("Error creating changeset for database session", code: rc)
 		}
 
 		// Tables with no PK return 0 for size and NULL for changeset
@@ -149,7 +149,7 @@ public struct Changeset {
 			sqlite3changeset_invert(Int32(data.count), buf.baseAddress, &size, &changeset)
 		}
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Error inverting changeset")
+			throw SQLiteError("Error inverting changeset", code: rc)
 		}
 
 		let inverted_data = size > 0 ? Data(bytes: changeset!, count: Int(size)) : Data()
@@ -178,7 +178,7 @@ public struct Changeset {
 			}
 		}
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Error appending changeset")
+			throw SQLiteError("Error appending changeset", code: rc)
 		}
 
 		let concat_data = size > 0 ? Data(bytes: changeset!, count: Int(size)) : Data()
@@ -219,7 +219,7 @@ public struct ChangesetOperation {
 		var indirect: Int32 = 0
 		let rc = sqlite3changeset_op(iterator, &table_name, &cols, &op, &indirect)
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Error obtaining current changeset operation")
+			throw SQLiteError("Error obtaining current changeset operation", code: rc)
 		}
 
 		self.iterator = iterator
@@ -257,7 +257,7 @@ public struct ChangesetOperation {
 		var value: SQLiteValue?
 		let rc = sqlite3changeset_old(iterator, Int32(index), &value)
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Unable to retrieve old value for change")
+			throw SQLiteError("Unable to retrieve old value for change", code: rc)
 		}
 		return DatabaseValue(sqliteValue: value.unsafelyUnwrapped)
 	}
@@ -280,7 +280,7 @@ public struct ChangesetOperation {
 		var value: SQLiteValue?
 		let rc = sqlite3changeset_new(iterator, Int32(index), &value)
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Unable to retrieve new value for change")
+			throw SQLiteError("Unable to retrieve new value for change", code: rc)
 		}
 		return DatabaseValue(sqliteValue: value.unsafelyUnwrapped)
 	}
@@ -307,7 +307,7 @@ public struct ChangesetOperation {
 		var value: SQLiteValue?
 		let rc = sqlite3changeset_conflict(iterator, Int32(index), &value)
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Unable to retrieve conflicting value for change")
+			throw SQLiteError("Unable to retrieve conflicting value for change", code: rc)
 		}
 		return DatabaseValue(sqliteValue: value.unsafelyUnwrapped)
 	}
@@ -324,7 +324,7 @@ public struct ChangesetOperation {
 		var cols: Int32 = 0
 		let rc = sqlite3changeset_pk(iterator, &pk, &cols)
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Unable to retrieve primary key for change")
+			throw SQLiteError("Unable to retrieve primary key for change", code: rc)
 		}
 		var result: [Bool] = []
 		for i in 0..<Int(cols) {
@@ -360,7 +360,7 @@ public final class ChangesetIterator {
 			return sqlite3changeset_start_v2(&iterator, Int32(changeset.data.count), ptr, options.rawValue)
 		}
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Error starting changeset iteration")
+			throw SQLiteError("Error starting changeset iteration", code: rc)
 		}
 		self.iterator = iterator!
 	}
@@ -380,7 +380,7 @@ public final class ChangesetIterator {
 		case SQLITE_DONE:
 			return nil
 		default:
-			throw SQLiteError(code: rc, details: "Error advancing changeset iterator")
+			throw SQLiteError("Error advancing changeset iterator", code: rc)
 		}
 	}
 }
@@ -415,7 +415,7 @@ public final class Changegroup {
 		var changegroup: SQLiteChangegroup? = nil
 		let rc = sqlite3changegroup_new(&changegroup)
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Error creating changegroup")
+			throw SQLiteError("Error creating changegroup", code: rc)
 		}
 
 		self.changegroup = changegroup!
@@ -438,7 +438,7 @@ public final class Changegroup {
 			return sqlite3changegroup_add(changegroup, Int32(changeset.data.count), ptr)
 		}
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Error adding changeset to changegroup")
+			throw SQLiteError("Error adding changeset to changegroup", code: rc)
 		}
 	}
 
@@ -454,7 +454,7 @@ public final class Changegroup {
 
 		let rc = sqlite3changegroup_output(changegroup, &size, &changeset)
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Error creating changeset for changegroup")
+			throw SQLiteError("Error creating changeset for changegroup", code: rc)
 		}
 
 		let data = size > 0 ? Data(bytes: changeset!, count: Int(size)) : Data()
@@ -609,7 +609,7 @@ extension Database {
 			}, context_ptr, &rebaser, &size, options.rawValue)
 		}
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Error applying changeset")
+			throw SQLiteError("Error applying changeset", code: rc)
 		}
 
 		// Rebaser is experimental

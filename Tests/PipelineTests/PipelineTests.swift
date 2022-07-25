@@ -1,3 +1,9 @@
+//
+// Copyright © 2015 - 2022 Stephen F. Booth <me@sbooth.org>
+// Part of https://github.com/sbooth/Pipeline
+// MIT license
+//
+
 import XCTest
 import CSQLite
 #if canImport(Combine)
@@ -1074,24 +1080,24 @@ final class ShuffledSequenceModule: VirtualTableModule {
 			}
 			if token == "count" {
 				guard scanner.scanString("=") != nil else {
-					throw SQLiteError(code: SQLITE_ERROR, details: "Missing value for count")
+					throw SQLiteError("Missing value for count")
 				}
 				guard scanner.scanInt(&count), count > 0 else {
-					throw SQLiteError(code: SQLITE_ERROR, details: "Invalid value for count")
+					throw SQLiteError("Invalid value for count")
 				}
 			}
 			else if token == "start" {
 				guard scanner.scanString("=") != nil else {
-					throw SQLiteError(code: SQLITE_ERROR, details: "Missing value for start")
+					throw SQLiteError("Missing value for start")
 				}
 				guard scanner.scanInt(&start) else {
-					throw SQLiteError(code: SQLITE_ERROR, details: "Invalid value for start")
+					throw SQLiteError("Invalid value for start")
 				}
 			}
 		}
 
 		guard count > 0 else {
-			throw SQLiteError(code: SQLITE_ERROR, details: "Invalid value for count")
+			throw SQLiteError("Invalid value for count")
 		}
 
 		values = (start ..< start + count).shuffled()
