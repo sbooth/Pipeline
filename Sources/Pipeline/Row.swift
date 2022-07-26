@@ -91,7 +91,7 @@ extension Row {
 	public func typeOfColumn(_ index: Int) throws -> Database.FundamentalType {
 		let idx = Int32(index)
 		guard idx >= 0, idx < sqlite3_column_count(statement.preparedStatement) else {
-			throw DatabaseError(message: "Column index \(idx) out of bounds")
+			throw DatabaseError("Column index \(idx) out of bounds")
 		}
 		let type = sqlite3_column_type(statement.preparedStatement, idx)
 		switch type {
@@ -127,7 +127,7 @@ extension Row {
 	public func value(at index: Int) throws -> DatabaseValue {
 		let idx = Int32(index)
 		guard idx >= 0, idx < sqlite3_column_count(statement.preparedStatement) else {
-			throw DatabaseError(message: "Column index \(idx) out of bounds")
+			throw DatabaseError("Column index \(idx) out of bounds")
 		}
 		let type = sqlite3_column_type(statement.preparedStatement, idx)
 		switch type {
@@ -258,7 +258,7 @@ extension Row {
 	public func integer(at index: Int) throws -> Int64 {
 		let idx = Int32(index)
 		guard idx >= 0, idx < sqlite3_column_count(statement.preparedStatement) else {
-			throw DatabaseError(message: "Column index \(idx) out of bounds")
+			throw DatabaseError("Column index \(idx) out of bounds")
 		}
 		return sqlite3_column_int64(statement.preparedStatement, idx)
 	}
@@ -281,7 +281,7 @@ extension Row {
 	public func real(at index: Int) throws -> Double {
 		let idx = Int32(index)
 		guard idx >= 0, idx < sqlite3_column_count(statement.preparedStatement) else {
-			throw DatabaseError(message: "Column index \(idx) out of bounds")
+			throw DatabaseError("Column index \(idx) out of bounds")
 		}
 		return sqlite3_column_double(statement.preparedStatement, idx)
 	}
@@ -304,7 +304,7 @@ extension Row {
 	public func text(at index: Int) throws -> String {
 		let idx = Int32(index)
 		guard idx >= 0, idx < sqlite3_column_count(statement.preparedStatement) else {
-			throw DatabaseError(message: "Column index \(idx) out of bounds")
+			throw DatabaseError("Column index \(idx) out of bounds")
 		}
 		guard let utf8 = sqlite3_column_text(statement.preparedStatement, idx) else {
 			throw SQLiteError("Out of memory", takingErrorCodeFromDatabaseConnection: statement.database.databaseConnection)
@@ -330,7 +330,7 @@ extension Row {
 	public func blob(at index: Int) throws -> Data {
 		let idx = Int32(index)
 		guard idx >= 0, idx < sqlite3_column_count(statement.preparedStatement) else {
-			throw DatabaseError(message: "Column index \(idx) out of bounds")
+			throw DatabaseError("Column index \(idx) out of bounds")
 		}
 		guard let b = sqlite3_column_blob(statement.preparedStatement, idx) else {
 			// A zero-length BLOB is returned as a null pointer

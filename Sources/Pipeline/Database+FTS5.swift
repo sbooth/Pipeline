@@ -107,7 +107,7 @@ extension Database {
 	/// 		var bytesConverted = 0
 	/// 		let charsConverted = CFStringGetBytes(text, tokenRange, CFStringBuiltInEncodings.UTF8.rawValue, 0, false, buffer, capacity, &bytesConverted)
 	/// 		guard charsConverted > 0 else {
-	/// 			throw DatabaseError(message: "Insufficient buffer size")
+	/// 			throw DatabaseError("Insufficient buffer size")
 	/// 		}
 	/// 		return bytesConverted
 	/// 	}
@@ -263,7 +263,7 @@ private func get_fts5_api(for databaseConnection: SQLiteDatabaseConnection) thro
 	}
 
 	guard let api = api_ptr else {
-		throw DatabaseError(message: "FTS5 not available")
+		throw DatabaseError("FTS5 not available")
 	}
 
 	return api

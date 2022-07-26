@@ -165,7 +165,7 @@ extension Database {
 	/// - returns: The name of the *n*th attached database.
 	public func name(ofDatabase n: Int32) throws -> String {
 		guard let name = sqlite3_db_name(databaseConnection, n) else {
-			throw DatabaseError(message: "The database at index \(n) does not exist")
+			throw DatabaseError("The database at index \(n) does not exist")
 		}
 		return String(cString: name)
 	}
@@ -181,7 +181,7 @@ extension Database {
 	/// - returns: The URL for the file associated with database `name`.
 	public func url(forDatabase name: String = "main") throws -> URL {
 		guard let path = sqlite3_db_filename(databaseConnection, name) else {
-			throw DatabaseError(message: "The database \"\(name)\" does not exist or is a temporary or in-memory database")
+			throw DatabaseError("The database \"\(name)\" does not exist or is a temporary or in-memory database")
 		}
 		return URL(fileURLWithPath: String(cString: path))
 	}

@@ -235,7 +235,7 @@ extension Database {
 			busyHandler?.deinitialize(count: 1)
 			busyHandler?.deallocate()
 			busyHandler = nil
-			throw DatabaseError(message: "Error setting busy handler")
+			throw DatabaseError("Error setting busy handler")
 		}
 	}
 
@@ -329,7 +329,7 @@ extension Database {
 		/// - throws: An error if `index` is out of bounds or an other error occurs.
 		public func oldValue(at index: Int) throws -> DatabaseValue {
 			if case .insert(_) = changeType {
-				throw DatabaseError(message: "sqlite3_preupdate_old() is undefined for insertions")
+				throw DatabaseError("sqlite3_preupdate_old() is undefined for insertions")
 			}
 			var value: SQLiteValue?
 			guard sqlite3_preupdate_old(databaseConnection, Int32(index), &value) == SQLITE_OK else {
@@ -352,7 +352,7 @@ extension Database {
 		/// - throws: An error if `index` is out of bounds or an other error occurs.
 		public func newValue(at index: Int) throws -> DatabaseValue {
 			if case .delete(_) = changeType {
-				throw DatabaseError(message: "sqlite3_preupdate_new() is undefined for deletions")
+				throw DatabaseError("sqlite3_preupdate_new() is undefined for deletions")
 			}
 			var value: SQLiteValue?
 			guard sqlite3_preupdate_new(databaseConnection, Int32(index), &value) == SQLITE_OK else {

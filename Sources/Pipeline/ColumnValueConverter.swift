@@ -20,7 +20,7 @@ import CSQLite
 /// 	public static let uuid = ColumnValueConverter { row, index in
 /// 		let t = try row.text(forColumn: index)
 /// 		guard let u = UUID(uuidString: t) else {
-/// 			throw DatabaseError(message: "text \"\(t)\" isn't a valid UUID")
+/// 			throw DatabaseError("text \"\(t)\" isn't a valid UUID")
 /// 		}
 /// 		return u
 /// 	}
@@ -52,7 +52,7 @@ extension Row {
 	/// - returns: The column's value as `type`.
 	public func value<T>(at index: Int, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> T {
 		guard try self.typeOfColumn(index) != .null else {
-			throw DatabaseError(message: "SQL NULL encountered for column \(index)")
+			throw DatabaseError("SQL NULL encountered for column \(index)")
 		}
 		return try converter.convert(self, index)
 	}
@@ -298,7 +298,7 @@ extension ColumnValueConverter where T == UUID {
 	public static let uuidWithString = ColumnValueConverter { row, index in
 		let t = try row.text(at: index)
 		guard let u = UUID(uuidString: t) else {
-			throw DatabaseError(message: "text \"\(t)\" isn't a valid UUID")
+			throw DatabaseError("text \"\(t)\" isn't a valid UUID")
 		}
 		return u
 	}
@@ -308,7 +308,7 @@ extension ColumnValueConverter where T == UUID {
 	public static let uuidWithBytes = ColumnValueConverter { row, index in
 		let b = try row.blob(at: index)
 		guard b.count == 16 else {
-			throw DatabaseError(message: "BLOB '\(b)' isn't a valid UUID")
+			throw DatabaseError("BLOB '\(b)' isn't a valid UUID")
 		}
 		let bytes = b.withUnsafeBytes {
 			$0.load(as: uuid_t.self)
@@ -323,7 +323,7 @@ extension ColumnValueConverter where T == URL {
 	public static let urlWithString = ColumnValueConverter { row, index in
 		let t = try row.text(at: index)
 		guard let u = URL(string: t) else {
-			throw DatabaseError(message: "text \"\(t)\" isn't a valid URL")
+			throw DatabaseError("text \"\(t)\" isn't a valid URL")
 		}
 		return u
 	}
@@ -348,7 +348,7 @@ extension ColumnValueConverter where T == Date {
 		ColumnValueConverter { row, index in
 			let t = try row.text(at: index)
 			guard let date = formatter.date(from: t) else {
-				throw DatabaseError(message: "text \"\(t)\" isn't a valid ISO 8601 date representation")
+				throw DatabaseError("text \"\(t)\" isn't a valid ISO 8601 date representation")
 			}
 			return date
 		}
@@ -376,7 +376,7 @@ extension ColumnValueConverter where T == NSNumber {
 		case .real:
 			return NSNumber(value: try $0.real(at: $1))
 		default:
-			throw DatabaseError(message: "\(type) is not a number")
+			throw DatabaseError("\(type) is not a number")
 		}
 	}
 }
@@ -387,7 +387,7 @@ extension ColumnValueConverter where T: NSObject, T: NSCoding {
 		ColumnValueConverter { row, index in
 			let b = try row.blob(at: index)
 			guard let result = try NSKeyedUnarchiver.unarchivedObject(ofClass: type, from: b) else {
-				throw DatabaseError(message: "\(b) is not a valid instance of \(type)")
+				throw DatabaseError("\(b) is not a valid instance of \(type)")
 			}
 			return result
 		}

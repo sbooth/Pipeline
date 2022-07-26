@@ -19,7 +19,7 @@ extension DatabaseError {
 	/// Creates an error with the given message.
 	///
 	/// - parameter message: A brief message describing the error.
-	public init(message: String) {
+	init(_ message: String) {
 		self.message = message
 		self.details = nil
 	}
@@ -32,5 +32,15 @@ extension DatabaseError: CustomStringConvertible {
 		} else {
 			return message
 		}
+	}
+}
+
+extension DatabaseError: LocalizedError {
+	public var errorDescription: String? {
+		return message
+	}
+
+	public var failureReason: String? {
+		return details
 	}
 }

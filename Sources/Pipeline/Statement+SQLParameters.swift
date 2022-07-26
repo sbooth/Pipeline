@@ -22,7 +22,7 @@ extension Statement {
 	/// - returns: The name of the specified parameter.
 	public func nameOfParameter(_ index: Int) throws -> String {
 		guard let name = sqlite3_bind_parameter_name(preparedStatement, Int32(index)) else {
-			throw DatabaseError(message: "SQL parameter at index \(index) not found or nameless")
+			throw DatabaseError("SQL parameter at index \(index) not found or nameless")
 		}
 		return String(cString: name)
 	}
@@ -35,7 +35,7 @@ extension Statement {
 	public func indexOfParameter(_ name: String) throws -> Int {
 		let index = sqlite3_bind_parameter_index(preparedStatement, name)
 		guard index != 0 else {
-			throw DatabaseError(message: "SQL parameter \"\(name)\" not found")
+			throw DatabaseError("SQL parameter \"\(name)\" not found")
 		}
 		return Int(index)
 	}

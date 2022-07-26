@@ -198,7 +198,7 @@ extension Database {
 		// client_data must live until the xDestroy function is invoked; store it as a +1 object
 		let client_data = VirtualTableModuleClientData(module: &module_struct) { [weak self] args, create -> VirtualTableModule in
 			guard let database = self else {
-				throw DatabaseError(message: "Database instance missing (weak reference was set to nil)")
+				throw DatabaseError("Database instance missing (weak reference was set to nil)")
 			}
 			return try T(database: database, arguments: args, create: create)
 		}
@@ -281,7 +281,7 @@ extension Database {
 		// client_data must live until the xDestroy function is invoked; store it as a +1 object
 		let client_data = VirtualTableModuleClientData(module: &module_struct) { [weak self] args, create -> VirtualTableModule in
 			guard let database = self else {
-				throw DatabaseError(message: "Database instance missing (weak reference was set to nil)")
+				throw DatabaseError("Database instance missing (weak reference was set to nil)")
 			}
 			return try T(database: database, arguments: args, create: create)
 		}
