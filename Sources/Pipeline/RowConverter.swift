@@ -28,7 +28,7 @@ import Foundation
 ///     }
 /// }
 ///  ```
-public struct ResultRowConverter<T> {
+public struct RowConverter<T> {
 	/// Converts `row` to `T` and returns the result.
 	///
 	/// - parameter row: A `Row` object.
@@ -49,7 +49,7 @@ extension Database {
 	/// - throws: An error if the SQL could not be compiled or executed, or if initialization fails.
 	///
 	/// - returns: All rows as `type`.
-	public func all<T>(as type: T.Type = T.self, _ converter: ResultRowConverter<T>, from table: String) throws -> [T] {
+	public func all<T>(as type: T.Type = T.self, _ converter: RowConverter<T>, from table: String) throws -> [T] {
 		let statement = try prepare(sql: "SELECT * FROM \"\(table)\";")
 		var results = [T]()
 		try statement.results { row in
@@ -69,7 +69,7 @@ extension Database {
 	/// - throws: An error if the SQL could not be compiled or executed, or if initialization fails.
 	///
 	/// - returns: The first row as `type`.
-	public func first<T>(as type: T.Type = T.self, _ converter: ResultRowConverter<T>, from table: String) throws -> T? {
+	public func first<T>(as type: T.Type = T.self, _ converter: RowConverter<T>, from table: String) throws -> T? {
 		let statement = try prepare(sql: "SELECT * FROM \"\(table)\" LIMIT 1;")
 		guard let row = try statement.step() else {
 			return nil
@@ -92,7 +92,7 @@ extension Database {
 	/// - returns: The matching rows as `type`.
 	///
 	/// - seealso: [expr](http://sqlite.org/syntax/expr.html)
-	public func find<T, C: Collection>(as type: T.Type = T.self, _ converter: ResultRowConverter<T>, from table: String, `where` expression: String, parameters: C) throws -> [T] where C.Element == SQLParameter {
+	public func find<T, C: Collection>(as type: T.Type = T.self, _ converter: RowConverter<T>, from table: String, `where` expression: String, parameters: C) throws -> [T] where C.Element == SQLParameter {
 		let statement = try prepare(sql: "SELECT * FROM \"\(table)\" WHERE \(expression);")
 		try statement.bind(parameters)
 		var results = [T]()
@@ -117,7 +117,7 @@ extension Database {
 	/// - returns: The matching rows as `type`.
 	///
 	/// - seealso: [expr](http://sqlite.org/syntax/expr.html)
-	public func find<T, C: Collection>(as type: T.Type = T.self, _ converter: ResultRowConverter<T>, from table: String, `where` expression: String, parameters: C) throws -> [T] where C.Element == (key: String, value: SQLParameter) {
+	public func find<T, C: Collection>(as type: T.Type = T.self, _ converter: RowConverter<T>, from table: String, `where` expression: String, parameters: C) throws -> [T] where C.Element == (key: String, value: SQLParameter) {
 		let statement = try prepare(sql: "SELECT * FROM \"\(table)\" WHERE \(expression);")
 		try statement.bind(parameters)
 		var results = [T]()
@@ -144,7 +144,7 @@ extension Database {
 	/// - returns: The matching rows as `type`.
 	///
 	/// - seealso: [expr](http://sqlite.org/syntax/expr.html)
-	public func find<T>(as type: T.Type = T.self, _ converter: ResultRowConverter<T>, from table: String, `where` expression: String, parameters: SQLParameter...) throws -> [T] {
+	public func find<T>(as type: T.Type = T.self, _ converter: RowConverter<T>, from table: String, `where` expression: String, parameters: SQLParameter...) throws -> [T] {
 		try find(as: type, converter, from: table, where: expression, parameters: parameters)
 	}
 }
