@@ -235,7 +235,7 @@ extension Database {
 			busyHandler?.deinitialize(count: 1)
 			busyHandler?.deallocate()
 			busyHandler = nil
-			throw DatabaseError("Error setting busy handler")
+			throw SQLiteError("Error setting busy handler")
 		}
 	}
 

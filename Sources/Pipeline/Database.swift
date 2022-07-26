@@ -267,8 +267,7 @@ extension Database {
 			result = sqlite3_exec(databaseConnection, sql, nil, nil, &errmsg)
 		}
 		guard result == SQLITE_OK else {
-			let details = errmsg != nil ? String(bytesNoCopy: errmsg.unsafelyUnwrapped, length: strlen(errmsg.unsafelyUnwrapped), encoding: .utf8, freeWhenDone: true).unsafelyUnwrapped : nil
-			throw DatabaseError(message: "Error executing SQL", details: details)
+			throw SQLiteError("Error executing SQL \"\(sql)\"", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}	
 }

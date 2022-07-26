@@ -235,7 +235,7 @@ final class PipelineTests: XCTestCase {
 				case .integer(let i):
 					sum += i
 				default:
-					throw DatabaseError(message: "Only integer values supported")
+					throw DatabaseError("Only integer values supported")
 				}
 			}
 
@@ -277,7 +277,7 @@ final class PipelineTests: XCTestCase {
 				case .integer(let i):
 					sum += i
 				default:
-					throw DatabaseError(message: "Only integer values supported")
+					throw DatabaseError("Only integer values supported")
 				}
 			}
 
@@ -287,7 +287,7 @@ final class PipelineTests: XCTestCase {
 				case .integer(let i):
 					sum -= i
 				default:
-					throw DatabaseError(message: "Only integer values supported")
+					throw DatabaseError("Only integer values supported")
 				}
 			}
 
@@ -357,7 +357,7 @@ final class PipelineTests: XCTestCase {
 				var bytesConverted = 0
 				let charsConverted = CFStringGetBytes(text, tokenRange, CFStringBuiltInEncodings.UTF8.rawValue, 0, false, buffer, capacity, &bytesConverted)
 				guard charsConverted > 0 else {
-					throw DatabaseError(message: "Insufficient buffer size")
+					throw DatabaseError("Insufficient buffer size")
 				}
 				return bytesConverted
 			}
