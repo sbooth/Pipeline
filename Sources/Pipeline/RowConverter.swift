@@ -1,5 +1,5 @@
 //
-// Copyright © 2016 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright © 2015 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/Pipeline
 // MIT license
 //

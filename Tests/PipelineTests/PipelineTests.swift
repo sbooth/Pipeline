@@ -945,11 +945,12 @@ final class PipelineTests: XCTestCase {
 		let statement = try! db.prepare(sql: "select v1 from t1;")
 		let uuids = try! statement.column(0, .uuidWithString)
 
-		struct UUIDHolder: RowMapping {
+		struct UUIDHolder {
 			let u: UUID
-			init(row: Row) throws {
-				u = UUID(uuidString: try row.text(at: 0))!
-			}
+		}
+
+		let uuidConverter = RowConverter {
+			UUIDHolder(u: try $0.value(at: 0, .uuidWithString))
 		}
 
 		let expectation = self.expectation(description: "uuids")
@@ -962,7 +963,7 @@ final class PipelineTests: XCTestCase {
 		var cancellables = Set<AnyCancellable>()
 
 		publisher
-			.mapRows(type: UUIDHolder.self)
+			.mapRows(uuidConverter)
 			.collect()
 			.sink { completion in
 				switch completion {
