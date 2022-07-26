@@ -137,7 +137,7 @@ extension Row {
 			return .real(sqlite3_column_double(statement.preparedStatement, idx))
 		case SQLITE_TEXT:
 			guard let utf8 = sqlite3_column_text(statement.preparedStatement, idx) else {
-				throw SQLiteError("Out of memory", fromDatabaseConnection: statement.database.databaseConnection)
+				throw SQLiteError("Out of memory", takingErrorCodeFromDatabaseConnection: statement.database.databaseConnection)
 			}
 			return .text(String(cString: utf8))
 		case SQLITE_BLOB:
@@ -145,7 +145,7 @@ extension Row {
 				// A zero-length BLOB is returned as a null pointer
 				// However, a null pointer may also indicate an error condition
 				if sqlite3_errcode(statement.database.databaseConnection) == SQLITE_NOMEM {
-					throw SQLiteError("Out of memory", fromDatabaseConnection: statement.database.databaseConnection)
+					throw SQLiteError("Out of memory", takingErrorCodeFromDatabaseConnection: statement.database.databaseConnection)
 				}
 				return .blob(Data())
 			}
@@ -307,7 +307,7 @@ extension Row {
 			throw DatabaseError(message: "Column index \(idx) out of bounds")
 		}
 		guard let utf8 = sqlite3_column_text(statement.preparedStatement, idx) else {
-			throw SQLiteError("Out of memory", fromDatabaseConnection: statement.database.databaseConnection)
+			throw SQLiteError("Out of memory", takingErrorCodeFromDatabaseConnection: statement.database.databaseConnection)
 		}
 		return String(cString: utf8)
 	}
@@ -336,7 +336,7 @@ extension Row {
 			// A zero-length BLOB is returned as a null pointer
 			// However, a null pointer may also indicate an error condition
 			if sqlite3_errcode(statement.database.databaseConnection) == SQLITE_NOMEM {
-				throw SQLiteError("Out of memory", fromDatabaseConnection: statement.database.databaseConnection)
+				throw SQLiteError("Out of memory", takingErrorCodeFromDatabaseConnection: statement.database.databaseConnection)
 			}
 			return Data()
 		}

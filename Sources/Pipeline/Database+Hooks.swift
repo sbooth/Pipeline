@@ -249,7 +249,7 @@ extension Database {
 			busyHandler = nil
 		}
 		guard sqlite3_busy_handler(databaseConnection, nil, nil) == SQLITE_OK else {
-			throw SQLiteError("Error removing busy handler", fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error removing busy handler", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 

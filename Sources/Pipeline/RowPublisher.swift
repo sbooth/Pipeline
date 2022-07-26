@@ -79,7 +79,7 @@ extension Publishers.RowPublisher {
 					subscriber.receive(completion: .finished)
 					self.demand = .none
 				default:
-					subscriber.receive(completion: .failure(SQLiteError("Error evaluating statement", fromPreparedStatement: statement.preparedStatement)))
+					subscriber.receive(completion: .failure(SQLiteError("Error evaluating statement", takingErrorCodeFromPreparedStatement: statement.preparedStatement)))
 					self.demand = .none
 				}
 			}

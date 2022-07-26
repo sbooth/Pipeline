@@ -69,7 +69,7 @@ extension Database {
 		var highwater: Int32 = 0
 
 		guard sqlite3_db_status(databaseConnection, op, &current, &highwater, resetHighwater ? 1 : 0) == SQLITE_OK else {
-			throw SQLiteError("Error retrieving status of database parameter \(parameter)", fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error retrieving status of database parameter \(parameter)", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 
 		return (Int(current), Int(highwater))

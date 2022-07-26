@@ -46,7 +46,7 @@ extension Database {
 		}
 
 		guard sqlite3_wal_checkpoint_v2(databaseConnection, nil, mode, nil, nil) == SQLITE_OK else {
-			throw SQLiteError("Error performing \(type) WAL checkpoint", fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error performing \(type) WAL checkpoint", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 }

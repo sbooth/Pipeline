@@ -40,7 +40,7 @@ extension Database {
 		}
 
 		guard sqlite3_errcode(destination.databaseConnection) == SQLITE_OK else {
-			throw SQLiteError("Unable to backup database", fromDatabaseConnection: destination.databaseConnection)
+			throw SQLiteError("Unable to backup database", takingErrorCodeFromDatabaseConnection: destination.databaseConnection)
 		}
 	}
 }

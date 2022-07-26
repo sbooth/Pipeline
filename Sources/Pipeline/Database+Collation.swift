@@ -45,7 +45,7 @@ extension Database {
 			function_ptr.deinitialize(count: 1)
 			function_ptr.deallocate()
 		}) == SQLITE_OK else {
-			throw SQLiteError("Error adding collation sequence \"\(name)\"", fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error adding collation sequence \"\(name)\"", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -56,7 +56,7 @@ extension Database {
 	/// - throws: An error if the collation function couldn't be removed.
 	public func removeCollation(_ name: String) throws {
 		guard sqlite3_create_collation_v2(databaseConnection, name, SQLITE_UTF8, nil, nil, nil) == SQLITE_OK else {
-			throw SQLiteError("Error removing collation sequence \"\(name)\"", fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error removing collation sequence \"\(name)\"", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 }

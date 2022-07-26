@@ -210,7 +210,7 @@ extension Database {
 	public func execute(sql: String) throws {
 		let result = sqlite3_exec(databaseConnection, sql, nil, nil, nil)
 		guard result == SQLITE_OK else {
-			throw SQLiteError("Error executing SQL \"\(sql)\"", fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error executing SQL \"\(sql)\"", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 

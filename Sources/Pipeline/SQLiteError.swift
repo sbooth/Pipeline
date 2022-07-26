@@ -27,7 +27,7 @@ public struct SQLiteError: Error {
 	/// - parameter message: A brief message describing the circumstances leading to the error.
 	/// - parameter code: An SQLite error code.
 	/// - parameter details: A description of the error's cause.
-	public init(_ message: String, code: Int32, details: String?) {
+	public init(message: String, code: Int32, details: String?) {
 		precondition(code & 0xff != SQLITE_OK)
 		precondition(code != SQLITE_ROW)
 		precondition(code != SQLITE_DONE)
@@ -55,30 +55,30 @@ extension SQLiteError {
 	///
 	/// - parameter message: A brief message describing the circumstances leading to the error.
 	/// - parameter code: An SQLite error code
-	public init(_ message: String, code: Int32 = SQLITE_ERROR) {
-		self.init(message, code: code, details: String(cString: sqlite3_errstr(code)))
+	init(_ message: String, code: Int32 = SQLITE_ERROR) {
+		self.init(message: message, code: code, details: String(cString: sqlite3_errstr(code)))
 	}
 
-	/// Creates an error with the given message, with result code and description obtained from `stmt`.
+	/// Creates an error with the given message, with result code and description obtained from `preparedStatement`.
 	///
-	/// The error code is obtained using `sqlite3_extended_errcode(sqlite3_db_handle(stmt))`.
-	/// The description is obtained using `sqlite3_errmsg(sqlite3_db_handle(stmt))`.
+	/// The error code is obtained using `sqlite3_extended_errcode(sqlite3_db_handle(preparedStatement))`.
+	/// The description is obtained using `sqlite3_errmsg(sqlite3_db_handle(preparedStatement))`.
 	///
 	/// - parameter message: A brief message describing the circumstances leading to the error.
-	/// - parameter stmt: An `sqlite3_stmt *` object.
-	public init(_ message: String, fromPreparedStatement stmt: SQLitePreparedStatement) {
-		self.init(message, fromDatabaseConnection: sqlite3_db_handle(stmt))
+	/// - parameter preparedStatement: An `sqlite3_stmt *` object.
+	init(_ message: String, takingErrorCodeFromPreparedStatement preparedStatement: SQLitePreparedStatement) {
+		self.init(message, takingErrorCodeFromDatabaseConnection: sqlite3_db_handle(preparedStatement))
 	}
 
-	/// Creates an error with the given message, with result code and description obtained from `db`.
+	/// Creates an error with the given message, with result code and description obtained from `databaseConnection`.
 	///
-	/// The error code is obtained using `sqlite3_extended_errcode(db)`.
-	/// The description is obtained using `sqlite3_errmsg(db)`.
+	/// The error code is obtained using `sqlite3_extended_errcode(databaseConnection)`.
+	/// The description is obtained using `sqlite3_errmsg(databaseConnection)`.
 	///
 	/// - parameter message: A brief message describing the circumstances leading to the error.
-	/// - parameter db: An `sqlite3 *` database connection handle.
-	public init(_ message: String, fromDatabaseConnection db: SQLiteDatabaseConnection) {
-		self.init(message, code: sqlite3_extended_errcode(db), details: String(cString: sqlite3_errmsg(db)))
+	/// - parameter databaseConnection: An `sqlite3 *` database connection handle.
+	init(_ message: String, takingErrorCodeFromDatabaseConnection databaseConnection: SQLiteDatabaseConnection) {
+		self.init(message: message, code: sqlite3_extended_errcode(databaseConnection), details: String(cString: sqlite3_errmsg(databaseConnection)))
 	}
 }
 

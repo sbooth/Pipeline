@@ -17,7 +17,7 @@ extension SQLParameter {
 			let mem = UnsafeMutableBufferPointer<Int32>.allocate(capacity: values.count)
 			_ = mem.initialize(from: values)
 			guard sqlite3_carray_bind(statement.preparedStatement, Int32(index), mem.baseAddress, Int32(values.count), CARRAY_INT32, { $0?.deallocate() }) == SQLITE_OK else {
-				throw SQLiteError("Error binding carray (CARRAY_INT32) to parameter \(index)", fromPreparedStatement: statement.preparedStatement)
+				throw SQLiteError("Error binding carray (CARRAY_INT32) to parameter \(index)", takingErrorCodeFromPreparedStatement: statement.preparedStatement)
 			}
 		}
 	}
@@ -29,7 +29,7 @@ extension SQLParameter {
 			let mem = UnsafeMutableBufferPointer<Int64>.allocate(capacity: values.count)
 			_ = mem.initialize(from: values)
 			guard sqlite3_carray_bind(statement.preparedStatement, Int32(index), mem.baseAddress, Int32(values.count), CARRAY_INT64, { $0?.deallocate() }) == SQLITE_OK else {
-				throw SQLiteError("Error binding carray (CARRAY_INT64) to parameter \(index)", fromPreparedStatement: statement.preparedStatement)
+				throw SQLiteError("Error binding carray (CARRAY_INT64) to parameter \(index)", takingErrorCodeFromPreparedStatement: statement.preparedStatement)
 			}
 		}
 	}
@@ -41,7 +41,7 @@ extension SQLParameter {
 			let mem = UnsafeMutableBufferPointer<Double>.allocate(capacity: values.count)
 			_ = mem.initialize(from: values)
 			guard sqlite3_carray_bind(statement.preparedStatement, Int32(index), mem.baseAddress, Int32(values.count), CARRAY_DOUBLE, { $0?.deallocate() }) == SQLITE_OK else {
-				throw SQLiteError("Error binding carray (CARRAY_DOUBLE) to parameter \(index)", fromPreparedStatement: statement.preparedStatement)
+				throw SQLiteError("Error binding carray (CARRAY_DOUBLE) to parameter \(index)", takingErrorCodeFromPreparedStatement: statement.preparedStatement)
 			}
 		}
 	}
@@ -71,7 +71,7 @@ extension SQLParameter {
 			}
 
 			guard sqlite3_carray_bind(statement.preparedStatement, Int32(index), mem, Int32(values.count), CARRAY_TEXT, { $0?.deallocate() }) == SQLITE_OK else {
-				throw SQLiteError("Error binding carray (CARRAY_TEXT) to parameter \(index)", fromPreparedStatement: statement.preparedStatement)
+				throw SQLiteError("Error binding carray (CARRAY_TEXT) to parameter \(index)", takingErrorCodeFromPreparedStatement: statement.preparedStatement)
 			}
 		}
 	}
