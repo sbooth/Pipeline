@@ -17,11 +17,11 @@ import Foundation
 /// }
 /// ```
 ///
-/// An implementation of `ResultRowConverter` for `Person` could be:
+/// An implementation of `RowConverter` for `Person` could be:
 ///
 /// ```swift
-/// extension ResultRowConverter where T == Person {
-///     public static let person = ResultRowConverter { row in
+/// extension RowConverter where T == Person {
+///     public static let person = RowConverter { row in
 ///         let firstName = try row.text(forColumn: 0)
 ///         let lastName = try row.text(forColumn: 1)
 ///         return Person(firstName: firstName, lastName: lastName)
@@ -42,8 +42,8 @@ extension Database {
 	///
 	/// This is equivalent to the SQL `SELECT * FROM "`*table*`"`.
 	///
-	/// - parameter type: The desired value type.
-	/// - parameter converter: The `ResultRowConverter` to use for converting result rows to `type`.
+	/// - parameter type: The type of object to create from the row.
+	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
 	/// - parameter table: The name of the desired table.
 	///
 	/// - throws: An error if the SQL could not be compiled or executed, or if initialization fails.
@@ -62,8 +62,8 @@ extension Database {
 	///
 	/// This is equivalent to the SQL `SELECT * FROM "`*table*`" LIMIT 1`.
 	///
-	/// - parameter type: The desired value type.
-	/// - parameter converter: The `ResultRowConverter` to use for converting result rows to `type`.
+	/// - parameter type: The type of object to create from the row.
+	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
 	/// - parameter table: The name of the desired table.
 	///
 	/// - throws: An error if the SQL could not be compiled or executed, or if initialization fails.
@@ -81,8 +81,8 @@ extension Database {
 	///
 	/// This is equivalent to the SQL `SELECT * FROM "`*table*`" WHERE` *expression*.
 	///
-	/// - parameter type: The desired value type.
-	/// - parameter converter: The `ResultRowConverter` to use for converting result rows to `type`.
+	/// - parameter type: The type of object to create from the row.
+	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
 	/// - parameter table: The name of the desired table.
 	/// - parameter expression: An SQL expression defining the scope of the result rows.
 	/// - parameter values: A collection of values to bind to SQL parameters.
@@ -106,8 +106,8 @@ extension Database {
 	///
 	/// This is equivalent to `SELECT * FROM "`*table*`" WHERE` *expression*.
 	///
-	/// - parameter type: The desired value type.
-	/// - parameter converter: The `ResultRowConverter` to use for converting result rows to `type`.
+	/// - parameter type: The type of object to create from the row.
+	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
 	/// - parameter table: The name of the desired table.
 	/// - parameter expression: An SQL expression defining the scope of the result rows.
 	/// - parameter parameters: A collection of name and value pairs to bind to SQL parameters.
@@ -133,8 +133,8 @@ extension Database {
 	///
 	/// This is equivalent to the SQL `SELECT * FROM "`*table*`" WHERE` *expression*.
 	///
-	/// - parameter type: The desired value type.
-	/// - parameter converter: The `ResultRowConverter` to use for converting result rows to `type`.
+	/// - parameter type: The type of object to create from the row.
+	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
 	/// - parameter table: The name of the desired table.
 	/// - parameter expression: An SQL expression defining the scope of the result rows.
 	/// - parameter values: A collection of values to bind to SQL parameters.
@@ -148,3 +148,24 @@ extension Database {
 		try find(as: type, converter, from: table, where: expression, parameters: parameters)
 	}
 }
+
+#if canImport(Combine)
+
+import Combine
+
+extension Publisher {
+	/// Returns a publisher mapping upstream result rows to objects of `type`.
+	///
+	/// - parameter type: The type of object to create from the row.
+	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
+	public func mapRows<T>(as type: T.Type = T.self, _ converter: RowConverter<T>) -> Publishers.TryMap<Self, T> where Output == Row {
+//	public func mapRows<T>(as type: T.Type = T.self, _ converter: RowConverter<T>) -> AnyPublisher<T, Error> where Output == Row {
+		return self
+			.tryMap {
+				try converter.convert($0)
+			}
+//			.eraseToAnyPublisher()
+	}
+}
+
+#endif
