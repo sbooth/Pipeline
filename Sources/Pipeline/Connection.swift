@@ -50,7 +50,7 @@ public final class Connection {
 		busyHandler?.deallocate()
 	}
 
-	/// Creates a connection to a temporary database.
+	/// Creates and connects to a temporary database.
 	///
 	/// - parameter inMemory: Whether the temporary database should be created in-memory or on-disk.
 	///
