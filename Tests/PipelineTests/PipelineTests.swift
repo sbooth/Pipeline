@@ -932,6 +932,52 @@ final class PipelineTests: XCTestCase {
 
 #endif
 
+	func testRowConverter() {
+		let connection = try! Connection()
+		XCTAssertNoThrow(try connection.execute(sql: "create table person(first_name text, last_name text);"))
+
+		XCTAssertNoThrow(try connection.execute(sql: "insert into person (first_name, last_name) values ('Isaac', 'Newton');"))
+
+		struct Person {
+			let firstName: String
+			let lastName: String
+		}
+
+		let personConverter = RowConverter<Person> { row in
+			let firstName = try row.text(at: 0)
+			let lastName = try row.text(at: 1)
+			return Person(firstName: firstName, lastName: lastName)
+		}
+
+		let person = try! connection.first(personConverter, from: "person")
+		XCTAssert(person?.firstName == "Isaac")
+		XCTAssert(person?.lastName == "Newton")
+	}
+
+	func testTableMapper() {
+		let connection = try! Connection()
+		XCTAssertNoThrow(try connection.execute(sql: "create table person(first_name text, last_name text);"))
+
+		XCTAssertNoThrow(try connection.execute(sql: "insert into person (first_name, last_name) values ('Isaac', 'Newton');"))
+
+		struct Person {
+			let firstName: String
+			let lastName: String
+		}
+
+		let personConverter = RowConverter<Person> { row in
+			let firstName = try row.text(at: 0)
+			let lastName = try row.text(at: 1)
+			return Person(firstName: firstName, lastName: lastName)
+		}
+
+		let personMapper = TableMapper(table: "person", converter: personConverter)
+
+		let person = try! connection.first(personMapper)
+		XCTAssert(person?.firstName == "Isaac")
+		XCTAssert(person?.lastName == "Newton")
+	}
+
 #if canImport(Combine)
 
 	func testRowPublisher() {
