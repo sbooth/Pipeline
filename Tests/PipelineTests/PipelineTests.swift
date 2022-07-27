@@ -44,61 +44,61 @@ final class PipelineTests: XCTestCase {
 	}
 
 	func testConnection() {
-		let db = try! Connection()
-		XCTAssertNoThrow(try db.execute(sql: "create table t1(v1);"))
+		let connection = try! Connection()
+		XCTAssertNoThrow(try connection.execute(sql: "create table t1(v1);"))
 
 		let rowCount = 10
 		for _ in 0 ..< rowCount {
-			XCTAssertNoThrow(try db.execute(sql: "insert into t1 default values;"))
+			XCTAssertNoThrow(try connection.execute(sql: "insert into t1 default values;"))
 		}
 
-		let count = try! db.prepare(sql: "select count(*) from t1;").step()!.get(.int, at: 0)
+		let count = try! connection.prepare(sql: "select count(*) from t1;").step()!.get(.int, at: 0)
 		XCTAssertEqual(count, rowCount)
 	}
 
 	func testBatch() {
-		let db = try! Connection()
+		let connection = try! Connection()
 
-		try! db.batch(sql: "pragma application_id;")
-		try! db.batch(sql: "pragma application_id; pragma foreign_keys;")
+		try! connection.batch(sql: "pragma application_id;")
+		try! connection.batch(sql: "pragma application_id; pragma foreign_keys;")
 
-		XCTAssertThrowsError(try db.batch(sql: "lulu"))
+		XCTAssertThrowsError(try connection.batch(sql: "lulu"))
 
-		try! db.batch(sql: "pragma application_id;") { row in
+		try! connection.batch(sql: "pragma application_id;") { row in
 			XCTAssertEqual(row.keys.count, 1)
 			XCTAssertEqual(row["application_id"], "0")
 		}
 	}
 
 	func testInsert() {
-		let db = try! Connection()
+		let connection = try! Connection()
 
-		try! db.execute(sql: "create table t1(a text);")
+		try! connection.execute(sql: "create table t1(a text);")
 
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: [1])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: ["feisty"])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: 2.5)
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: .data(Data(count: 8)))
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: [1])
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: ["feisty"])
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: 2.5)
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: .data(Data(count: 8)))
 
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(.urlString(URL(fileURLWithPath: "/tmp")), toParameter: 1).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(.uuidString(UUID())).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.timeIntervalSinceReferenceDate(Date())]).execute()
+		try! connection.prepare(sql: "insert into t1(a) values (?);").bind(.urlString(URL(fileURLWithPath: "/tmp")), toParameter: 1).execute()
+		try! connection.prepare(sql: "insert into t1(a) values (?);").bind(.uuidString(UUID())).execute()
+		try! connection.prepare(sql: "insert into t1(a) values (?);").bind([.timeIntervalSinceReferenceDate(Date())]).execute()
 
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: [.null])
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: [.null])
 	}
 
 	func testIteration() {
-		let db = try! Connection()
+		let connection = try! Connection()
 
-		try! db.execute(sql: "create table t1(a);")
+		try! connection.execute(sql: "create table t1(a);")
 
 		let rowCount = 10
 
 		for i in 0..<rowCount {
-			try! db.prepare(sql: "insert into t1(a) values (?);").bind(.int(i)).execute()
+			try! connection.prepare(sql: "insert into t1(a) values (?);").bind(.int(i)).execute()
 		}
 
-		let s = try! db.prepare(sql: "select * from t1;")
+		let s = try! connection.prepare(sql: "select * from t1;")
 		var count = 0
 
 		for row in s {
@@ -162,21 +162,21 @@ final class PipelineTests: XCTestCase {
 	}
 
 	func testCustomCollation() {
-		let db = try! Connection()
+		let connection = try! Connection()
 
-		try! db.addCollation("reversed", { (a, b) -> ComparisonResult in
+		try! connection.addCollation("reversed", { (a, b) -> ComparisonResult in
 			return b.compare(a)
 		})
 
-		try! db.execute(sql: "create table t1(a text);")
+		try! connection.execute(sql: "create table t1(a text);")
 
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: "a")
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: ["c"])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: .string("z"))
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: [.string("e")])
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: "a")
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: ["c"])
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: .string("z"))
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: [.string("e")])
 
 		var str = ""
-		let s = try! db.prepare(sql: "select * from t1 order by a collate reversed;")
+		let s = try! connection.prepare(sql: "select * from t1 order by a collate reversed;")
 		try! s.results { row in
 			let c = try row.get(.string, at: 0)
 			str.append(c)
