@@ -27,7 +27,7 @@ import Foundation
 ///         return Person(firstName: firstName, lastName: lastName)
 ///     }
 /// }
-///  ```
+/// ```
 public struct RowConverter<T> {
 	/// Converts `row` to `T` and returns the result.
 	///
@@ -101,7 +101,7 @@ extension Connection {
 	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
 	/// - parameter table: The name of the desired table.
 	/// - parameter expression: An SQL expression defining the scope of the result rows.
-	/// - parameter values: A collection of values to bind to SQL parameters.
+	/// - parameter parameters: A collection of values to bind to SQL parameters.
 	///
 	/// - throws: An error if the SQL could not be compiled or executed, or if initialization fails.
 	///
@@ -153,7 +153,7 @@ extension Connection {
 	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
 	/// - parameter table: The name of the desired table.
 	/// - parameter expression: An SQL expression defining the scope of the result rows.
-	/// - parameter values: A collection of values to bind to SQL parameters.
+	/// - parameter parameters: A collection of values to bind to SQL parameters.
 	///
 	/// - throws: An error if the SQL could not be compiled or executed, or if initialization fails.
 	///
