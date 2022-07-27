@@ -22,7 +22,7 @@ extension Statement {
 	/// - throws: An error if the BLOB couldn't be bound.
 	public func bindZeroBLOB(toParameter index: Int, length: Int) throws {
 		guard sqlite3_bind_zeroblob(preparedStatement, Int32(index), Int32(length)) == SQLITE_OK else {
-			throw SQLiteError("Error binding zeroblob of length \(length) to parameter \(index)", takingErrorCodeFromDatabaseConnection: database.databaseConnection)
+			throw SQLiteError("Error binding zeroblob of length \(length) to parameter \(index)", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 		}
 	}
 

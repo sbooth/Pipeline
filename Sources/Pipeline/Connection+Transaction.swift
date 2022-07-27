@@ -7,7 +7,7 @@
 import Foundation
 import CSQLite
 
-extension Database {
+extension Connection {
 	/// Possible database transaction types.
 	///
 	/// - seealso: [Transactions in SQLite](https://sqlite.org/lang_transaction.html)
@@ -111,10 +111,10 @@ extension Database {
 
 	/// A series of database actions grouped into a transaction.
 	///
-	/// - parameter database: A `Database` used for database access within the block.
+	/// - parameter connection: A `Connection` used for database access within the block.
 	///
 	/// - returns: `.commit` if the transaction should be committed or `.rollback` if the transaction should be rolled back.
-	public typealias TransactionBlock = (_ database: Database) throws -> TransactionCompletion
+	public typealias TransactionBlock = (_ connection: Connection) throws -> TransactionCompletion
 
 	/// Performs a transaction on the database.
 	///
@@ -125,7 +125,7 @@ extension Database {
 	///
 	/// - note: If `block` throws an error the transaction will be rolled back and the error will be re-thrown.
 	/// - note: If an error occurs committing the transaction a rollback will be attempted and the error will be re-thrown.
-	public func transaction(type: Database.TransactionType = .deferred, _ block: TransactionBlock) throws {
+	public func transaction(type: Connection.TransactionType = .deferred, _ block: TransactionBlock) throws {
 		try begin(type: type)
 		do {
 			let action = try block(self)

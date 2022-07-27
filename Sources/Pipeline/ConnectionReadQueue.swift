@@ -8,13 +8,13 @@ import os.log
 import Foundation
 import CSQLite
 
-/// A queue providing serialized execution of read operations on a database.
+/// A queue providing serialized execution of read operations on a database connection.
 ///
 /// Normally read queues are used for concurrent read access to databases using WAL mode.
 ///
-/// A database read queue manages the execution of read-only database operations to
+/// A connection read queue manages the execution of read-only database operations to
 /// ensure they occur one at a time in FIFO order.  This provides thread-safe
-/// database access.
+/// access to the database connection.
 ///
 /// Database read operations may be submitted for synchronous or asynchronous execution.
 ///
@@ -24,35 +24,35 @@ import CSQLite
 ///
 /// The interface is similar to `DispatchQueue` and a dispatch queue is used
 /// internally for work item management.
-public final class DatabaseReadQueue {
-	/// The underlying database.
-	let database: Database
+public final class ConnectionReadQueue {
+	/// The underlying database connection.
+	let connection: Connection
 	/// The dispatch queue used to serialize access to the underlying database connection.
 	public let queue: DispatchQueue
 
-	/// Creates a database read queue for serialized read access to a database from a file.
+	/// Creates a connection read queue for serialized read access to an on-disk database.
 	///
 	/// - parameter url: The location of the SQLite database.
 	/// - parameter label: The label to attach to the queue.
-	/// - parameter qos: The quality of service class for the work performed by the database queue.
+	/// - parameter qos: The quality of service class for the work performed by the connection read queue.
 	/// - parameter target: The target dispatch queue on which to execute blocks.
 	///
-	/// - throws: An error if the database could not be opened.
+	/// - throws: An error if the connection could not be created.
 	public init(url: URL, label: String, qos: DispatchQoS = .default, target: DispatchQueue? = nil) throws {
-		self.database = try Database(readingFrom: url)
+		self.connection = try Connection(readingFrom: url)
 		self.queue = DispatchQueue(label: label, qos: qos, target: target)
 	}
 
-	/// Creates a database read queue for serialized read access to an existing database.
+	/// Creates a connection read queue for serialized read access to an existing database connection.
 	///
-	/// - attention: The database queue takes ownership of `database`.  The result of further use of `database` is undefined.
+	/// - attention: The connection read queue takes ownership of `connection`.  The result of further use of `connection` is undefined.
 	///
-	/// - parameter database: The database to be serialized.
+	/// - parameter connection: The connection to be serialized.
 	/// - parameter label: The label to attach to the queue.
-	/// - parameter qos: The quality of service class for the work performed by the database queue.
+	/// - parameter qos: The quality of service class for the work performed by the connection read queue.
 	/// - parameter target: The target dispatch queue on which to execute blocks.
-	public init(database: Database, label: String, qos: DispatchQoS = .default, target: DispatchQueue? = nil) {
-		self.database = database
+	public init(connection: Connection, label: String, qos: DispatchQoS = .default, target: DispatchQueue? = nil) {
+		self.connection = connection
 		self.queue = DispatchQueue(label: label, qos: qos, target: target)
 	}
 
@@ -85,83 +85,85 @@ public final class DatabaseReadQueue {
 		}
 	}
 
-	/// Performs a synchronous read operation on the database.
+	/// Performs a synchronous read operation on the database connection.
 	///
 	/// - parameter block: A closure performing the database operation.
-	/// - parameter database: A `Database` used for database access within `block`.
+	/// - parameter connection: A `Connection` used for database access within `block`.
 	///
 	/// - throws: Any error thrown in `block`.
 	///
 	/// - returns: The value returned by `block`.
-	public func sync<T>(block: (_ database: Database) throws -> (T)) rethrows -> T {
+	public func sync<T>(block: (_ connection: Connection) throws -> (T)) rethrows -> T {
 		try queue.sync {
-			try block(self.database)
+			try block(self.connection)
 		}
 	}
 
-	/// Submits an asynchronous read operation to the database queue.
+	/// Submits an asynchronous read operation to the queue.
 	///
 	/// - parameter group: An optional `DispatchGroup` with which to associate `block`.
 	/// - parameter qos: The quality of service for `block`.
 	/// - parameter block: A closure performing the database operation.
-	/// - parameter database: A `Database` used for database access within `block`.
-	public func async(group: DispatchGroup? = nil, qos: DispatchQoS = .unspecified, block: @escaping (_ database: Database) -> (Void)) {
+	/// - parameter connection: A `Connection` used for database access within `block`.
+	public func async(group: DispatchGroup? = nil, qos: DispatchQoS = .unspecified, block: @escaping (_ connection: Connection) -> (Void)) {
 		queue.async(group: group, qos: qos) {
-			block(self.database)
+			block(self.connection)
 		}
 	}
 
-	/// Performs a synchronous read transaction on the database.
+	/// Performs a synchronous read transaction on the database connection.
 	///
 	/// - parameter block: A closure performing the database operation.
+	/// - parameter connection: A `Connection` used for database access within `block`.
 	///
 	/// - throws: Any error thrown in `block` or an error if the transaction could not be started or rolled back.
 	///
 	/// - note: If `block` throws an error the transaction will be rolled back and the error will be re-thrown.
-	public func readTransaction(_ block: (_ database: Database) throws -> (Void)) throws {
+	public func readTransaction(_ block: (_ connection: Connection) throws -> (Void)) throws {
 		try queue.sync {
-			try database.readTransaction(block)
+			try connection.readTransaction(block)
 		}
 	}
 
-	/// Submits an asynchronous read transaction to the database queue.
+	/// Submits an asynchronous read transaction to the queue.
 	///
 	/// - parameter group: An optional `DispatchGroup` with which to associate `block`
 	/// - parameter qos: The quality of service for `block`
 	/// - parameter block: A closure performing the database operation
-	public func asyncReadTransaction(group: DispatchGroup? = nil, qos: DispatchQoS = .default, _ block: @escaping (_ database: Database) -> (Void)) {
+	/// - parameter connection: A `Connection` used for database access within `block`.
+	public func asyncReadTransaction(group: DispatchGroup? = nil, qos: DispatchQoS = .default, _ block: @escaping (_ connection: Connection) -> (Void)) {
 		queue.async(group: group, qos: qos) {
 			do {
-				try self.database.readTransaction(block)
+				try self.connection.readTransaction(block)
 			} catch let error {
-				os_log("Error performing database transaction: %{public}@", type: .info, error.localizedDescription)
+				os_log("Error performing database read transaction: %{public}@", type: .info, error.localizedDescription)
 			}
 		}
 	}
 }
 
-extension DatabaseReadQueue {
-	/// Creates a database read queue for serialized read access to a database from the file corresponding to the database *main* on a write queue.
+extension ConnectionReadQueue {
+	/// Creates a connection read queue for serialized read access to a database from the file corresponding to the database *main* on a write queue.
 	///
-	/// - note: The QoS for the database queue is set to the QoS of `writeQueue`.
+	/// - note: The QoS is set to the QoS of `writeQueue`.
 	///
-	/// - parameter writeQueue: A database queue for the SQLite database.
+	/// - parameter writeQueue: A connection queue for the SQLite database.
 	/// - parameter label: The label to attach to the queue.
 	///
-	/// - throws: An error if the database could not be opened.
-	public convenience init(writeQueue: DatabaseQueue, label: String) throws {
+	/// - throws: An error if the connection could not be created.
+	public convenience init(writeQueue: ConnectionQueue, label: String) throws {
 		try self.init(writeQueue: writeQueue, label: label, qos: writeQueue.queue.qos)
 	}
 
-	/// Creates a database read queue for serialized read access to a database from the file corresponding to the database *main* on a write queue.
+	/// Creates a connection read queue for serialized read access to a database from the file corresponding to the database *main* on a write queue.
 	///
-	/// - parameter writeQueue: A database queue for the SQLite database.
+	/// - parameter writeQueue: A connection queue for the SQLite database.
 	/// - parameter label: The label to attach to the queue.
-	/// - parameter qos: The quality of service class for the work performed by the database queue.
+	/// - parameter qos: The quality of service class for the work performed by the connection read queue.
 	/// - parameter target: The target dispatch queue on which to execute blocks.
 	///
-	/// - throws: An error if the database could not be opened.
-	public convenience init(writeQueue: DatabaseQueue, label: String, qos: DispatchQoS, target: DispatchQueue? = nil) throws {
+	/// - throws: An error if the connection could not be created.
+	public convenience init(writeQueue: ConnectionQueue, label: String, qos: DispatchQoS, target: DispatchQueue? = nil) throws {
 		let url = try writeQueue.sync { db in
 			return try db.url(forDatabase: "main")
 		}
@@ -169,7 +171,7 @@ extension DatabaseReadQueue {
 	}
 }
 
-extension Database {
+extension Connection {
 	/// Begins a long-running read transaction on the database.
 	///
 	/// This is equivalent to the SQL `BEGIN DEFERRED TRANSACTION;`.
@@ -203,11 +205,12 @@ extension Database {
 	/// Performs a read transaction on the database.
 	///
 	/// - parameter block: A closure performing the database operation.
+	/// - parameter connection: A `Connection` used for database access within `block`.
 	///
 	/// - throws: Any error thrown in `block` or an error if the transaction could not be started or rolled back.
 	///
 	/// - note: If `block` throws an error the transaction will be rolled back and the error will be re-thrown.
-	public func readTransaction(_ block: (_ database: Database) throws -> (Void)) throws {
+	public func readTransaction(_ block: (_ connection: Connection) throws -> (Void)) throws {
 		try begin(type: .deferred)
 		do {
 			try block(self)

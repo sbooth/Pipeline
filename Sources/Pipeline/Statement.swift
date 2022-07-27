@@ -16,10 +16,10 @@ public typealias SQLitePreparedStatement = OpaquePointer
 ///
 /// **Creation**
 ///
-/// A statement is not created directly but is obtained from a `Database`.
+/// A statement is not created directly but is obtained from a `Connection`.
 ///
 /// ```swift
-/// let statement = try database.prepare(sql: "select count(*) from t1;")
+/// let statement = try connection.prepare(sql: "select count(*) from t1;")
 /// ```
 ///
 /// **Parameter Binding**
@@ -29,7 +29,7 @@ public typealias SQLitePreparedStatement = OpaquePointer
 /// - note: Parameter indexes are 1-based.  The leftmost parameter in a statement has index 1.
 ///
 /// ```swift
-/// let statement = try database.prepare(sql: "insert into t1(a, b, c, d, e, f) values (?, ?, ?, :d, :e, :f);")
+/// let statement = try connection.prepare(sql: "insert into t1(a, b, c, d, e, f) values (?, ?, ?, :d, :e, :f);")
 /// try statement.bind(integer: 30, toParameter: 3)
 /// try statement.bind(integer: 40, toParameter: ":d")
 /// try statement.bind(parameterValues: 10, 20)
@@ -55,8 +55,8 @@ public typealias SQLitePreparedStatement = OpaquePointer
 /// It is generally preferred to use the block-based method because any errors may be explicitly handled instead of
 /// silently discarded.
 public final class Statement {
-	/// The owning database.
-	public let database: Database
+	/// The owning database connection.
+	public let connection: Connection
 	/// The underlying `sqlite3_stmt *` object.
 	let preparedStatement: SQLitePreparedStatement
 
@@ -64,13 +64,13 @@ public final class Statement {
 	///
 	/// - attention: The statement takes ownership of `preparedStatement`.  The result of further use of `preparedStatement` is undefined.
 	///
-	/// - parameter database: The owning database.
+	/// - parameter connection: The owning database connection.
 	/// - parameter preparedStatement: An `sqlite3_stmt *` prepared statement object..
 	///
 	/// - throws: An error if `sql` could not be compiled.
-	public init(database: Database, preparedStatement: SQLitePreparedStatement) {
-		precondition(sqlite3_db_handle(preparedStatement) == database.databaseConnection)
-		self.database = database
+	public init(connection: Connection, preparedStatement: SQLitePreparedStatement) {
+		precondition(sqlite3_db_handle(preparedStatement) == connection.databaseConnection)
+		self.connection = connection
 		self.preparedStatement = preparedStatement
 	}
 
@@ -80,17 +80,17 @@ public final class Statement {
 
 	/// Creates a compiled SQL statement.
 	///
-	/// - parameter database: The owning database.
+	/// - parameter connection: The owning database connection.
 	/// - parameter sql: The SQL statement to compile.
 	///
 	/// - throws: An error if `sql` could not be compiled.
-	public convenience init(database: Database, sql: String) throws {
-		var stmt: SQLitePreparedStatement?
-		guard sqlite3_prepare_v2(database.databaseConnection, sql, -1, &stmt, nil) == SQLITE_OK else {
-			throw SQLiteError("Error preparing SQL \"\(sql)\"", takingErrorCodeFromDatabaseConnection: database.databaseConnection)
+	public convenience init(connection: Connection, sql: String) throws {
+		var preparedStatement: SQLitePreparedStatement?
+		guard sqlite3_prepare_v2(connection.databaseConnection, sql, -1, &preparedStatement, nil) == SQLITE_OK else {
+			throw SQLiteError("Error preparing SQL \"\(sql)\"", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 		}
-		precondition(stmt != nil)
-		self.init(database: database, preparedStatement: stmt.unsafelyUnwrapped)
+		precondition(preparedStatement != nil)
+		self.init(connection: connection, preparedStatement: preparedStatement.unsafelyUnwrapped)
 	}
 
 	/// `true` if this statement makes no direct changes to the database, `false` otherwise.
@@ -167,11 +167,11 @@ public final class Statement {
 }
 
 extension Statement {
-	/// Performs a low-level SQLite statement operation.
+	/// Performs a low-level SQLite operation on the prepared statement.
 	///
 	/// - attention: **Use of this function should be avoided whenever possible.**
 	///
-	/// - parameter block: A closure performing the statement operation.
+	/// - parameter block: A closure performing the operation.
 	/// - parameter preparedStatement: The raw `sqlite3_stmt *` prepared statement object.
 	///
 	/// - throws: Any error thrown in `block`.
@@ -192,7 +192,7 @@ extension Statement {
 			result = sqlite3_step(preparedStatement)
 		}
 		guard result == SQLITE_DONE else {
-			throw SQLiteError("Error evaluating statement", takingErrorCodeFromDatabaseConnection: database.databaseConnection)
+			throw SQLiteError("Error evaluating statement", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 		}
 	}
 
@@ -209,7 +209,7 @@ extension Statement {
 			result = sqlite3_step(preparedStatement)
 		}
 		guard result == SQLITE_DONE else {
-			throw SQLiteError("Error evaluating statement", takingErrorCodeFromDatabaseConnection: database.databaseConnection)
+			throw SQLiteError("Error evaluating statement", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 		}
 	}
 
@@ -225,7 +225,7 @@ extension Statement {
 		case SQLITE_DONE:
 			return nil
 		default:
-			throw SQLiteError("Error evaluating statement", takingErrorCodeFromDatabaseConnection: database.databaseConnection)
+			throw SQLiteError("Error evaluating statement", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 		}
 	}
 
@@ -236,7 +236,7 @@ extension Statement {
 	/// - throws: An error if the statement could not be reset.
 	public func reset() throws {
 		guard sqlite3_reset(preparedStatement) == SQLITE_OK else {
-			throw SQLiteError("Error resetting statement", takingErrorCodeFromDatabaseConnection: database.databaseConnection)
+			throw SQLiteError("Error resetting statement", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 		}
 	}
 }
