@@ -69,7 +69,7 @@ public enum VirtualTableModuleBestIndexResult {
 public protocol VirtualTableModule {
 	/// Opens a connection to an SQLite virtual table module.
 	///
-	/// - parameter database: The database to which this virtual table module is being added.
+	/// - parameter connection: The database connection to which this virtual table module is being added.
 	/// - parameter arguments: The arguments used to create the virtual table module. The first argument is the name of the module being invoked.
 	/// The second argument is the name of the database in which the virtual table is being created. The third argument is the name of the new virtual table.
 	/// Any additional arguments are those passed to the module name in the `CREATE VIRTUAL TABLE` statement.
@@ -77,7 +77,7 @@ public protocol VirtualTableModule {
 	/// and should create any persistent state.
 	///
 	/// - throws: `SQLiteError` if the module could not be created.
-	init(database: Connection, arguments: [String], create: Bool) throws
+	init(connection: Connection, arguments: [String], create: Bool) throws
 
 	/// The options supported by this virtual table module.
 	var options: Connection.VirtualTableModuleOptions { get }
@@ -125,19 +125,19 @@ extension VirtualTableModule {
 public protocol EponymousVirtualTableModule: VirtualTableModule {
 	/// Opens a connection to an SQLite eponymous virtual table module.
 	///
-	/// - parameter database: The database to which this virtual table module is being added.
+	/// - parameter connection: The database connection to which this virtual table module is being added.
 	/// - parameter arguments: The arguments used to create the virtual table module. The first argument is the name of the module being invoked.
 	/// The second argument is the name of the database in which the virtual table is being created. The third argument is the name of the new virtual table.
 	///
 	/// - throws: `SQLiteError` if the module could not be created.
-	init(database: Connection, arguments: [String]) throws
+	init(connection: Connection, arguments: [String]) throws
 }
 
 extension VirtualTableModule where Self: EponymousVirtualTableModule {
-	init(database: Connection, arguments: [String], create: Bool) throws {
+	init(connection: Connection, arguments: [String], create: Bool) throws {
 		precondition(create == false)
 		// Eponymous-only virtual tables have no state
-		try self.init(database: database, arguments: arguments)
+		try self.init(connection: connection, arguments: arguments)
 	}
 }
 
@@ -181,7 +181,7 @@ extension Connection {
 		public static let directOnly = VirtualTableModuleOptions(rawValue: 1 << 3)
 	}
 
-	/// Adds a virtual table module to the database.
+	/// Adds a virtual table module to the database connection.
 	///
 	/// - parameter name: The name of the virtual table module.
 	/// - parameter type: The class implementing the virtual table module.
@@ -197,10 +197,10 @@ extension Connection {
 
 		// client_data must live until the xDestroy function is invoked; store it as a +1 object
 		let client_data = VirtualTableModuleClientData(module: &module_struct) { [weak self] args, create -> VirtualTableModule in
-			guard let database = self else {
-				throw DatabaseError("Database instance missing (weak reference was set to nil)")
+			guard let connection = self else {
+				throw DatabaseError("Connection instance missing (weak reference was set to nil)")
 			}
-			return try T(database: database, arguments: args, create: create)
+			return try T(connection: connection, arguments: args, create: create)
 		}
 		let client_data_ptr = Unmanaged.passRetained(client_data).toOpaque()
 
@@ -212,7 +212,7 @@ extension Connection {
 		}
 	}
 
-	/// Adds an eponymous virtual table module to the database.
+	/// Adds an eponymous virtual table module to the database connection.
 	///
 	/// An eponymous virtual table module presents a virtual table with the same name as the module and
 	/// does not require a `CREATE VIRTUAL TABLE` statement to be available.
@@ -244,15 +244,15 @@ extension Connection {
 	/// 		}
 	/// 	}
 	///
-	/// 	required init(database: Database, arguments: [String]) {
-	/// 		// database and arguments not used
+	/// 	required init(connection: Connection, arguments: [String]) {
+	/// 		// connection and arguments not used
 	/// 	}
 	///
 	/// 	var declaration: String {
 	/// 		"CREATE TABLE x(value)"
 	/// 	}
 	///
-	/// 	var options: Database.VirtualTableModuleOptions {
+	/// 	var options: Connection.VirtualTableModuleOptions {
 	/// 		[.innocuous]
 	/// 	}
 	///
@@ -280,10 +280,10 @@ extension Connection {
 
 		// client_data must live until the xDestroy function is invoked; store it as a +1 object
 		let client_data = VirtualTableModuleClientData(module: &module_struct) { [weak self] args, create -> VirtualTableModule in
-			guard let database = self else {
-				throw DatabaseError("Database instance missing (weak reference was set to nil)")
+			guard let connection = self else {
+				throw DatabaseError("Connection instance missing (weak reference was set to nil)")
 			}
-			return try T(database: database, arguments: args, create: create)
+			return try T(connection: connection, arguments: args, create: create)
 		}
 		let client_data_ptr = Unmanaged.passRetained(client_data).toOpaque()
 
@@ -295,7 +295,7 @@ extension Connection {
 		}
 	}
 
-	/// Removes a virtual table module from the database.
+	/// Removes a virtual table module from the database connection.
 	///
 	/// - parameter name: The name of the virtual table module.
 	///
@@ -306,7 +306,7 @@ extension Connection {
 		}
 	}
 
-	/// Removes all virtual table modules from the database.
+	/// Removes all virtual table modules from the database connection.
 	///
 	/// - parameter except: An array containing the names of virtual table modules to keep.
 	///

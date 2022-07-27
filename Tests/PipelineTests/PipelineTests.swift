@@ -523,7 +523,7 @@ final class PipelineTests: XCTestCase {
 				}
 			}
 
-			required init(database: Connection, arguments: [String]) {
+			required init(connection: Connection, arguments: [String]) {
 			}
 
 			var declaration: String {
@@ -655,7 +655,7 @@ final class PipelineTests: XCTestCase {
 				}
 			}
 
-			required init(database: Connection, arguments: [String]) {
+			required init(connection: Connection, arguments: [String]) {
 			}
 
 			var declaration: String {
@@ -1062,7 +1062,7 @@ final class ShuffledSequenceModule: VirtualTableModule {
 
 	let values: [Int]
 
-	required init(database: Connection, arguments: [String], create: Bool) throws {
+	required init(connection: Connection, arguments: [String], create: Bool) throws {
 		var count = 0
 		var start = 1
 

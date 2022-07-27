@@ -30,7 +30,7 @@ public final class Session {
 
 	/// Initializes a new session for `schema` on `database`.
 	///
-	/// - parameter database: The owning database.
+	/// - parameter connection: The owning database connection.
 	/// - parameter schema: The database schema to track.
 	///
 	/// - throws: An error if the session could not be created.
