@@ -37,12 +37,28 @@ public struct RowConverter<T> {
 	public let convert: (_ row: Row) throws -> T
 }
 
+extension Statement {
+	/// Executes the statement, converts each result row to `type`, and applies `block` to each result.
+	///
+	/// - parameter type: The type of object to create from each row.
+	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
+	/// - parameter block: A closure applied to each result row.
+	/// - parameter object: A result row of returned data.
+	///
+	/// - throws: Any error thrown in `block` or an error if the statement did not successfully run to completion or object initialization fails.
+	public func results<T>(as type: T.Type = T.self, _ converter: RowConverter<T>, _ block: ((_ object: T) throws -> ())) throws {
+		try results { row in
+			try block(converter.convert(row))
+		}
+	}
+}
+
 extension Connection {
 	/// Returns all rows in `table` converted to `type`.
 	///
 	/// This is equivalent to the SQL `SELECT * FROM "`*table*`"`.
 	///
-	/// - parameter type: The type of object to create from the row.
+	/// - parameter type: The type of object to create from each row.
 	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
 	/// - parameter table: The name of the desired table.
 	///
@@ -52,8 +68,8 @@ extension Connection {
 	public func all<T>(as type: T.Type = T.self, _ converter: RowConverter<T>, from table: String) throws -> [T] {
 		let statement = try prepare(sql: "SELECT * FROM \"\(table)\";")
 		var results = [T]()
-		try statement.results { row in
-			try results.append(converter.convert(row))
+		try statement.results(as: type, converter) { object in
+			results.append(object)
 		}
 		return results
 	}
@@ -81,7 +97,7 @@ extension Connection {
 	///
 	/// This is equivalent to the SQL `SELECT * FROM "`*table*`" WHERE` *expression*.
 	///
-	/// - parameter type: The type of object to create from the row.
+	/// - parameter type: The type of object to create from each row.
 	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
 	/// - parameter table: The name of the desired table.
 	/// - parameter expression: An SQL expression defining the scope of the result rows.
@@ -96,8 +112,8 @@ extension Connection {
 		let statement = try prepare(sql: "SELECT * FROM \"\(table)\" WHERE \(expression);")
 		try statement.bind(parameters)
 		var results = [T]()
-		try statement.results { row in
-			try results.append(converter.convert(row))
+		try statement.results(as: type, converter) { object in
+			results.append(object)
 		}
 		return results
 	}
@@ -106,7 +122,7 @@ extension Connection {
 	///
 	/// This is equivalent to `SELECT * FROM "`*table*`" WHERE` *expression*.
 	///
-	/// - parameter type: The type of object to create from the row.
+	/// - parameter type: The type of object to create from each row.
 	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
 	/// - parameter table: The name of the desired table.
 	/// - parameter expression: An SQL expression defining the scope of the result rows.
@@ -121,8 +137,8 @@ extension Connection {
 		let statement = try prepare(sql: "SELECT * FROM \"\(table)\" WHERE \(expression);")
 		try statement.bind(parameters)
 		var results = [T]()
-		try statement.results { row in
-			try results.append(converter.convert(row))
+		try statement.results(as: type, converter) { object in
+			results.append(object)
 		}
 		return results
 	}
@@ -133,7 +149,7 @@ extension Connection {
 	///
 	/// This is equivalent to the SQL `SELECT * FROM "`*table*`" WHERE` *expression*.
 	///
-	/// - parameter type: The type of object to create from the row.
+	/// - parameter type: The type of object to create from each row.
 	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
 	/// - parameter table: The name of the desired table.
 	/// - parameter expression: An SQL expression defining the scope of the result rows.
