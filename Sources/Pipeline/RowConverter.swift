@@ -28,6 +28,12 @@ import Foundation
 ///     }
 /// }
 /// ```
+///
+/// The row converter could be used from a database connection as:
+///
+/// ```swift
+/// try connection.first(.person, from: "person")
+/// ```
 public struct RowConverter<T> {
 	/// Converts `row` to `T` and returns the result.
 	///

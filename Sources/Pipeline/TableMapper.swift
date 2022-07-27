@@ -32,6 +32,12 @@ import Foundation
 ///     public static let person = TableMapper(table: "person", converter: .person)
 /// }
 /// ```
+///
+/// The table mapper could be used from a database connection as:
+///
+/// ```swift
+/// try connection.first(.person)
+/// ```
 struct TableMapper<T> {
 	/// The name of the table.
 	let table: String
