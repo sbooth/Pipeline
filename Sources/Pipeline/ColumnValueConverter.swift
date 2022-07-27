@@ -17,13 +17,14 @@ import CSQLite
 ///
 /// ```swift
 /// extension ColumnValueConverter where T == UUID {
-/// 	public static let uuid = ColumnValueConverter { row, index in
-/// 		let t = try row.text(forColumn: index)
-/// 		guard let u = UUID(uuidString: t) else {
-/// 			throw DatabaseError("text \"\(t)\" isn't a valid UUID")
-/// 		}
-/// 		return u
-/// 	}
+///     public static let uuid = ColumnValueConverter { row, index in
+///         let t = try row.text(forColumn: index)
+///         guard let u = UUID(uuidString: t) else {
+///             throw DatabaseError("text \"\(t)\" isn't a valid UUID")
+///         }
+///         return u
+///     }
+/// }
 ///  ```
 public struct ColumnValueConverter<T> {
 	/// Converts the value at `index` in `row` to `T` and returns the result.

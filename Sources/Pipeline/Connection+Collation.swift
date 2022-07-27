@@ -7,7 +7,7 @@
 import Foundation
 import CSQLite
 
-extension Database {
+extension Connection {
 	/// A comparator for `String` objects.
 	///
 	/// - parameter lhs: The left-hand operand.
@@ -19,7 +19,7 @@ extension Database {
 	/// Adds a custom collation function.
 	///
 	/// ```swift
-	/// try database.addCollation("localizedCompare", { (lhs, rhs) -> ComparisonResult in
+	/// try connection.addCollation("localizedCompare", { (lhs, rhs) -> ComparisonResult in
 	///     return lhs.localizedCompare(rhs)
 	/// })
 	/// ```

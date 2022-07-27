@@ -13,7 +13,7 @@ import Combine
 
 /// An `sqlite3 *` object.
 ///
-/// - seealso: [SQLite Database Connection Handle](https://sqlite.org/c3ref/sqlite3.html)
+/// - seealso: [Database Connection Handle](https://sqlite.org/c3ref/sqlite3.html)
 public typealias SQLiteDatabaseConnection = OpaquePointer
 
 /// The content pointer is constant and will never change.
@@ -26,17 +26,17 @@ public let SQLiteStaticStorage = unsafeBitCast(0, to: sqlite3_destructor_type.se
 /// - seealso: [Constants Defining Special Destructor Behavior](https://sqlite.org/c3ref/c_static.html)
 public let SQLiteTransientStorage = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 
-/// An [SQLite](https://sqlite.org) database.
-public final class Database {
-	/// The underlying `sqlite3 *` database.
+/// A connection to an [SQLite](https://sqlite.org) database.
+public final class Connection {
+	/// The underlying `sqlite3 *` connection handle.
 	let databaseConnection: SQLiteDatabaseConnection
 
-	/// The database's custom busy handler.
+	/// The connection's custom busy handler.
 	var busyHandler: UnsafeMutablePointer<BusyHandler>?
 
-	/// Creates a database from an existing `sqlite3 *` database connection handle.
+	/// Creates a connection from an existing `sqlite3 *` database connection handle.
 	///
-	/// - attention: The database takes ownership of `databaseConnection`.  The result of further use of `databaseConnection` is undefined.
+	/// - attention: The connection takes ownership of `databaseConnection`.  The result of further use of `databaseConnection` is undefined.
 	///
 	/// - parameter databaseConnection: An `sqlite3 *` database connection handle.
 	public init(databaseConnection: SQLiteDatabaseConnection) {
@@ -50,11 +50,11 @@ public final class Database {
 		busyHandler?.deallocate()
 	}
 
-	/// Creates a temporary database.
+	/// Creates and connects to a temporary database.
 	///
 	/// - parameter inMemory: Whether the temporary database should be created in-memory or on-disk.
 	///
-	/// - throws: An error if the database could not be created.
+	/// - throws: An error if the connection could not be created.
 	public convenience init(inMemory: Bool = true) throws {
 		var db: SQLiteDatabaseConnection?
 		let path = inMemory ? ":memory:" : ""
@@ -67,11 +67,11 @@ public final class Database {
 		self.init(databaseConnection: db.unsafelyUnwrapped)
 	}
 
-	/// Creates a read-only database from a file.
+	/// Creates a read-only connection to an on-disk database.
 	///
 	/// - parameter url: The location of the SQLite database.
 	///
-	/// - throws: An error if the database could not be created.
+	/// - throws: An error if the connection could not be created.
 	public convenience init(readingFrom url: URL) throws {
 		var db: SQLiteDatabaseConnection?
 		try url.withUnsafeFileSystemRepresentation { path in
@@ -85,12 +85,12 @@ public final class Database {
 		self.init(databaseConnection: db.unsafelyUnwrapped)
 	}
 
-	/// Creates a database from a file.
+	/// Creates a connection to an on-disk database.
 	///
 	/// - parameter url: The location of the SQLite database.
 	/// - parameter create: Whether to create the database if it doesn't exist.
 	///
-	/// - throws: An error if the database could not be created.
+	/// - throws: An error if the connection could not be created.
 	public convenience init(url: URL, create: Bool = true) throws {
 		var db: SQLiteDatabaseConnection?
 		try url.withUnsafeFileSystemRepresentation { path in
@@ -122,8 +122,8 @@ public final class Database {
 #endif
 }
 
-extension Database {
-	/// `true` if this database is read only, `false` otherwise.
+extension Connection {
+	/// `true` if this database connection is read only, `false` otherwise.
 	public var isReadOnly: Bool {
 		sqlite3_db_readonly(self.databaseConnection, nil) == 1
 	}
@@ -186,11 +186,11 @@ extension Database {
 		return URL(fileURLWithPath: String(cString: path))
 	}
 
-	/// Performs a low-level SQLite database operation.
+	/// Performs a low-level SQLite operation on the database connection handle.
 	///
 	/// - attention: **Use of this function should be avoided whenever possible.**
 	///
-	/// - parameter block: A closure performing the database operation.
+	/// - parameter block: A closure performing the operation.
 	/// - parameter databaseConnection: The raw `sqlite3 *` database connection handle.
 	///
 	/// - throws: Any error thrown in `block`.
@@ -201,7 +201,7 @@ extension Database {
 	}
 }
 
-extension Database {
+extension Connection {
 	/// Executes an SQL statement.
 	///
 	/// - parameter sql: The SQL statement to execute.
@@ -222,7 +222,7 @@ extension Database {
 	///
 	/// - returns: A compiled SQL statement.
 	public func prepare(sql: String) throws -> Statement {
-		try Statement(database: self, sql: sql)
+		try Statement(connection: self, sql: sql)
 	}
 
 	/// Executes one or more SQL statements and optionally applies `block` to each result row.
@@ -272,7 +272,7 @@ extension Database {
 	}	
 }
 
-extension Database {
+extension Connection {
 	/// Returns the result or error code associated with the most recent `sqlite3_` API call.
 	public var errorCode: Int32 {
 		sqlite3_errcode(databaseConnection) & 0xff
@@ -307,7 +307,7 @@ extension Database {
 	}
 }
 
-extension Database {
+extension Connection {
 	/// Returns `true` if the last `sqlite3_` API call succeeded.
 	public var success: Bool {
 		let result = sqlite3_errcode(databaseConnection) & 0xff

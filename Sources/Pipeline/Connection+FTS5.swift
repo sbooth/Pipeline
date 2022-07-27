@@ -19,7 +19,7 @@ public protocol FTS5Tokenizer {
 	///
 	/// - parameter text: The text to be tokenized.
 	/// - parameter reason: The reason tokenization is being requested.
-	func setText(_ text: String, reason: Database.FTS5TokenizationReason)
+	func setText(_ text: String, reason: Connection.FTS5TokenizationReason)
 
 	/// Advances the tokenizer to the next token.
 	///
@@ -42,7 +42,7 @@ public protocol FTS5Tokenizer {
 	func copyCurrentToken(to buffer: UnsafeMutablePointer<UInt8>, capacity: Int) throws -> Int
 }
 
-extension Database {
+extension Connection {
 	/// Glue for creating a generic Swift type in a C callback.
 	final class FTS5TokenizerCreator {
 		/// The constructor closure.
@@ -213,7 +213,7 @@ extension Database {
 	}
 }
 
-extension Database.FTS5TokenizationReason {
+extension Connection.FTS5TokenizationReason {
 	/// Convenience initializer for conversion of `FTS5_TOKENIZE_` values.
 	///
 	/// - parameter flags: The flags passed as the second argument of `fts5_tokenizer.xTokenize()`.

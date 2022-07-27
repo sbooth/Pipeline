@@ -33,18 +33,18 @@ Pipeline uses the [CSQLite](https://github.com/sbooth/CSQLite) package for the S
 ## Quick Start
 
 ```swift
-// Create an in-memory database
-let database = try Database()
+// Create a connection to an in-memory database
+let connection = try Connection()
 
 // Create a table
-try database.execute(sql: "CREATE TABLE t1(a,b);")
+try connection.execute(sql: "CREATE TABLE t1(a,b);")
 
 // Insert a row
-try database.execute(sql: "INSERT INTO t1(a,b) VALUES (?,?);", 
-                     parameters: 33, "lulu")
+try connection.execute(sql: "INSERT INTO t1(a,b) VALUES (?,?);", 
+                       parameters: 33, "lulu")
 
 // Retrieve the values
-try database.execute(sql: "SELECT a,b FROM t1;") { row in
+try connection.execute(sql: "SELECT a,b FROM t1;") { row in
     let a = try row.value(at: 0, .int)
     let b = try row.value(at: 1, .string)
 }
@@ -52,40 +52,40 @@ try database.execute(sql: "SELECT a,b FROM t1;") { row in
 
 ### Segue to Thread Safety
 
-Pipeline compiles SQLite with thread safety disabled for improved performance. While this increases performance, it also means a `Database` instance may only be accessed from a single thread or dispatch queue at a time.
+Pipeline compiles SQLite with thread safety disabled for improved performance. While this increases performance, it also means a `Connection` object may only be accessed from a single thread or dispatch queue at a time.
 
-Most applications should not create a `Database` directly but instead should use a thread-safe `DatabaseQueue`.
+Most applications should not create a `Connection` directly but instead should use a thread-safe `ConnectionQueue`.
 
 ```swift
 // Create a queue serializing access to an in-memory database
-let databaseQueue = try DatabaseQueue("myapp.database-isolation-queue")
+let connectionQueue = try ConnectionQueue("myapp.database-connection-isolation-queue")
 ```
 
-This creates a queue which may be used from multiple threads or dispatch queues safely.  The queue serializes access to the database ensuring only a single operation occurs at a time. Database operations may be performed synchronously or asynchronously.
+This creates a queue which may be used from multiple threads or dispatch queues safely.  The queue serializes access to the database connection ensuring only a single operation occurs at a time. Database operations may be performed synchronously or asynchronously.
 
 ```swift
 // Perform a synchronous database access
-try databaseQueue.sync { database in
-    // Do something with `database`
+try connectionQueue.sync { connection in
+    // Do something with `connection`
 }
 
 // Perform an asynchronous database access
-databaseQueue.async { database in
+connectionQueue.async { connection in
     do {
-        // Do something with `database`
+        // Do something with `connection`
     } catch let error {
         // Handle any errors that occurred
     }
 }
 ```
 
-For databases using [Write-Ahead Logging](https://www.sqlite.org/wal.html) concurrent reading and writing is supported. Multiple read operations may be performed simultaneously using more than one `DatabaseReadQueue` instance.  Write operations must always be confined to a single `DatabaseQueue`.  A typical usage pattern is one global `DatabaseQueue` instance used for writing located in the application's delegate, with `DatabaseReadQueue` instances located in individual view or window controllers.  When used with long-running read transactions each `DatabaseReadQueue` maintains a separate, consistent snapshot of the database that may be updated in response to database changes.
+For databases using [Write-Ahead Logging](https://www.sqlite.org/wal.html) concurrent reading and writing is supported. Multiple read operations may be performed simultaneously using more than one `ConnectionReadQueue` instance.  Write operations must always be confined to a single `ConnectionQueue`.  A typical usage pattern is one global `ConnectionQueue` instance used for writing located in the application's delegate, with `ConnectionReadQueue` instances located in individual view or window controllers.  When used with long-running read transactions each `ConnectionReadQueue` maintains a separate, consistent snapshot of the database that may be updated in response to database changes.
 
 ## Design
 
-The core of Pipeline is the types `Database`, `Statement`, and `Row`.
+The core of Pipeline is the types `Connection`, `Statement`, and `Row`.
 
-- `Database` is an SQLite database.
+- `Connection` is a connection to an SQLite database.
 
 - `Statement` is a compiled SQL statement.
 
@@ -105,25 +105,25 @@ Type-safe SQL parameter binding is provided by `SQLParameter` objects.
 
 - `SQLParameter` objects capture a value and bind it to an SQL parameter.
 
-Thread-safe access to a database is provided by `DatabaseQueue`.
+Thread-safe access to a database is provided by `ConnectionQueue`.
 
-- `DatabaseQueue` serializes work items on a database.
-- `DatabaseReadQueue` serializes read operations on a database.
+- `ConnectionQueue` serializes work items on a database connection.
+- `ConnectionReadQueue` serializes read operations on a database connection.
 
 ## Examples
 
-### Create an In-Memory Database
+### Create a Connection to an In-Memory Database
 
 ```swift
-let database = try Database()
+let connection = try Connection()
 ```
 
-This creates a database for use on a single thread or dispatch queue only. Most applications should not create a `Database` directly but instead should use a thread-safe `DatabaseQueue`.
+This creates a connection for use on a single thread or dispatch queue only. Most applications should not create a `Connection` directly but instead should use a thread-safe `ConnectionQueue`.
 
 ### Create a Table
 
 ```swift
-try database.execute(sql: "CREATE TABLE t1(a,b);")
+try connection.execute(sql: "CREATE TABLE t1(a,b);")
 ```
 
 The created table *t1* has two columns, *a* and *b*.
@@ -132,15 +132,15 @@ The created table *t1* has two columns, *a* and *b*.
 
 ```swift
 for i in 0..<5 {
-    try database.execute(sql: "INSERT INTO t1(a,b) VALUES (?,?);",
-                         parameters: .int(2*i), .int(2*i+1))
+    try connection.execute(sql: "INSERT INTO t1(a,b) VALUES (?,?);",
+                           parameters: .int(2*i), .int(2*i+1))
 }
 ```
 SQL parameters are passed as a sequence or series of values.  Named parameters are also supported.
 
 ```swift
-try database.execute(sql: "INSERT INTO t1(a,b) VALUES (:a,:b);",
-                     parameters: [":a": 100, ":b": 404])
+try connection.execute(sql: "INSERT INTO t1(a,b) VALUES (:a,:b);",
+                       parameters: [":a": 100, ":b": 404])
 ```
 
 ### Insert Data Efficiently
@@ -148,7 +148,7 @@ try database.execute(sql: "INSERT INTO t1(a,b) VALUES (:a,:b);",
 Rather than parsing SQL each time a statement is executed, it is more efficient to prepare a statement and reuse it.
 
 ```swift
-let statement = try database.prepare(sql: "INSERT INTO t1(a,b) VALUES (?,?);")
+let statement = try connection.prepare(sql: "INSERT INTO t1(a,b) VALUES (?,?);")
 for i in 0..<5 {
     try statement.bind(.int(2*i), .int(2*i+1))
     try statement.execute()
@@ -162,7 +162,7 @@ for i in 0..<5 {
 The closure passed to `execute()` will be called with each result row.
 
 ```swift
-try database.execute(sql: "SELECT * FROM t1;") { row in
+try connection.execute(sql: "SELECT * FROM t1;") { row in
     let x = try row.value(at: 0, .int)
     let y = try row.valueOrNil(at: 1, .int)
 }
@@ -173,17 +173,17 @@ try database.execute(sql: "SELECT * FROM t1;") { row in
 ### Perform a Transaction
 
 ```swift
-try database.transaction { database in
-    // Do something with `database`
+try connection.transaction { connection in
+    // Do something with `connection`
     return .commit
 }
 ```
 
-Database transactions may also be performed asynchronously using `DatabaseQueue`.
+Database transactions may also be performed asynchronously using `ConnectionQueue`.
 
 ```swift
-databaseQueue.asyncTransaction { database in
-    // Do something with `database`
+connectionQueue.asyncTransaction { connection in
+    // Do something with `connection`
     return .commit
 }
 ```
@@ -197,7 +197,7 @@ let rot13Mapping: [Character: Character] = [
     "a": "n", "b": "o", "c": "p", "d": "q", "e": "r", "f": "s", "g": "t", "h": "u", "i": "v", "j": "w", "k": "x", "l": "y", "m": "z",
     "n": "a", "o": "b", "p": "c", "q": "d", "r": "e", "s": "f", "t": "g", "u": "h", "v": "i", "w": "j", "x": "k", "y": "l", "z": "m"]
 
-try database.addFunction("rot13", arity: 1) { values in
+try connection.addFunction("rot13", arity: 1) { values in
     let value = values.first.unsafelyUnwrapped
     switch value {
         case .text(let t):
@@ -211,13 +211,13 @@ try database.addFunction("rot13", arity: 1) { values in
 *rot13* can now be used just like any other [SQL function](https://www.sqlite.org/lang_corefunc.html).
 
 ```swift
-let statement = try database.prepare(sql: "INSERT INTO t1(a) VALUES (rot13(?));")
+let statement = try connection.prepare(sql: "INSERT INTO t1(a) VALUES (rot13(?));")
 ```
 
 ### Custom Collating Sequences
 
 ```swift
-try database.addCollation("localized_compare", { (lhs, rhs) -> ComparisonResult in
+try connection.addCollation("localized_compare", { (lhs, rhs) -> ComparisonResult in
     return lhs.localizedCompare(rhs)
 })
 ```
@@ -225,7 +225,7 @@ try database.addCollation("localized_compare", { (lhs, rhs) -> ComparisonResult 
 *localized_compare* is now available as a [collating sequence](https://www.sqlite.org/c3ref/create_collation.html).
 
 ```swift
-let statement = try database.prepare(sql: "SELECT * FROM t1 ORDER BY a COLLATE localized_compare;")
+let statement = try connection.prepare(sql: "SELECT * FROM t1 ORDER BY a COLLATE localized_compare;")
 ```
 
 ## Combine
@@ -243,11 +243,11 @@ extension UUIDHolder: RowMapping
 	}
 }
 
-let database = try Database()
+let connection = try Connection()
 
 let sevenDaysAgo = Date() - 7 * 24 * 60 * 60
 
-let publisher = database.rowPublisher(sql: "select uuid from table_one where date >= ?;") {
+let publisher = connection.rowPublisher(sql: "select uuid from table_one where date >= ?;") {
 	try $0.bind(.timeIntervalSinceReferenceDate(sevenDaysAgo), toParameter: 1)
 }
 

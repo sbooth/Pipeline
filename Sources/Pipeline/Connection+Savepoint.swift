@@ -7,7 +7,7 @@
 import Foundation
 import CSQLite
 
-extension Database {
+extension Connection {
 	/// Begins a database savepoint transaction.
 	///
 	/// - note: Savepoint transactions may be nested.
@@ -57,10 +57,10 @@ extension Database {
 
 	/// A series of database actions grouped into a savepoint transaction.
 	///
-	/// - parameter database: A `Database` used for database access within the block.
+	/// - parameter connection: A `Connection` used for database access within the block.
 	///
 	/// - returns: `.release` if the savepoint should be released or `.rollback` if the savepoint should be rolled back.
-	public typealias SavepointBlock = (_ database: Database) throws -> SavepointCompletion
+	public typealias SavepointBlock = (_ connection: Connection) throws -> SavepointCompletion
 
 	/// Performs a savepoint transaction on the database.
 	///
