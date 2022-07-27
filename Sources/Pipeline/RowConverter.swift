@@ -37,7 +37,7 @@ public struct RowConverter<T> {
 	public let convert: (_ row: Row) throws -> T
 }
 
-extension Database {
+extension Connection {
 	/// Returns all rows in `table` converted to `type`.
 	///
 	/// This is equivalent to the SQL `SELECT * FROM "`*table*`"`.
@@ -128,7 +128,7 @@ extension Database {
 	}
 }
 
-extension Database {
+extension Connection {
 	/// Returns the rows in `table` matching `expression` converted to `type`.
 	///
 	/// This is equivalent to the SQL `SELECT * FROM "`*table*`" WHERE` *expression*.
