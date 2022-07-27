@@ -38,12 +38,12 @@ public struct RowConverter<T> {
 }
 
 extension Statement {
-	/// Executes the statement, converts each result row to `type`, and applies `block` to each result.
+	/// Executes the statement, converts each result row to `type` using `converter`, and applies `block` to each resultant object.
 	///
 	/// - parameter type: The type of object to create from each row.
 	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
-	/// - parameter block: A closure applied to each result row.
-	/// - parameter object: A result row of returned data.
+	/// - parameter block: A closure applied to each resultant object.
+	/// - parameter object: A resultant object.
 	///
 	/// - throws: Any error thrown in `block` or an error if the statement did not successfully run to completion or object initialization fails.
 	public func results<T>(as type: T.Type = T.self, _ converter: RowConverter<T>, _ block: ((_ object: T) throws -> ())) throws {
