@@ -45,8 +45,8 @@ try connection.execute(sql: "INSERT INTO t1(a,b) VALUES (?,?);",
 
 // Retrieve the values
 try connection.execute(sql: "SELECT a,b FROM t1;") { row in
-    let a = try row.value(at: 0, .int)
-    let b = try row.value(at: 1, .string)
+    let a = try row.get(.int, at: 0)
+    let b = try row.get(.string, at: 1)
 }
 ```
 
@@ -163,8 +163,8 @@ The closure passed to `execute()` will be called with each result row.
 
 ```swift
 try connection.execute(sql: "SELECT * FROM t1;") { row in
-    let x = try row.value(at: 0, .int)
-    let y = try row.valueOrNil(at: 1, .int)
+    let x = try row.get(.int, at: 0)
+    let y = try row.optional(.int, at: 1)
 }
 ```
 
@@ -218,7 +218,7 @@ let statement = try connection.prepare(sql: "INSERT INTO t1(a) VALUES (rot13(?))
 
 ```swift
 try connection.addCollation("localized_compare", { (lhs, rhs) -> ComparisonResult in
-    return lhs.localizedCompare(rhs)
+    lhs.localizedCompare(rhs)
 })
 ```
 
@@ -233,26 +233,27 @@ let statement = try connection.prepare(sql: "SELECT * FROM t1 ORDER BY a COLLATE
 Pipeline provides a Combine publisher for SQLite query results, allowing you to write elegant and powerful data processing code.
 
 ```swift
-struct UUIDHolder {
-	let id: UUID
+struct Event {
+    let what: String
+    let when: Double
 }
 
-extension UUIDHolder: RowMapping
-	init(row: Row) throws {
-		id = try row.value(at: 0, .uuidWithString)
-	}
+let eventConverter = RowConverter<Event> { row in
+    let what = try row.text(at: 0)
+    let when = try row.real(at: 1)
+    return Event(what: what, when: when)
 }
 
 let connection = try Connection()
 
 let sevenDaysAgo = Date() - 7 * 24 * 60 * 60
 
-let publisher = connection.rowPublisher(sql: "select uuid from table_one where date >= ?;") {
-	try $0.bind(.timeIntervalSinceReferenceDate(sevenDaysAgo), toParameter: 1)
+let publisher = connection.rowPublisher(sql: "select what, when from event where when >= ?;") {
+    try $0.bind(.timeIntervalSinceReferenceDate(sevenDaysAgo), toParameter: 1)
 }
 
 publisher
-	.mapRows(type: UUIDHolder.self)
+    .mapRows(eventConverter)
 ```
 
 ## License
