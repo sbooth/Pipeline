@@ -16,8 +16,8 @@ public typealias SQLiteBLOB = OpaquePointer
 ///
 /// - seealso: [Open A BLOB For Incremental I/O](https://sqlite.org/c3ref/blob_open.html)
 public final class BLOB {
-	/// The owning database.
-	public let database: Connection
+	/// The owning database connection.
+	public let connection: Connection
 
 	/// The underlying `sqlite3_blob *` object.
 	let blob: SQLiteBLOB
@@ -26,7 +26,7 @@ public final class BLOB {
 	///
 	/// - note: This opens the BLOB that would be selected by `SELECT column FROM schema.table WHERE rowid = row;`.
 	///
-	/// - parameter database: The owning database.
+	/// - parameter connection: The owning database connection.
 	/// - parameter schema: The symbolic name of the database such as `main` or `temp`.
 	/// - parameter table: The name of the desired table in `schema`.
 	/// - parameter column: The name of the desired column in `table`.
@@ -34,11 +34,11 @@ public final class BLOB {
 	/// - parameter readOnly: Whetherif the BLOB should be opened read-only.
 	///
 	/// - throws: An error if the BLOB could not be opened.
-	init(database: Connection, schema: String, table: String, column: String, row: Int64, readOnly: Bool) throws {
-		self.database = database
+	init(connection: Connection, schema: String, table: String, column: String, row: Int64, readOnly: Bool) throws {
+		self.connection = connection
 		var blob: SQLiteBLOB? = nil
-		guard sqlite3_blob_open(database.databaseConnection, schema, table, column, row, readOnly ? 0 : 1, &blob) == SQLITE_OK else {
-			throw SQLiteError("Error opening BLOB for schema \"\(schema)\"", takingErrorCodeFromDatabaseConnection: database.databaseConnection)
+		guard sqlite3_blob_open(connection.databaseConnection, schema, table, column, row, readOnly ? 0 : 1, &blob) == SQLITE_OK else {
+			throw SQLiteError("Error opening BLOB for schema \"\(schema)\"", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 		}
 		precondition(blob != nil)
 		self.blob = blob.unsafelyUnwrapped
@@ -67,7 +67,7 @@ public final class BLOB {
 	/// - throws: An error if unsufficient bytes are available or a read error occurs.
 	public func read(into buffer: UnsafeMutableRawPointer, length: Int, readOffset offset: Int) throws {
 		guard sqlite3_blob_read(blob, buffer, Int32(length), Int32(offset)) == SQLITE_OK else {
-			throw SQLiteError("Error reading \(length) bytes from BLOB at offset \(offset)", takingErrorCodeFromDatabaseConnection: database.databaseConnection)
+			throw SQLiteError("Error reading \(length) bytes from BLOB at offset \(offset)", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 		}
 	}
 
@@ -98,7 +98,7 @@ public final class BLOB {
 	/// - throws: An error if the BLOB could not be moved to the specfied row.
 	public func reopen(rowid: Int64) throws {
 		guard sqlite3_blob_reopen(blob, rowid) == SQLITE_OK else {
-			throw SQLiteError("Error reopening BLOB for row \(rowid)", takingErrorCodeFromDatabaseConnection: database.databaseConnection)
+			throw SQLiteError("Error reopening BLOB for row \(rowid)", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 		}
 	}
 }
@@ -118,6 +118,6 @@ extension Connection {
 	///
 	/// - returns: An initialized `BLOB` for incremental reading.
 	public func openBLOB(schema: String, table: String, column: String, row: Int64, readOny: Bool) throws -> BLOB {
-		try BLOB(database: self, schema: schema, table: table, column: column, row: row, readOnly: readOny)
+		try BLOB(connection: self, schema: schema, table: table, column: column, row: row, readOnly: readOny)
 	}
 }

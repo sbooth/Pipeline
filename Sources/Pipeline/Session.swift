@@ -22,7 +22,7 @@ public typealias SQLiteSession = OpaquePointer
 /// - seealso: [The Session Extension](https://www.sqlite.org/sessionintro.html)
 /// - seealso: [Introduction](https://www.sqlite.org/session/intro.html)
 public final class Session {
-	/// The owning database.
+	/// The owning database connection.
 	public let connection: Connection
 
 	/// The underlying `sqlite3_session *` object.

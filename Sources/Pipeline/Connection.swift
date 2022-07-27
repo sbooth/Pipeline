@@ -186,7 +186,7 @@ extension Connection {
 		return URL(fileURLWithPath: String(cString: path))
 	}
 
-	/// Performs a low-level SQLite operation.
+	/// Performs a low-level SQLite operation on the database connection handle.
 	///
 	/// - attention: **Use of this function should be avoided whenever possible.**
 	///
@@ -222,7 +222,7 @@ extension Connection {
 	///
 	/// - returns: A compiled SQL statement.
 	public func prepare(sql: String) throws -> Statement {
-		try Statement(database: self, sql: sql)
+		try Statement(connection: self, sql: sql)
 	}
 
 	/// Executes one or more SQL statements and optionally applies `block` to each result row.
