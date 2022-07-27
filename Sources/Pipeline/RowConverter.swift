@@ -22,8 +22,8 @@ import Foundation
 /// ```swift
 /// extension RowConverter where T == Person {
 ///     public static let person = RowConverter { row in
-///         let firstName = try row.text(forColumn: 0)
-///         let lastName = try row.text(forColumn: 1)
+///         let firstName = try row.text(at: 0)
+///         let lastName = try row.text(at: 1)
 ///         return Person(firstName: firstName, lastName: lastName)
 ///     }
 /// }
