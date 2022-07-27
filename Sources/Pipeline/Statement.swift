@@ -56,7 +56,7 @@ public typealias SQLitePreparedStatement = OpaquePointer
 /// silently discarded.
 public final class Statement {
 	/// The owning database.
-	public let database: Database
+	public let database: Connection
 	/// The underlying `sqlite3_stmt *` object.
 	let preparedStatement: SQLitePreparedStatement
 
@@ -68,7 +68,7 @@ public final class Statement {
 	/// - parameter preparedStatement: An `sqlite3_stmt *` prepared statement object..
 	///
 	/// - throws: An error if `sql` could not be compiled.
-	public init(database: Database, preparedStatement: SQLitePreparedStatement) {
+	public init(database: Connection, preparedStatement: SQLitePreparedStatement) {
 		precondition(sqlite3_db_handle(preparedStatement) == database.databaseConnection)
 		self.database = database
 		self.preparedStatement = preparedStatement
@@ -84,7 +84,7 @@ public final class Statement {
 	/// - parameter sql: The SQL statement to compile.
 	///
 	/// - throws: An error if `sql` could not be compiled.
-	public convenience init(database: Database, sql: String) throws {
+	public convenience init(database: Connection, sql: String) throws {
 		var stmt: SQLitePreparedStatement?
 		guard sqlite3_prepare_v2(database.databaseConnection, sql, -1, &stmt, nil) == SQLITE_OK else {
 			throw SQLiteError("Error preparing SQL \"\(sql)\"", takingErrorCodeFromDatabaseConnection: database.databaseConnection)

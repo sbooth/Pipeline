@@ -77,10 +77,10 @@ public protocol VirtualTableModule {
 	/// and should create any persistent state.
 	///
 	/// - throws: `SQLiteError` if the module could not be created.
-	init(database: Database, arguments: [String], create: Bool) throws
+	init(database: Connection, arguments: [String], create: Bool) throws
 
 	/// The options supported by this virtual table module.
-	var options: Database.VirtualTableModuleOptions { get }
+	var options: Connection.VirtualTableModuleOptions { get }
 
 	/// The SQL `CREATE TABLE` statement used to tell SQLite about the virtual table's columns and datatypes.
 	///
@@ -110,7 +110,7 @@ public protocol VirtualTableModule {
 }
 
 extension VirtualTableModule {
-	var options: Database.VirtualTableModuleOptions {
+	var options: Connection.VirtualTableModuleOptions {
 		return []
 	}
 
@@ -130,18 +130,18 @@ public protocol EponymousVirtualTableModule: VirtualTableModule {
 	/// The second argument is the name of the database in which the virtual table is being created. The third argument is the name of the new virtual table.
 	///
 	/// - throws: `SQLiteError` if the module could not be created.
-	init(database: Database, arguments: [String]) throws
+	init(database: Connection, arguments: [String]) throws
 }
 
 extension VirtualTableModule where Self: EponymousVirtualTableModule {
-	init(database: Database, arguments: [String], create: Bool) throws {
+	init(database: Connection, arguments: [String], create: Bool) throws {
 		precondition(create == false)
 		// Eponymous-only virtual tables have no state
 		try self.init(database: database, arguments: arguments)
 	}
 }
 
-extension Database {
+extension Connection {
 	/// Glue for creating a generic Swift type in a C callback.
 	final class VirtualTableModuleClientData {
 		/// The constructor closure.
@@ -384,7 +384,7 @@ func init_vtab(_ db: OpaquePointer?, _ pAux: UnsafeMutableRawPointer?, _ argc: I
 
 	let virtualTable: VirtualTableModule
 	do {
-		let clientData = Unmanaged<Database.VirtualTableModuleClientData>.fromOpaque(UnsafeRawPointer(pAux.unsafelyUnwrapped)).takeUnretainedValue()
+		let clientData = Unmanaged<Connection.VirtualTableModuleClientData>.fromOpaque(UnsafeRawPointer(pAux.unsafelyUnwrapped)).takeUnretainedValue()
 		virtualTable = try clientData.construct(arguments, create)
 	}
 

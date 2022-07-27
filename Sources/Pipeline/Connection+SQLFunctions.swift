@@ -7,7 +7,7 @@
 import Foundation
 import CSQLite
 
-extension Database {
+extension Connection {
 	/// A custom SQL function.
 	///
 	/// - parameter values: The SQL function parameters.
@@ -39,7 +39,7 @@ extension Database {
 	}
 }
 
-extension Database.SQLFunctionFlags {
+extension Connection.SQLFunctionFlags {
 	/// Returns the value of `self` using SQLite's flag values.
 	func asSQLiteFlags() -> Int32 {
 		var flags: Int32 = 0
@@ -95,7 +95,7 @@ public protocol SQLAggregateWindowFunction: SQLAggregateFunction {
 	func value() throws -> DatabaseValue
 }
 
-extension Database {
+extension Connection {
 	/// Adds a custom SQL scalar function.
 	///
 	/// For example, a localized uppercase scalar function could be implemented as:

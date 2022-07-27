@@ -7,7 +7,7 @@
 import Foundation
 import CSQLite
 
-extension Database {
+extension Connection {
 	/// A fundamental data type that may be stored in an SQLite database.
 	///
 	/// - seealso: [Datatypes In SQLite](https://sqlite.org/datatype3.html)
@@ -88,7 +88,7 @@ extension Row {
 	/// - returns: The data type of the column.
 	///
 	/// - seealso: [Result values from a query](https://sqlite.org/c3ref/column_blob.html)
-	public func typeOfColumn(_ index: Int) throws -> Database.FundamentalType {
+	public func typeOfColumn(_ index: Int) throws -> Connection.FundamentalType {
 		let idx = Int32(index)
 		guard idx >= 0, idx < sqlite3_column_count(statement.preparedStatement) else {
 			throw DatabaseError("Column index \(idx) out of bounds")

@@ -7,7 +7,7 @@
 import Foundation
 import CSQLite
 
-extension Database {
+extension Connection {
 	/// Possible write-ahead log (WAL) checkpoint types.
 	///
 	/// - seealso: [Write-Ahead Logging](https://www.sqlite.org/wal.html)

@@ -15,7 +15,7 @@ public typealias SQLiteSnapshot = UnsafeMutablePointer<sqlite3_snapshot>
 /// The state of a WAL mode database at a specific point in history.
 public final class Snapshot {
 	/// The owning database.
-	public let database: Database
+	public let database: Connection
 
 	/// The underlying `sqlite3_snapshot *` object.
 	let snapshot: SQLiteSnapshot
@@ -28,7 +28,7 @@ public final class Snapshot {
 	/// - parameter schema: The database schema to snapshot.
 	///
 	/// - throws: An error if the snapshot could not be recorded.
-	init(database: Database, schema: String) throws {
+	init(database: Connection, schema: String) throws {
 		self.database = database
 		var snapshot: SQLiteSnapshot? = nil
 		guard sqlite3_snapshot_get(database.databaseConnection, schema, &snapshot) == SQLITE_OK else {
@@ -55,7 +55,7 @@ extension Snapshot: Comparable {
 	}
 }
 
-extension Database {
+extension Connection {
 	/// Records a snapshot of the current state of a database schema.
 	///
 	/// - parameter schema: The database schema to snapshot.

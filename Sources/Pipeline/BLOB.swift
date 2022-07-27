@@ -17,7 +17,7 @@ public typealias SQLiteBLOB = OpaquePointer
 /// - seealso: [Open A BLOB For Incremental I/O](https://sqlite.org/c3ref/blob_open.html)
 public final class BLOB {
 	/// The owning database.
-	public let database: Database
+	public let database: Connection
 
 	/// The underlying `sqlite3_blob *` object.
 	let blob: SQLiteBLOB
@@ -34,7 +34,7 @@ public final class BLOB {
 	/// - parameter readOnly: Whetherif the BLOB should be opened read-only.
 	///
 	/// - throws: An error if the BLOB could not be opened.
-	init(database: Database, schema: String, table: String, column: String, row: Int64, readOnly: Bool) throws {
+	init(database: Connection, schema: String, table: String, column: String, row: Int64, readOnly: Bool) throws {
 		self.database = database
 		var blob: SQLiteBLOB? = nil
 		guard sqlite3_blob_open(database.databaseConnection, schema, table, column, row, readOnly ? 0 : 1, &blob) == SQLITE_OK else {
@@ -103,7 +103,7 @@ public final class BLOB {
 	}
 }
 
-extension Database {
+extension Connection {
 	/// Opens and returns a BLOB for incremental I/O.
 	///
 	/// - note: This is the BLOB that would be selected by `SELECT column FROM schema.table WHERE rowid = row;`.

@@ -114,7 +114,7 @@ extension Statement {
 	}
 }
 
-extension Database {
+extension Connection {
 	/// Executes `sql` with the *n* `parameters` bound to the first *n* SQL parameters of `sql` and applies `block` to each result row.
 	///
 	/// - parameter sql: The SQL statement to execute.
@@ -152,7 +152,7 @@ extension Database {
 	}
 }
 
-extension Database {
+extension Connection {
 	/// Executes `sql` with the *n* `parameters` bound to the first *n* SQL parameters of `sql` and applies `block` to each result row.
 	///
 	/// - parameter sql: The SQL statement to execute.

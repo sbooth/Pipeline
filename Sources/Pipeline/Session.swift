@@ -23,7 +23,7 @@ public typealias SQLiteSession = OpaquePointer
 /// - seealso: [Introduction](https://www.sqlite.org/session/intro.html)
 public final class Session {
 	/// The owning database.
-	public let database: Database
+	public let connection: Connection
 
 	/// The underlying `sqlite3_session *` object.
 	let session: SQLiteSession
@@ -34,11 +34,11 @@ public final class Session {
 	/// - parameter schema: The database schema to track.
 	///
 	/// - throws: An error if the session could not be created.
-	init(database: Database, schema: String) throws {
-		self.database = database
+	init(connection: Connection, schema: String) throws {
+		self.connection = connection
 
 		var session: SQLiteSession? = nil
-		let rc = sqlite3session_create(database.databaseConnection, schema, &session)
+		let rc = sqlite3session_create(connection.databaseConnection, schema, &session)
 		guard rc == SQLITE_OK else {
 			throw SQLiteError("Error creating database session for schema \"\(schema)\"", code: rc)
 		}
@@ -226,7 +226,7 @@ public struct ChangesetOperation {
 		self.isConflict = isConflict
 		self.table = String(utf8String: table_name.unsafelyUnwrapped).unsafelyUnwrapped
 		self.columnCount = Int(cols)
-		self.operation = Database.RowChangeType(op)
+		self.operation = Connection.RowChangeType(op)
 		self.indirect = indirect != 0
 	}
 
@@ -235,7 +235,7 @@ public struct ChangesetOperation {
 	/// The number of columns in `table`.
 	public let columnCount: Int
 	/// The operation being performed.
-	public let operation: Database.RowChangeType
+	public let operation: Connection.RowChangeType
 	/// True for an indirect change.
 	public let indirect: Bool
 
@@ -529,7 +529,7 @@ public struct ChangesetApplyOptions: OptionSet {
 	public static let invert = ChangesetApplyOptions(rawValue: SQLITE_CHANGESETAPPLY_INVERT)
 }
 
-extension Database {
+extension Connection {
 	/// Applies a changeset to the database.
 	///
 	/// - parameter changeset: The changeset to apply.
