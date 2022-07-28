@@ -68,9 +68,11 @@ extension Connection {
 	///
 	/// - throws: Any error thrown in `block` or an error if the savepoint could not be started, rolled back, or released.
 	///
+	/// - returns: The result of the savepoint transaction.
+	///
 	/// - note: If `block` throws an error the savepoint will be rolled back and the error will be re-thrown.
 	/// - note: If an error occurs releasing the savepoint a rollback will be attempted and the error will be re-thrown.
-	public func savepoint(block: SavepointBlock) throws {
+	public func savepoint(block: SavepointBlock) throws -> SavepointCompletion {
 		let savepointUUID = UUID().uuidString
 		try begin(savepoint: savepointUUID)
 		do {
@@ -78,11 +80,12 @@ extension Connection {
 			switch action {
 			case .release:
 				try release(savepoint: savepointUUID)
+				return .release
 			case .rollback:
 				try rollback(to: savepointUUID)
+				return .rollback
 			}
-		}
-		catch let error {
+		} catch let error {
 			try? rollback(to: savepointUUID)
 			throw error
 		}

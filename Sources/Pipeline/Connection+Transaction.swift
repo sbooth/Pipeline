@@ -123,20 +123,23 @@ extension Connection {
 	///
 	/// - throws: Any error thrown in `block` or an error if the transaction could not be started, rolled back, or committed.
 	///
+	/// - returns: The result of the transaction.
+	///
 	/// - note: If `block` throws an error the transaction will be rolled back and the error will be re-thrown.
 	/// - note: If an error occurs committing the transaction a rollback will be attempted and the error will be re-thrown.
-	public func transaction(type: Connection.TransactionType = .deferred, _ block: TransactionBlock) throws {
+	public func transaction(type: Connection.TransactionType = .deferred, _ block: TransactionBlock) throws -> TransactionCompletion {
 		try begin(type: type)
 		do {
 			let action = try block(self)
 			switch action {
 			case .commit:
 				try commit()
+				return .commit
 			case .rollback:
 				try rollback()
+				return .rollback
 			}
-		}
-		catch let error {
+		} catch let error {
 			if !isInAutocommitMode {
 				try rollback()
 			}

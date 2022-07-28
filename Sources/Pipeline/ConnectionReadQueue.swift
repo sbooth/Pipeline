@@ -129,7 +129,7 @@ public final class ConnectionReadQueue {
 	/// - throws: Any error thrown in `block` or an error if the transaction could not be started or rolled back.
 	///
 	/// - note: If `block` throws an error the transaction will be rolled back and the error will be re-thrown.
-	public func readTransaction(_ block: (_ connection: Connection) throws -> (Void)) throws {
+	public func readTransaction(_ block: (_ connection: Connection) throws -> Void) throws {
 		try queue.sync {
 			try connection.readTransaction(block)
 		}
@@ -222,7 +222,7 @@ extension Connection {
 	/// - throws: Any error thrown in `block` or an error if the transaction could not be started or rolled back.
 	///
 	/// - note: If `block` throws an error the transaction will be rolled back and the error will be re-thrown.
-	public func readTransaction(_ block: (_ connection: Connection) throws -> (Void)) throws {
+	public func readTransaction(_ block: (_ connection: Connection) throws -> Void) throws {
 		try begin(type: .deferred)
 		do {
 			try block(self)
