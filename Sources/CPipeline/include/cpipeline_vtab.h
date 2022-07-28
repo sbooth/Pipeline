@@ -19,7 +19,7 @@
 struct cpipeline_sqlite3_vtab {
 	/// sqlite3 required fields
 	sqlite3_vtab base;
-	/// `UnsafeMutablePointer<VirtualTableModule>`
+	/// @c UnsafeMutablePointer<VirtualTableModule>
 	void *virtual_table_module_ptr;
 };
 typedef struct cpipeline_sqlite3_vtab cpipeline_sqlite3_vtab;
@@ -28,7 +28,7 @@ typedef struct cpipeline_sqlite3_vtab cpipeline_sqlite3_vtab;
 struct cpipeline_sqlite3_vtab_cursor {
 	/// sqlite3 required fields
 	sqlite3_vtab_cursor base;
-	/// `UnsafeMutablePointer<VirtualTableCursor>`
+	/// @c UnsafeMutablePointer<VirtualTableCursor>
 	void *virtual_table_cursor_ptr;
 };
 typedef struct cpipeline_sqlite3_vtab_cursor cpipeline_sqlite3_vtab_cursor;

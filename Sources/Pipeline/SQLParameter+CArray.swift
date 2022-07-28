@@ -9,53 +9,47 @@ import CSQLite
 
 //#if CSQLITE_CARRAY
 
-extension SQLParameterBinder where T: Collection, T.Element == Int32 {
-	/// Binds a `Collection` of `Int32` values using the sqlite3 carray extension..
+extension SQLParameter {
+	/// Binds a collection of `Int32` values using the sqlite3 carray extension..
 	/// - seealso: [The Carray() Table-Valued Function](https://www.sqlite.org/carray.html)
-	public static func carray() -> SQLParameterBinder {
-		SQLParameterBinder { statement, values, index in
+	public static func carray<C: Collection>(_ values: C) -> SQLParameter where C.Element == Int32 {
+		SQLParameter { statement, index in
 			let mem = UnsafeMutableBufferPointer<Int32>.allocate(capacity: values.count)
 			_ = mem.initialize(from: values)
 			guard sqlite3_carray_bind(statement.preparedStatement, Int32(index), mem.baseAddress, Int32(values.count), CARRAY_INT32, { $0?.deallocate() }) == SQLITE_OK else {
-				throw SQLiteError(fromPreparedStatement: statement.preparedStatement)
+				throw SQLiteError("Error binding carray (CARRAY_INT32) to parameter \(index)", takingErrorCodeFromPreparedStatement: statement.preparedStatement)
 			}
 		}
 	}
-}
 
-extension SQLParameterBinder where T: Collection, T.Element == Int64 {
-	/// Binds a `Collection` of `Int64` values using the sqlite3 carray extension..
+	/// Binds a collection of `Int64` values using the sqlite3 carray extension..
 	/// - seealso: [The Carray() Table-Valued Function](https://www.sqlite.org/carray.html)
-	public static func carray() -> SQLParameterBinder {
-		SQLParameterBinder { statement, values, index in
+	public static func carray<C: Collection>(_ values: C) -> SQLParameter where C.Element == Int64 {
+		SQLParameter { statement, index in
 			let mem = UnsafeMutableBufferPointer<Int64>.allocate(capacity: values.count)
 			_ = mem.initialize(from: values)
 			guard sqlite3_carray_bind(statement.preparedStatement, Int32(index), mem.baseAddress, Int32(values.count), CARRAY_INT64, { $0?.deallocate() }) == SQLITE_OK else {
-				throw SQLiteError(fromPreparedStatement: statement.preparedStatement)
+				throw SQLiteError("Error binding carray (CARRAY_INT64) to parameter \(index)", takingErrorCodeFromPreparedStatement: statement.preparedStatement)
 			}
 		}
 	}
-}
 
-extension SQLParameterBinder where T: Collection, T.Element == Double {
-	/// Binds a `Collection` of `Double` values using the sqlite3 carray extension..
+	/// Binds a collection of doubles using the sqlite3 carray extension..
 	/// - seealso: [The Carray() Table-Valued Function](https://www.sqlite.org/carray.html)
-	public static func carray() -> SQLParameterBinder {
-		SQLParameterBinder { statement, values, index in
+	public static func carray<C: Collection>(_ values: C) -> SQLParameter where C.Element == Double {
+		SQLParameter { statement, index in
 			let mem = UnsafeMutableBufferPointer<Double>.allocate(capacity: values.count)
 			_ = mem.initialize(from: values)
 			guard sqlite3_carray_bind(statement.preparedStatement, Int32(index), mem.baseAddress, Int32(values.count), CARRAY_DOUBLE, { $0?.deallocate() }) == SQLITE_OK else {
-				throw SQLiteError(fromPreparedStatement: statement.preparedStatement)
+				throw SQLiteError("Error binding carray (CARRAY_DOUBLE) to parameter \(index)", takingErrorCodeFromPreparedStatement: statement.preparedStatement)
 			}
 		}
 	}
-}
 
-extension SQLParameterBinder where T: Collection, T.Element == String {
-	/// Binds a `Collection` of `String` values using the sqlite3 carray extension..
+	/// Binds a collection of strings using the sqlite3 carray extension..
 	/// - seealso: [The Carray() Table-Valued Function](https://www.sqlite.org/carray.html)
-	public static func carray() -> SQLParameterBinder {
-		SQLParameterBinder { statement, values, index in
+	public static func carray<C: Collection>(_ values: C) -> SQLParameter where C.Element == String {
+		SQLParameter { statement, index in
 			let count = values.count
 
 			let utf8_character_counts = values.map { $0.utf8.count + 1 }
@@ -77,31 +71,23 @@ extension SQLParameterBinder where T: Collection, T.Element == String {
 			}
 
 			guard sqlite3_carray_bind(statement.preparedStatement, Int32(index), mem, Int32(values.count), CARRAY_TEXT, { $0?.deallocate() }) == SQLITE_OK else {
-				throw SQLiteError(fromPreparedStatement: statement.preparedStatement)
+				throw SQLiteError("Error binding carray (CARRAY_TEXT) to parameter \(index)", takingErrorCodeFromPreparedStatement: statement.preparedStatement)
 			}
 		}
 	}
 }
 
-/// Computes the accumulated result  of `seq`.
-private func accumulate<S: Sequence, U>(_ seq: S, _ initial: U, _ combine: (U, S.Element) -> U) -> [U] {
-	var result: [U] = []
-	result.reserveCapacity(seq.underestimatedCount)
-	var runningResult = initial
-	for element in seq {
-		runningResult = combine(runningResult, element)
-		result.append(runningResult)
-	}
-	return result
-}
-
-/// Computes the prefix sum of `seq`.
-private func scan<S: Sequence, U>(_ seq: S, _ initial: U, _ combine: (U, S.Element) -> U) -> [U] {
-	var result: [U] = []
-	result.reserveCapacity(seq.underestimatedCount)
-	var runningResult = initial
-	for element in seq {
-		runningResult = combine(runningResult, element)
+/// Computes and returns the prefix sum of a sequence.
+/// - parameter sequence: A sequence.
+/// - parameter initialResult: The value to use as the initial accumulating value. `initialResult` is passed to `nextPartialResult` the first time the closure is executed.
+/// - parameter nextPartialResult: A closure that combines an accumulating value and an element of the sequence into a new accumulating value, to be used in the next call of the `nextPartialResult` closure or returned to the caller.
+/// - returns: The prefix sum. If the sequence has no elements, the result is `initialResult`.
+private func scan<S, Result>(_ sequence: S, _ initialResult: Result, _ nextPartialResult: (Result, S.Element) -> Result) -> [Result] where S: Sequence {
+	var result: [Result] = []
+	result.reserveCapacity(sequence.underestimatedCount)
+	var runningResult = initialResult
+	for element in sequence {
+		runningResult = nextPartialResult(runningResult, element)
 		result.append(runningResult)
 	}
 	return result

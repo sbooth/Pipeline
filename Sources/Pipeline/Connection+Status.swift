@@ -7,8 +7,8 @@
 import Foundation
 import CSQLite
 
-extension Database {
-	/// Available database status parameters.
+extension Connection {
+	/// Available database connection status parameters.
 	///
 	/// - seealso: [Status Parameters for database connections](https://www.sqlite.org/c3ref/c_dbstatus_options.html)
 	public enum StatusParameter {
@@ -51,25 +51,37 @@ extension Database {
 	public func status(ofParameter parameter: StatusParameter, resetHighwater: Bool = false) throws -> (Int, Int) {
 		let op: Int32
 		switch parameter {
-		case .lookasideUsed: 		op = SQLITE_DBSTATUS_LOOKASIDE_USED
-		case .cacheUsed:			op = SQLITE_DBSTATUS_CACHE_USED
-		case .schemaUsed:			op = SQLITE_DBSTATUS_SCHEMA_USED
-		case .stmtUsed:				op = SQLITE_DBSTATUS_STMT_USED
-		case .lookasideHit:			op = SQLITE_DBSTATUS_LOOKASIDE_HIT
-		case .lookasideMissSize:	op = SQLITE_DBSTATUS_LOOKASIDE_MISS_SIZE
-		case .lookasideMissFull:	op = SQLITE_DBSTATUS_LOOKASIDE_MISS_FULL
-		case .cacheHit:				op = SQLITE_DBSTATUS_CACHE_HIT
-		case .cacheMiss:			op = SQLITE_DBSTATUS_CACHE_MISS
-		case .cacheWrite:			op = SQLITE_DBSTATUS_CACHE_WRITE
-		case .deferredForeignKeys:	op = SQLITE_DBSTATUS_DEFERRED_FKS
-		case .cacheUsedShared:		op = SQLITE_DBSTATUS_CACHE_USED_SHARED
+		case .lookasideUsed:
+			op = SQLITE_DBSTATUS_LOOKASIDE_USED
+		case .cacheUsed:
+			op = SQLITE_DBSTATUS_CACHE_USED
+		case .schemaUsed:
+			op = SQLITE_DBSTATUS_SCHEMA_USED
+		case .stmtUsed:
+			op = SQLITE_DBSTATUS_STMT_USED
+		case .lookasideHit:
+			op = SQLITE_DBSTATUS_LOOKASIDE_HIT
+		case .lookasideMissSize:
+			op = SQLITE_DBSTATUS_LOOKASIDE_MISS_SIZE
+		case .lookasideMissFull:
+			op = SQLITE_DBSTATUS_LOOKASIDE_MISS_FULL
+		case .cacheHit:
+			op = SQLITE_DBSTATUS_CACHE_HIT
+		case .cacheMiss:
+			op = SQLITE_DBSTATUS_CACHE_MISS
+		case .cacheWrite:
+			op = SQLITE_DBSTATUS_CACHE_WRITE
+		case .deferredForeignKeys:
+			op = SQLITE_DBSTATUS_DEFERRED_FKS
+		case .cacheUsedShared:
+			op = SQLITE_DBSTATUS_CACHE_USED_SHARED
 		}
 
 		var current: Int32 = 0
 		var highwater: Int32 = 0
 
 		guard sqlite3_db_status(databaseConnection, op, &current, &highwater, resetHighwater ? 1 : 0) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error retrieving status of database parameter \(parameter)", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 
 		return (Int(current), Int(highwater))
