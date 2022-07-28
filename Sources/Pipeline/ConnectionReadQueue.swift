@@ -99,7 +99,9 @@ public final class ConnectionReadQueue {
 	}
 
 	/// A block called with the result of an asynchronous database operation.
-	public typealias CompletionHandler = ConnectionQueue.CompletionHandler
+	///
+	/// - parameter result: A `Result` object containing the result of the operation.
+	public typealias CompletionHandler = (_ result: Result<Void, Error>) -> Void
 
 	/// Submits an asynchronous read operation to the queue.
 	///
