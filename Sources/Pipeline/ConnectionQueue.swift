@@ -4,7 +4,6 @@
 // MIT license
 //
 
-import os.log
 import Foundation
 import CSQLite
 
@@ -92,15 +91,26 @@ public final class ConnectionQueue {
 		}
 	}
 
+	/// A block called with the result of an asynchronous database operation.
+	///
+	/// - parameter result: A `Result` object containing the result of the operation.
+	public typealias CompletionHandler = (_ result: Result<Void, Error>) -> Void
+
 	/// Submits an asynchronous operation to the queue.
 	///
 	/// - parameter group: An optional `DispatchGroup` with which to associate `block`.
 	/// - parameter qos: The quality of service for `block`.
 	/// - parameter block: A closure performing the database operation.
 	/// - parameter connection: A `Connection` used for database access within `block`.
-	public func async(group: DispatchGroup? = nil, qos: DispatchQoS = .default, block: @escaping (_ connection: Connection) -> (Void)) {
+	/// - parameter completion: A closure called with the result of the operation.
+	public func async(group: DispatchGroup? = nil, qos: DispatchQoS = .default, block: @escaping (_ connection: Connection) throws -> Void, completion: @escaping CompletionHandler) {
 		queue.async(group: group, qos: qos) {
-			block(self.connection)
+			do {
+				try block(self.connection)
+				completion(.success(()))
+			} catch let error {
+				completion(.failure(error))
+			}
 		}
 	}
 
@@ -125,12 +135,14 @@ public final class ConnectionQueue {
 	/// - parameter group: An optional `DispatchGroup` with which to associate `block`.
 	/// - parameter qos: The quality of service for `block`.
 	/// - parameter block: A closure performing the database operation.
-	public func asyncTransaction(type: Connection.TransactionType = .deferred, group: DispatchGroup? = nil, qos: DispatchQoS = .default, _ block: @escaping Connection.TransactionBlock) {
+	/// - parameter completion: A closure called with the result of the transaction.
+	public func asyncTransaction(type: Connection.TransactionType = .deferred, group: DispatchGroup? = nil, qos: DispatchQoS = .default, _ block: @escaping Connection.TransactionBlock, completion: @escaping CompletionHandler) {
 		queue.async(group: group, qos: qos) {
 			do {
 				try self.connection.transaction(type: type, block)
+				completion(.success(()))
 			} catch let error {
-				os_log("Error performing database transaction: %{public}@", type: .info, error.localizedDescription)
+				completion(.failure(error))
 			}
 		}
 	}
@@ -154,12 +166,14 @@ public final class ConnectionQueue {
 	/// - parameter group: An optional `DispatchGroup` with which to associate `block`.
 	/// - parameter qos: The quality of service for `block`.
 	/// - parameter block: A closure performing the database operation.
-	public func asyncSavepoint(group: DispatchGroup? = nil, qos: DispatchQoS = .default, block: @escaping Connection.SavepointBlock) {
+	/// - parameter completion: A closure called with the result of the savepoint.
+	public func asyncSavepoint(group: DispatchGroup? = nil, qos: DispatchQoS = .default, block: @escaping Connection.SavepointBlock, completion: @escaping CompletionHandler) {
 		queue.async(group: group, qos: qos) {
 			do {
 				try self.connection.savepoint(block: block)
+				completion(.success(()))
 			} catch let error {
-				os_log("Error performing database savepoint: %{public}@", type: .info, error.localizedDescription)
+				completion(.failure(error))
 			}
 		}
 	}
