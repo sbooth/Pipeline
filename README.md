@@ -71,11 +71,9 @@ try connectionQueue.sync { connection in
 
 // Perform an asynchronous database access
 connectionQueue.async { connection in
-    do {
-        // Do something with `connection`
-    } catch let error {
-        // Handle any errors that occurred
-    }
+    // Do something with `connection`
+} completion: { result in
+    // Handle any errors that occurred
 }
 ```
 
@@ -173,10 +171,11 @@ try connection.execute(sql: "SELECT * FROM t1;") { row in
 ### Perform a Transaction
 
 ```swift
-try connection.transaction { connection in
+let result = try connection.transaction { connection in
     // Do something with `connection`
     return .commit
 }
+// Result is either `.commit`. or `.rollback`
 ```
 
 Database transactions may also be performed asynchronously using `ConnectionQueue`.
@@ -185,6 +184,8 @@ Database transactions may also be performed asynchronously using `ConnectionQueu
 connectionQueue.asyncTransaction { connection in
     // Do something with `connection`
     return .commit
+} completion: { result in
+    // Handle any errors that occurred
 }
 ```
 
