@@ -23,7 +23,7 @@ extension Connection {
 	}
 }
 
-extension Publishers {
+private extension Publishers {
 	struct RowPublisher: Publisher {
 		typealias Output = Row
 		typealias Failure = SQLiteError
@@ -32,7 +32,7 @@ extension Publishers {
 		private let sql: String
 		private let bindings: (_ statement: Statement) throws -> Void
 
-		fileprivate init(connection: Connection, sql: String, bindings: @escaping (_ statement: Statement) throws -> Void) {
+		init(connection: Connection, sql: String, bindings: @escaping (_ statement: Statement) throws -> Void) {
 			self.connection = connection
 			self.sql = sql
 			self.bindings = bindings
@@ -53,8 +53,8 @@ extension Publishers {
 	}
 }
 
-extension Publishers.RowPublisher {
-	private final class Subscription<S>: Combine.Subscription where S: Subscriber, S.Input == Output, S.Failure == Failure {
+private extension Publishers.RowPublisher {
+	final class Subscription<S>: Combine.Subscription where S: Subscriber, S.Input == Output, S.Failure == Failure {
 		/// The subscriber.
 		private let subscriber: AnySubscriber<Output, Failure>
 		/// The current subscriber demand.
@@ -62,7 +62,7 @@ extension Publishers.RowPublisher {
 		/// The statement providing the result rows.
 		private let statement: Statement
 
-		fileprivate init(subscriber: S, statement: Statement) {
+		init(subscriber: S, statement: Statement) {
 			self.subscriber = AnySubscriber(subscriber)
 			self.statement = statement
 		}
