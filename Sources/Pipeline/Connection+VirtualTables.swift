@@ -438,8 +438,10 @@ private func xBestIndex(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?, _ pIdxInfo
 		do {
 			let result = try virtualTable.bestIndex(&pIdxInfo.unsafelyUnwrapped.pointee)
 			switch result {
-			case .ok: 			return SQLITE_OK
-			case .constraint: 	return SQLITE_CONSTRAINT
+			case .ok:
+				return SQLITE_OK
+			case .constraint:
+				return SQLITE_CONSTRAINT
 			}
 		} catch let error as SQLiteError {
 			os_log("Error in bestIndex(): %{public}@", type: .info, error.description)
