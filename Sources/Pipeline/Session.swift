@@ -201,7 +201,7 @@ public struct Changeset {
 }
 
 /// A changeset iterator object.
-public typealias SQLiteChangesetIterator = OpaquePointer
+typealias SQLiteChangesetIterator = OpaquePointer
 
 /// An operation in a changeset.
 public struct ChangesetOperation {
@@ -360,7 +360,8 @@ public final class ChangesetIterator {
 		guard rc == SQLITE_OK else {
 			throw SQLiteError("Error starting changeset iteration", code: rc)
 		}
-		self.iterator = iterator!
+		precondition(iterator != nil)
+		self.iterator = iterator.unsafelyUnwrapped
 	}
 
 	deinit {
@@ -396,7 +397,7 @@ extension ChangesetIterator: IteratorProtocol {
 }
 
 /// A changegroup object.
-public typealias SQLiteChangegroup = OpaquePointer
+typealias SQLiteChangegroup = OpaquePointer
 
 /// A mechanism for grouping changesets.
 ///
@@ -408,7 +409,7 @@ public final class Changegroup {
 	/// Initializes a new changegroup.
 	///
 	/// - throws: An error if the changegroup could not be created.
-	init() throws {
+	public init() throws {
 		var changegroup: SQLiteChangegroup? = nil
 		let rc = sqlite3changegroup_new(&changegroup)
 		guard rc == SQLITE_OK else {
@@ -442,7 +443,7 @@ public final class Changegroup {
 	/// Creates and returns a changeset containing the changes in `self`.
 	///
 	/// - throws: An error if the changeset could not be created.
-	func changeset() throws -> Changeset {
+	public func changeset() throws -> Changeset {
 		var changeset: SQLiteChangeset? = nil
 		var size: Int32 = 0
 		defer {
