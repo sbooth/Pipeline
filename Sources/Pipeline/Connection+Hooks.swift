@@ -170,7 +170,7 @@ extension Connection {
 	}
 }
 
-extension Connection.RowChangeType {
+private extension Connection.RowChangeType {
 	/// Convenience initializer for conversion of `SQLITE_` values.
 	///
 	/// - parameter operation: The second argument to the callback function passed to `sqlite3_update_hook()`.
@@ -404,7 +404,7 @@ extension Connection {
 	}
 }
 
-extension Connection.PreUpdateChange.ChangeType {
+private extension Connection.PreUpdateChange.ChangeType {
 	/// Convenience initializer for conversion of `SQLITE_` values and associated rowids.
 	///
 	/// - parameter op: The third argument to the callback function passed to `sqlite3_preupdate_hook()`.
