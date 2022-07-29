@@ -7,15 +7,15 @@
 import Foundation
 import CSQLite
 
-extension Connection {
-	/// A comparator for `String` objects.
-	///
-	/// - parameter lhs: The left-hand operand.
-	/// - parameter rhs: The right-hand operand.
-	///
-	/// - returns: The result of comparing `lhs` to `rhs`.
-	public typealias StringComparator = (_ lhs: String, _ rhs: String) -> ComparisonResult
+/// A comparator for `String` objects.
+///
+/// - parameter lhs: The left-hand operand.
+/// - parameter rhs: The right-hand operand.
+///
+/// - returns: The result of comparing `lhs` to `rhs`.
+public typealias StringComparator = (_ lhs: String, _ rhs: String) -> ComparisonResult
 
+extension Connection {
 	/// Adds a custom collation function.
 	///
 	/// ```swift
