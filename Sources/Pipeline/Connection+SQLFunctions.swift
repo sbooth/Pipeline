@@ -37,26 +37,6 @@ public struct SQLFunctionFlags: OptionSet {
 	public static let innocuous = SQLFunctionFlags(rawValue: 1 << 3)
 }
 
-extension SQLFunctionFlags {
-	/// Returns the value of `self` using SQLite's flag values.
-	func asSQLiteFlags() -> Int32 {
-		var flags: Int32 = 0
-		if contains(.deterministic) {
-			flags |= SQLITE_DETERMINISTIC
-		}
-		if contains(.directOnly) {
-			flags |= SQLITE_DIRECTONLY
-		}
-		if contains(.subtype) {
-			flags |= SQLITE_SUBTYPE
-		}
-		if contains(.innocuous) {
-			flags |= SQLITE_INNOCUOUS
-		}
-		return flags
-	}
-}
-
 /// A custom SQL aggregate function.
 public protocol SQLAggregateFunction {
 	/// Invokes the aggregate function for one or more values in a row.
@@ -322,11 +302,36 @@ extension Connection {
 	}
 }
 
+extension SQLFunctionFlags {
+	/// Returns the value of `self` using SQLite's flag values.
+	func asSQLiteFlags() -> Int32 {
+		var flags: Int32 = 0
+		if contains(.deterministic) {
+			flags |= SQLITE_DETERMINISTIC
+		}
+		if contains(.directOnly) {
+			flags |= SQLITE_DIRECTONLY
+		}
+		if contains(.subtype) {
+			flags |= SQLITE_SUBTYPE
+		}
+		if contains(.innocuous) {
+			flags |= SQLITE_INNOCUOUS
+		}
+		return flags
+	}
+}
+
+/// An `sqlite3_context *` object.
+///
+/// - seealso: [SQL Function Context Object](https://sqlite.org/c3ref/context.html)
+typealias SQLiteContext = OpaquePointer
+
 /// Passes `value` to the appropriate `sqlite3_result` function.
 ///
 /// - parameter sqlite_context: An `sqlite3_context *` object.
 /// - parameter value: The value to pass.
-func set_sqlite3_result(_ sqlite_context: OpaquePointer!, value: DatabaseValue) {
+func set_sqlite3_result(_ sqlite_context: SQLiteContext!, value: DatabaseValue) {
 	switch value {
 	case .integer(let i):
 		sqlite3_result_int64(sqlite_context, i)
