@@ -331,7 +331,7 @@ final class PipelineTests: XCTestCase {
 			required init(arguments: [String]) {
 			}
 
-			func setText(_ text: String, reason: Connection.FTS5TokenizationReason) {
+			func setText(_ text: String, reason: FTS5TokenizationReason) {
 				self.text = text as CFString
 				tokenizer = CFStringTokenizerCreate(kCFAllocatorDefault, self.text, CFRangeMake(0, CFStringGetLength(self.text)), kCFStringTokenizerUnitWord, nil)
 			}
