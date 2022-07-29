@@ -14,7 +14,6 @@ import CSQLite
 ///
 /// - seealso: [The Session Extension](https://www.sqlite.org/sessionintro.html)
 /// - seealso: [Introduction](https://www.sqlite.org/session/intro.html)
-//public typealias SQLiteSession = UnsafeMutablePointer<sqlite3_session>
 public typealias SQLiteSession = OpaquePointer
 
 /// A mechanism for recording changes to some or all tables in a database.
@@ -34,7 +33,7 @@ public final class Session {
 	/// - parameter schema: The database schema to track.
 	///
 	/// - throws: An error if the session could not be created.
-	init(connection: Connection, schema: String) throws {
+	public init(connection: Connection, schema: String) throws {
 		self.connection = connection
 
 		var session: SQLiteSession? = nil
@@ -53,7 +52,7 @@ public final class Session {
 	/// The indirect change flag.
 	///
 	/// - seealso: [Set Or Clear the Indirect Change Flag](https://www.sqlite.org/session/sqlite3session_indirect.html)
-	var indirect: Bool {
+	public var indirect: Bool {
 		get {
 			sqlite3session_indirect(session, -1) != 0
 		}
@@ -65,14 +64,14 @@ public final class Session {
 	/// Returns `true` if the session contains no changes.
 	///
 	/// - seealso: [Test if a changeset has recorded any changes.](https://www.sqlite.org/session/sqlite3session_isempty.html)
-	var isEmpty: Bool {
+	public var isEmpty: Bool {
 		sqlite3session_isempty(session) != 0
 	}
 
 	/// Returns the total amount of heap memory in bytes currently used by the session.
 	///
 	/// - seealso: [Query for the amount of heap memory used by a session object.](https://www.sqlite.org/session/sqlite3session_memory_used.html)
-	var memoryUsed: Int {
+	public var memoryUsed: Int {
 		Int(sqlite3session_memory_used(session))
 	}
 
@@ -83,7 +82,7 @@ public final class Session {
 	/// - throws: An error if the table could not be attached to the session.
 	///
 	/// - seealso: [Attach A Table To A Session Object](https://www.sqlite.org/session/sqlite3session_attach.html)
-	func attach(_ table: String) throws {
+	public func attach(_ table: String) throws {
 		let rc = sqlite3session_attach(session, table)
 		guard rc == SQLITE_OK else {
 			throw SQLiteError( "Error attaching table \"\(table)\" to database session", code: rc)
@@ -95,7 +94,7 @@ public final class Session {
 	/// - throws: An error if the tables could not be attached to the session.
 	///
 	/// - seealso: [Attach A Table To A Session Object](https://www.sqlite.org/session/sqlite3session_attach.html)
-	func attachAll() throws {
+	public func attachAll() throws {
 		let rc = sqlite3session_attach(session, nil)
 		guard rc == SQLITE_OK else {
 			throw SQLiteError("Error attaching all tables to database session", code: rc)
@@ -105,7 +104,7 @@ public final class Session {
 	/// Creates and returns a changeset.
 	///
 	/// - throws: An error if the changeset could not be created.
-	func changeset() throws -> Changeset {
+	public func changeset() throws -> Changeset {
 		var changeset: SQLiteChangeset? = nil
 		var size: Int32 = 0
 		defer {
@@ -202,7 +201,6 @@ public struct Changeset {
 }
 
 /// A changeset iterator object.
-//public typealias SQLiteChangesetIterator = UnsafeMutablePointer<sqlite3_changeset_iter>
 public typealias SQLiteChangesetIterator = OpaquePointer
 
 /// An operation in a changeset.
@@ -398,7 +396,6 @@ extension ChangesetIterator: IteratorProtocol {
 }
 
 /// A changegroup object.
-//public typealias SQLiteChangegroup = UnsafeMutablePointer<sqlite3_changegroup>
 public typealias SQLiteChangegroup = OpaquePointer
 
 /// A mechanism for grouping changesets.
