@@ -19,7 +19,7 @@ public protocol FTS5Tokenizer {
 	///
 	/// - parameter text: The text to be tokenized.
 	/// - parameter reason: The reason tokenization is being requested.
-	func setText(_ text: String, reason: Connection.FTS5TokenizationReason)
+	func setText(_ text: String, reason: FTS5TokenizationReason)
 
 	/// Advances the tokenizer to the next token.
 	///
@@ -42,32 +42,19 @@ public protocol FTS5Tokenizer {
 	func copyCurrentToken(to buffer: UnsafeMutablePointer<UInt8>, capacity: Int) throws -> Int
 }
 
+/// The reasons FTS5 will request tokenization.
+public enum FTS5TokenizationReason {
+	/// A document is being inserted into or removed from the FTS table.
+	case document
+	/// A `MATCH` query is being executed against the FTS index.
+	case query
+	/// Same as `query`, except that the bareword or quoted string is followed by a `*` character.
+	case prefix
+	/// The tokenizer is being invoked to satisfy an `fts5_api.xTokenize()` request made by an auxiliary function.
+	case aux
+}
+
 extension Connection {
-	/// Glue for creating a generic Swift type in a C callback.
-	final class FTS5TokenizerCreator {
-		/// The constructor closure.
-		let construct: (_ arguments : [String]) throws -> FTS5Tokenizer
-
-		/// Creates a new FTS5TokenizerCreator.
-		///
-		/// - parameter construct: A closure that creates the tokenizer.
-		init(_ construct: @escaping (_ arguments: [String]) -> FTS5Tokenizer) {
-			self.construct = construct
-		}
-	}
-
-	/// The reasons FTS5 will request tokenization.
-	public enum FTS5TokenizationReason {
-		/// A document is being inserted into or removed from the FTS table.
-		case document
-		/// A `MATCH` query is being executed against the FTS index.
-		case query
-		/// Same as `query`, except that the bareword or quoted string is followed by a `*` character.
-		case prefix
-		/// The tokenizer is being invoked to satisfy an `fts5_api.xTokenize()` request made by an auxiliary function.
-		case aux
-	}
-
 	/// Adds a custom FTS5 tokenizer.
 	///
 	/// For example, a word tokenizer using `CFStringTokenizer` could be implemented as:
@@ -213,7 +200,22 @@ extension Connection {
 	}
 }
 
-extension Connection.FTS5TokenizationReason {
+private extension Connection {
+	/// Glue for creating a generic Swift type in a C callback.
+	final class FTS5TokenizerCreator {
+		/// The constructor closure.
+		let construct: (_ arguments : [String]) throws -> FTS5Tokenizer
+
+		/// Creates a new FTS5TokenizerCreator.
+		///
+		/// - parameter construct: A closure that creates the tokenizer.
+		init(_ construct: @escaping (_ arguments: [String]) -> FTS5Tokenizer) {
+			self.construct = construct
+		}
+	}
+}
+
+private extension FTS5TokenizationReason {
 	/// Convenience initializer for conversion of `FTS5_TOKENIZE_` values.
 	///
 	/// - parameter flags: The flags passed as the second argument of `fts5_tokenizer.xTokenize()`.
