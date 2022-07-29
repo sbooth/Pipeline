@@ -129,7 +129,7 @@ extension Connection {
 	///
 	/// - note: If `block` throws an error the transaction will be rolled back and the error will be re-thrown.
 	/// - note: If an error occurs committing the transaction a rollback will be attempted and the error will be re-thrown.
-	public func transaction(type: TransactionType = .deferred, _ block: TransactionBlock) throws -> TransactionCompletion {
+	@discardableResult public func transaction(type: TransactionType = .deferred, _ block: TransactionBlock) throws -> TransactionCompletion {
 		try begin(type: type)
 		do {
 			let action = try block(self)

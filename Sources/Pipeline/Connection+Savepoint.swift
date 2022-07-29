@@ -72,7 +72,7 @@ extension Connection {
 	///
 	/// - note: If `block` throws an error the savepoint will be rolled back and the error will be re-thrown.
 	/// - note: If an error occurs releasing the savepoint a rollback will be attempted and the error will be re-thrown.
-	public func savepoint(block: SavepointBlock) throws -> SavepointCompletion {
+	@discardableResult public func savepoint(block: SavepointBlock) throws -> SavepointCompletion {
 		let savepointUUID = UUID().uuidString
 		try begin(savepoint: savepointUUID)
 		do {
