@@ -302,7 +302,7 @@ extension Connection {
 	}
 }
 
-extension SQLFunctionFlags {
+private extension SQLFunctionFlags {
 	/// Returns the value of `self` using SQLite's flag values.
 	func asSQLiteFlags() -> Int32 {
 		var flags: Int32 = 0
