@@ -339,11 +339,11 @@ extension Connection {
 
 // MARK: - Implementations
 
-fileprivate func xCreate(_ db: OpaquePointer?, _ pAux: UnsafeMutableRawPointer?, _ argc: Int32, _ argv: UnsafePointer<UnsafePointer<Int8>?>?, _ ppVTab:UnsafeMutablePointer<UnsafeMutablePointer<sqlite3_vtab>?>?, _ pzErr: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+private func xCreate(_ db: OpaquePointer?, _ pAux: UnsafeMutableRawPointer?, _ argc: Int32, _ argv: UnsafePointer<UnsafePointer<Int8>?>?, _ ppVTab:UnsafeMutablePointer<UnsafeMutablePointer<sqlite3_vtab>?>?, _ pzErr: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
 	return init_vtab(db, pAux, argc, argv, ppVTab, pzErr, true)
 }
 
-fileprivate func xDestroy(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?) -> Int32 {
+private func xDestroy(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?) -> Int32 {
 	let rc = pVTab.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab.self, capacity: 1) { vtab -> Int32 in
 		let virtualTable = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(vtab.pointee.virtual_table_module_ptr.unsafelyUnwrapped)).takeUnretainedValue() as! VirtualTableModule
 		do {
@@ -370,11 +370,11 @@ fileprivate func xDestroy(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?) -> Int32
 	return xDisconnect(pVTab)
 }
 
-fileprivate func xConnect(_ db: OpaquePointer?, _ pAux: UnsafeMutableRawPointer?, _ argc: Int32, _ argv: UnsafePointer<UnsafePointer<Int8>?>?, _ ppVTab: UnsafeMutablePointer<UnsafeMutablePointer<sqlite3_vtab>?>?, _ pzErr: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+private func xConnect(_ db: OpaquePointer?, _ pAux: UnsafeMutableRawPointer?, _ argc: Int32, _ argv: UnsafePointer<UnsafePointer<Int8>?>?, _ ppVTab: UnsafeMutablePointer<UnsafeMutablePointer<sqlite3_vtab>?>?, _ pzErr: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
 	return init_vtab(db, pAux, argc, argv, ppVTab, pzErr, false)
 }
 
-fileprivate func init_vtab(_ db: OpaquePointer?, _ pAux: UnsafeMutableRawPointer?, _ argc: Int32, _ argv: UnsafePointer<UnsafePointer<Int8>?>?, _ ppVTab: UnsafeMutablePointer<UnsafeMutablePointer<sqlite3_vtab>?>?, _ pzErr: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?, _ create: Bool) -> Int32 {
+private func init_vtab(_ db: OpaquePointer?, _ pAux: UnsafeMutableRawPointer?, _ argc: Int32, _ argv: UnsafePointer<UnsafePointer<Int8>?>?, _ ppVTab: UnsafeMutablePointer<UnsafeMutablePointer<sqlite3_vtab>?>?, _ pzErr: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?, _ create: Bool) -> Int32 {
 	let args = UnsafeBufferPointer(start: argv, count: Int(argc))
 	let arguments = args.map { String(utf8String: $0.unsafelyUnwrapped).unsafelyUnwrapped }
 
@@ -423,7 +423,7 @@ fileprivate func init_vtab(_ db: OpaquePointer?, _ pAux: UnsafeMutableRawPointer
 	return SQLITE_OK
 }
 
-fileprivate func xDisconnect(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?) -> Int32 {
+private func xDisconnect(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?) -> Int32 {
 	pVTab.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab.self, capacity: 1) { vtab in
 		// Balance the +1 retain in xConnect()
 		Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(vtab.pointee.virtual_table_module_ptr)).release()
@@ -432,7 +432,7 @@ fileprivate func xDisconnect(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?) -> In
 	return SQLITE_OK
 }
 
-fileprivate func xBestIndex(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?, _ pIdxInfo: UnsafeMutablePointer<sqlite3_index_info>?) -> Int32  {
+private func xBestIndex(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?, _ pIdxInfo: UnsafeMutablePointer<sqlite3_index_info>?) -> Int32  {
 	return pVTab.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab.self, capacity: 1) { vtab -> Int32 in
 		let virtualTable = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(vtab.pointee.virtual_table_module_ptr.unsafelyUnwrapped)).takeUnretainedValue() as! VirtualTableModule
 		do {
@@ -455,7 +455,7 @@ fileprivate func xBestIndex(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?, _ pIdx
 	}
 }
 
-fileprivate func xOpen(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?, _ ppCursor: UnsafeMutablePointer<UnsafeMutablePointer<sqlite3_vtab_cursor>?>?) -> Int32 {
+private func xOpen(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?, _ ppCursor: UnsafeMutablePointer<UnsafeMutablePointer<sqlite3_vtab_cursor>?>?) -> Int32 {
 	return pVTab.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab.self, capacity: 1) { vtab -> Int32 in
 		let virtualTable = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(vtab.pointee.virtual_table_module_ptr.unsafelyUnwrapped)).takeUnretainedValue() as! VirtualTableModule
 
@@ -492,7 +492,7 @@ fileprivate func xOpen(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?, _ ppCursor:
 	}
 }
 
-fileprivate func xClose(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?) -> Int32 {
+private func xClose(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?) -> Int32 {
 	pCursor.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab_cursor.self, capacity: 1) { curs in
 		// Balance the +1 retain above
 		Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(curs.pointee.virtual_table_cursor_ptr)).release()
@@ -501,7 +501,7 @@ fileprivate func xClose(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?) -
 	return SQLITE_OK
 }
 
-fileprivate func xFilter(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?, _ idxNum: Int32, _ idxStr: UnsafePointer<Int8>?, _ argc: Int32, _ argv: UnsafeMutablePointer<OpaquePointer?>?) -> Int32 {
+private func xFilter(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?, _ idxNum: Int32, _ idxStr: UnsafePointer<Int8>?, _ argc: Int32, _ argv: UnsafeMutablePointer<OpaquePointer?>?) -> Int32 {
 	let args = UnsafeBufferPointer(start: argv, count: Int(argc))
 	let arguments = args.map { DatabaseValue($0.unsafelyUnwrapped) }
 
@@ -529,7 +529,7 @@ fileprivate func xFilter(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?, 
 	}
 }
 
-fileprivate func xNext(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?) -> Int32 {
+private func xNext(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?) -> Int32 {
 	return pCursor.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab_cursor.self, capacity: 1) { curs -> Int32 in
 		let cursor = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(curs.pointee.virtual_table_cursor_ptr.unsafelyUnwrapped)).takeUnretainedValue() as! VirtualTableCursor
 		do {
@@ -549,14 +549,14 @@ fileprivate func xNext(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?) ->
 	}
 }
 
-fileprivate func xEof(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?) -> Int32 {
+private func xEof(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?) -> Int32 {
 	return pCursor.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab_cursor.self, capacity: 1) { curs -> Int32 in
 		let cursor = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(curs.pointee.virtual_table_cursor_ptr.unsafelyUnwrapped)).takeUnretainedValue() as! VirtualTableCursor
 		return cursor.eof ? 1 : 0
 	}
 }
 
-fileprivate func xColumn(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?, _ pCtx: OpaquePointer?, _ i: Int32) -> Int32 {
+private func xColumn(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?, _ pCtx: OpaquePointer?, _ i: Int32) -> Int32 {
 	return pCursor.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab_cursor.self, capacity: 1) { curs -> Int32 in
 		let cursor = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(curs.pointee.virtual_table_cursor_ptr.unsafelyUnwrapped)).takeUnretainedValue() as! VirtualTableCursor
 		do {
@@ -577,7 +577,7 @@ fileprivate func xColumn(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?, 
 	}
 }
 
-fileprivate func xRowid(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?, _ pRowid: UnsafeMutablePointer<sqlite3_int64>?) -> Int32 {
+private func xRowid(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?, _ pRowid: UnsafeMutablePointer<sqlite3_int64>?) -> Int32 {
 	return pCursor.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab_cursor.self, capacity: 1) { curs -> Int32 in
 		let cursor = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(curs.pointee.virtual_table_cursor_ptr.unsafelyUnwrapped)).takeUnretainedValue() as! VirtualTableCursor
 		do {
