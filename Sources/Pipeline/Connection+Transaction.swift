@@ -7,19 +7,31 @@
 import Foundation
 import CSQLite
 
-extension Connection {
-	/// Possible database transaction types.
-	///
-	/// - seealso: [Transactions in SQLite](https://sqlite.org/lang_transaction.html)
-	public enum TransactionType {
-		/// A deferred transaction.
-		case deferred
-		/// An immediate transaction.
-		case immediate
-		/// An exclusive transaction.
-		case exclusive
-	}
+/// Possible database transaction types.
+///
+/// - seealso: [Transactions in SQLite](https://sqlite.org/lang_transaction.html)
+public enum TransactionType {
+	/// A deferred transaction.
+	case deferred
+	/// An immediate transaction.
+	case immediate
+	/// An exclusive transaction.
+	case exclusive
+}
 
+/// Possible transaction states for a database.
+///
+/// - seealso: [Determine the transaction state of a database](https://www.sqlite.org/c3ref/txn_state.html)
+public enum TransactionState {
+	/// No transaction is currently pending.
+	case none
+	/// The database is currently in a read transaction.
+	case read
+	/// The database is currently in a write transaction.
+	case write
+}
+
+extension Connection {
 	/// Begins a database transaction.
 	///
 	/// - note: Database transactions may not be nested.
@@ -61,16 +73,6 @@ extension Connection {
 		guard sqlite3_exec(databaseConnection, "COMMIT;", nil, nil, nil) == SQLITE_OK else {
 			throw SQLiteError("Error committing", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
-	}
-
-	/// Possible transaction states for a database.
-	public enum TransactionState {
-		/// No transaction is currently pending.
-		case none
-		/// The database is currently in a read transaction.
-		case read
-		/// The database is currently in a write transaction.
-		case write
 	}
 
 	/// Determines the transaction state of a database.
@@ -127,7 +129,7 @@ extension Connection {
 	///
 	/// - note: If `block` throws an error the transaction will be rolled back and the error will be re-thrown.
 	/// - note: If an error occurs committing the transaction a rollback will be attempted and the error will be re-thrown.
-	public func transaction(type: Connection.TransactionType = .deferred, _ block: TransactionBlock) throws -> TransactionCompletion {
+	public func transaction(type: TransactionType = .deferred, _ block: TransactionBlock) throws -> TransactionCompletion {
 		try begin(type: type)
 		do {
 			let action = try block(self)

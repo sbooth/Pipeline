@@ -125,7 +125,7 @@ public final class ConnectionQueue {
 	///
 	/// - note: If `block` throws an error the transaction will be rolled back and the error will be re-thrown.
 	/// - note: If an error occurs committing the transaction a rollback will be attempted and the error will be re-thrown.
-	public func transaction(type: Connection.TransactionType = .deferred, _ block: Connection.TransactionBlock) throws -> Connection.TransactionCompletion {
+	public func transaction(type: TransactionType = .deferred, _ block: Connection.TransactionBlock) throws -> Connection.TransactionCompletion {
 		return try queue.sync {
 			try connection.transaction(type: type, block)
 		}
@@ -138,7 +138,7 @@ public final class ConnectionQueue {
 	/// - parameter qos: The quality of service for `block`.
 	/// - parameter block: A closure performing the database operation.
 	/// - parameter completion: A closure called with the result of the transaction.
-	public func asyncTransaction(type: Connection.TransactionType = .deferred, group: DispatchGroup? = nil, qos: DispatchQoS = .default, _ block: @escaping Connection.TransactionBlock, completion: @escaping CompletionHandler<Connection.TransactionCompletion>) {
+	public func asyncTransaction(type: TransactionType = .deferred, group: DispatchGroup? = nil, qos: DispatchQoS = .default, _ block: @escaping Connection.TransactionBlock, completion: @escaping CompletionHandler<Connection.TransactionCompletion>) {
 		queue.async(group: group, qos: qos) {
 			do {
 				let result = try self.connection.transaction(type: type, block)
