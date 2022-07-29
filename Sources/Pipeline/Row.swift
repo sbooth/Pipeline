@@ -7,22 +7,20 @@
 import Foundation
 import CSQLite
 
-extension Connection {
-	/// A fundamental data type that may be stored in an SQLite database.
-	///
-	/// - seealso: [Datatypes In SQLite](https://sqlite.org/datatype3.html)
-	public enum FundamentalType {
-		/// An integer value.
-		case integer
-		/// A floating-point value.
-		case real
-		/// A text value.
-		case text
-		/// A blob (untyped bytes) value.
-		case blob
-		/// A null value.
-		case null
-	}
+/// A fundamental data type that may be stored in an SQLite database.
+///
+/// - seealso: [Datatypes In SQLite](https://sqlite.org/datatype3.html)
+public enum FundamentalType {
+	/// An integer value.
+	case integer
+	/// A floating-point value.
+	case real
+	/// A text value.
+	case text
+	/// A blob (untyped bytes) value.
+	case blob
+	/// A null value.
+	case null
 }
 
 /// A result row containing one or more columns with type-safe value access.
@@ -88,7 +86,7 @@ extension Row {
 	/// - returns: The data type of the column.
 	///
 	/// - seealso: [Result values from a query](https://sqlite.org/c3ref/column_blob.html)
-	public func typeOfColumn(_ index: Int) throws -> Connection.FundamentalType {
+	public func typeOfColumn(_ index: Int) throws -> FundamentalType {
 		let idx = Int32(index)
 		guard idx >= 0, idx < sqlite3_column_count(statement.preparedStatement) else {
 			throw DatabaseError("Column index \(idx) out of bounds")
