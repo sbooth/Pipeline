@@ -519,7 +519,7 @@ func xClose(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?) -> Int32 {
 
 func xFilter(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?, _ idxNum: Int32, _ idxStr: UnsafePointer<Int8>?, _ argc: Int32, _ argv: UnsafeMutablePointer<OpaquePointer?>?) -> Int32 {
 	let args = UnsafeBufferPointer(start: argv, count: Int(argc))
-	let arguments = args.map { DatabaseValue(sqliteValue: $0.unsafelyUnwrapped) }
+	let arguments = args.map { DatabaseValue($0.unsafelyUnwrapped) }
 
 	return pCursor.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab_cursor.self, capacity: 1) { curs -> Int32 in
 		let cursor = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(curs.pointee.virtual_table_cursor_ptr.unsafelyUnwrapped)).takeUnretainedValue() as! VirtualTableCursor

@@ -7,39 +7,37 @@
 import Foundation
 import CSQLite
 
-extension Connection {
-	/// A custom SQL function.
-	///
-	/// - parameter values: The SQL function parameters.
-	///
-	/// - throws: `Error`.
-	///
-	/// - returns: The result of applying the function to `values`.
-	public typealias SQLFunction = (_ values: [DatabaseValue]) throws -> DatabaseValue
+/// A custom SQL function.
+///
+/// - parameter values: The SQL function parameters.
+///
+/// - throws: `Error`.
+///
+/// - returns: The result of applying the function to `values`.
+public typealias SQLFunction = (_ values: [DatabaseValue]) throws -> DatabaseValue
 
-	/// Custom SQL function flags.
-	///
-	/// - seealso: [Function Flags](https://www.sqlite.org/c3ref/c_deterministic.html)
-	public struct SQLFunctionFlags: OptionSet {
-		public let rawValue: Int
-		public init(rawValue: Int) {
-			self.rawValue = rawValue
-		}
-
-		/// The function gives the same output when the input parameters are the same.
-		public static let deterministic = SQLFunctionFlags(rawValue: 1 << 0)
-		/// The function may only be invoked from top-level SQL, and cannot be used in views or triggers.
-		/// nor in schema structures such as `CHECK` constraints, `DEFAULT` clauses, expression indexes, partial indexes, or generated columns.
-		public static let directOnly = SQLFunctionFlags(rawValue: 1 << 1)
-		/// Indicates to SQLite that a function may call `sqlite3_value_subtype() `to inspect the sub-types of its arguments.
-		public static let subtype = SQLFunctionFlags(rawValue: 1 << 2)
-		/// The function is unlikely to cause problems even if misused.
-		/// An innocuous function should have no side effects and should not depend on any values other than its input parameters.
-		public static let innocuous = SQLFunctionFlags(rawValue: 1 << 3)
+/// Custom SQL function flags.
+///
+/// - seealso: [Function Flags](https://www.sqlite.org/c3ref/c_deterministic.html)
+public struct SQLFunctionFlags: OptionSet {
+	public let rawValue: Int
+	public init(rawValue: Int) {
+		self.rawValue = rawValue
 	}
+
+	/// The function gives the same output when the input parameters are the same.
+	public static let deterministic = SQLFunctionFlags(rawValue: 1 << 0)
+	/// The function may only be invoked from top-level SQL, and cannot be used in views or triggers.
+	/// nor in schema structures such as `CHECK` constraints, `DEFAULT` clauses, expression indexes, partial indexes, or generated columns.
+	public static let directOnly = SQLFunctionFlags(rawValue: 1 << 1)
+	/// Indicates to SQLite that a function may call `sqlite3_value_subtype() `to inspect the sub-types of its arguments.
+	public static let subtype = SQLFunctionFlags(rawValue: 1 << 2)
+	/// The function is unlikely to cause problems even if misused.
+	/// An innocuous function should have no side effects and should not depend on any values other than its input parameters.
+	public static let innocuous = SQLFunctionFlags(rawValue: 1 << 3)
 }
 
-extension Connection.SQLFunctionFlags {
+extension SQLFunctionFlags {
 	/// Returns the value of `self` using SQLite's flag values.
 	func asSQLiteFlags() -> Int32 {
 		var flags: Int32 = 0
@@ -127,7 +125,7 @@ extension Connection {
 			let context = sqlite3_user_data(sqlite_context)
 			let function_ptr = context.unsafelyUnwrapped.assumingMemoryBound(to: SQLFunction.self)
 			let args = UnsafeBufferPointer(start: argv, count: Int(argc))
-			let arguments = args.map { DatabaseValue(sqliteValue: $0.unsafelyUnwrapped) }
+			let arguments = args.map { DatabaseValue($0.unsafelyUnwrapped) }
 			do {
 				set_sqlite3_result(sqlite_context, value: try function_ptr.pointee(arguments))
 			} catch let error {
@@ -186,7 +184,7 @@ extension Connection {
 			let context_ptr = context.unsafelyUnwrapped.assumingMemoryBound(to: SQLAggregateFunction.self)
 			let function = context_ptr.pointee
 			let args = UnsafeBufferPointer(start: argv, count: Int(argc))
-			let arguments = args.map { DatabaseValue(sqliteValue: $0.unsafelyUnwrapped) }
+			let arguments = args.map { DatabaseValue($0.unsafelyUnwrapped) }
 			do {
 				try function.step(arguments)
 			} catch let error {
@@ -267,7 +265,7 @@ extension Connection {
 			let context_ptr = context.unsafelyUnwrapped.assumingMemoryBound(to: SQLAggregateWindowFunction.self)
 			let function = context_ptr.pointee
 			let args = UnsafeBufferPointer(start: argv, count: Int(argc))
-			let arguments = args.map { DatabaseValue(sqliteValue: $0.unsafelyUnwrapped) }
+			let arguments = args.map { DatabaseValue($0.unsafelyUnwrapped) }
 			do {
 				try function.step(arguments)
 			} catch let error {
@@ -296,7 +294,7 @@ extension Connection {
 			let context_ptr = context.unsafelyUnwrapped.assumingMemoryBound(to: SQLAggregateWindowFunction.self)
 			let function = context_ptr.pointee
 			let args = UnsafeBufferPointer(start: argv, count: Int(argc))
-			let arguments = args.map { DatabaseValue(sqliteValue: $0.unsafelyUnwrapped) }
+			let arguments = args.map { DatabaseValue($0.unsafelyUnwrapped) }
 			do {
 				try function.inverse(arguments)
 			} catch let error {
@@ -354,7 +352,7 @@ extension DatabaseValue {
 	/// Creates an instance containing `value`.
 	///
 	/// - parameter value: An `sqlite3_value *` object.
-	init(sqliteValue value: SQLiteValue) {
+	init(_ value: SQLiteValue) {
 		let type = sqlite3_value_type(value)
 		switch type {
 		case SQLITE_INTEGER:
