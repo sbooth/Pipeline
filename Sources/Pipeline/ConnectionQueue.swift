@@ -103,11 +103,11 @@ public final class ConnectionQueue {
 	/// - parameter block: A closure performing the database operation.
 	/// - parameter connection: A `Connection` used for database access within `block`.
 	/// - parameter completion: A closure called with the result of the operation.
-	public func async(group: DispatchGroup? = nil, qos: DispatchQoS = .default, block: @escaping (_ connection: Connection) throws -> Void, completion: @escaping CompletionHandler<Void>) {
+	public func async<T>(group: DispatchGroup? = nil, qos: DispatchQoS = .default, block: @escaping (_ connection: Connection) throws -> T, completion: @escaping CompletionHandler<T>) {
 		queue.async(group: group, qos: qos) {
 			do {
-				try block(self.connection)
-				completion(.success(()))
+				let result = try block(self.connection)
+				completion(.success(result))
 			} catch let error {
 				completion(.failure(error))
 			}

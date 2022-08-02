@@ -101,7 +101,7 @@ public final class ConnectionReadQueue {
 	/// A block called with the result of an asynchronous database operation.
 	///
 	/// - parameter result: A `Result` object containing the result of the operation.
-	public typealias CompletionHandler = (_ result: Result<Void, Error>) -> Void
+	public typealias CompletionHandler<T> = (_ result: Result<T, Error>) -> Void
 
 	/// Submits an asynchronous read operation to the queue.
 	///
@@ -110,11 +110,11 @@ public final class ConnectionReadQueue {
 	/// - parameter block: A closure performing the database operation.
 	/// - parameter connection: A `Connection` used for database access within `block`.
 	/// - parameter completion: A closure called with the result of the operation.
-	public func async(group: DispatchGroup? = nil, qos: DispatchQoS = .unspecified, block: @escaping (_ connection: Connection) throws -> Void, completion: @escaping CompletionHandler) {
+	public func async<T>(group: DispatchGroup? = nil, qos: DispatchQoS = .unspecified, block: @escaping (_ connection: Connection) throws -> T, completion: @escaping CompletionHandler<T>) {
 		queue.async(group: group, qos: qos) {
 			do {
-				try block(self.connection)
-				completion(.success(()))
+				let result = try block(self.connection)
+				completion(.success(result))
 			} catch let error {
 				completion(.failure(error))
 			}
@@ -142,7 +142,7 @@ public final class ConnectionReadQueue {
 	/// - parameter block: A closure performing the database operation
 	/// - parameter connection: A `Connection` used for database access within `block`.
 	/// - parameter completion: A closure called with the result of the read transaction.
-	public func asyncReadTransaction(group: DispatchGroup? = nil, qos: DispatchQoS = .default, _ block: @escaping (_ connection: Connection) -> Void, completion: @escaping CompletionHandler) {
+	public func asyncReadTransaction(group: DispatchGroup? = nil, qos: DispatchQoS = .default, _ block: @escaping (_ connection: Connection) -> Void, completion: @escaping CompletionHandler<Void>) {
 		queue.async(group: group, qos: qos) {
 			do {
 				try self.connection.readTransaction(block)
