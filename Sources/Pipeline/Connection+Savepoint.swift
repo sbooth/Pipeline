@@ -58,9 +58,16 @@ extension Connection {
 	/// A series of database actions grouped into a savepoint transaction.
 	///
 	/// - parameter connection: A `Connection` used for database access within the block.
+	/// - parameter command: `.release` if the savepoint should be released or `.rollback` if the savepoint should be rolled back.
 	///
-	/// - returns: `.release` if the savepoint should be released or `.rollback` if the savepoint should be rolled back.
-	public typealias SavepointBlock = (_ connection: Connection) throws -> SavepointCompletion
+	/// - returns: An object.
+	public typealias SavepointBlock<T> = (_ connection: Connection, _ command: inout SavepointCompletion) throws -> T
+
+	/// The result of a savepoint transaction.
+	///
+	/// - parameter command: `.release` if the savepoint was released or `.rollback` if the savepoint was rolled back.
+	/// - parameter value: The object returned by the savepoint block.
+	public typealias SavepointResult<T> = (command: SavepointCompletion, value: T)
 
 	/// Performs a savepoint transaction on the database.
 	///
@@ -72,18 +79,19 @@ extension Connection {
 	///
 	/// - note: If `block` throws an error the savepoint will be rolled back and the error will be re-thrown.
 	/// - note: If an error occurs releasing the savepoint a rollback will be attempted and the error will be re-thrown.
-	@discardableResult public func savepoint(block: SavepointBlock) throws -> SavepointCompletion {
+	@discardableResult public func savepoint<T>(block: SavepointBlock<T>) throws -> SavepointResult<T> {
 		let savepointUUID = UUID().uuidString
 		try begin(savepoint: savepointUUID)
 		do {
-			let action = try block(self)
-			switch action {
+			var command = SavepointCompletion.release
+			let result = try block(self, &command)
+			switch command {
 			case .release:
 				try release(savepoint: savepointUUID)
 			case .rollback:
 				try rollback(to: savepointUUID)
 			}
-			return action
+			return (command, result)
 		} catch let error {
 			try? rollback(to: savepointUUID)
 			throw error
