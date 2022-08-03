@@ -176,7 +176,7 @@ try connection.transaction { connection, command in
 }
 ```
 
-Transactions are committed by default after the transaction closure completes.
+Transactions are committed by default after the transaction closure returns.
 
 To roll back a transaction instead, set `command` to `.rollback`:
 
