@@ -73,7 +73,12 @@ try connectionQueue.sync { connection in
 connectionQueue.async { connection in
     // Do something with `connection`
 } completion: { result in
-    // Handle any errors that occurred
+    switch result {
+        case .success:
+            // 🎉
+        case .failure(let error):
+            // Handle any errors that occurred
+    }
 }
 ```
 
