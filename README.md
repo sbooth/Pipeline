@@ -171,21 +171,47 @@ try connection.execute(sql: "SELECT * FROM t1;") { row in
 ### Perform a Transaction
 
 ```swift
-let result = try connection.transaction { connection in
+try connection.transaction { connection, command in
     // Do something with `connection`
-    return .commit
 }
-// Result is either `.commit`. or `.rollback`
 ```
+
+Transactions are committed by default after the transaction block completes.
+
+To roll back a transaction instead, set `command` to `.rollback` in the transaction block:
+
+```swift
+try connection.transaction { connection, command in
+    // If a condition occurs that should prevent the transaction from committing:
+    command = .rollback
+}
+```
+
+A rollback is not considered an error.
+
+Transactions may also return a value:
+
+```swift
+let (command, value) = try connection.transaction { connection, command -> Int64 in
+    // ... some long and complex sequence of database commands inserting a row 
+    return connection.lastInsertRowid
+}
+```
+
+*command* contains the result of the transaction (whether it was committed or rolled back), and *value* is the value returned from the transaction block.
 
 Database transactions may also be performed asynchronously using `ConnectionQueue`.
 
 ```swift
-connectionQueue.asyncTransaction { connection in
+connectionQueue.asyncTransaction { connection, command in
     // Do something with `connection`
-    return .commit
 } completion: { result in
-    // Handle any errors that occurred
+    switch result {
+        case .success:
+            // 🎉
+        case .failure(let error):
+            // Handle any errors that occurred
+    }
 }
 ```
 
