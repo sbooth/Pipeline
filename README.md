@@ -176,18 +176,18 @@ try connection.transaction { connection, command in
 }
 ```
 
-Transactions are committed by default after the transaction block completes.
+Transactions are committed by default after the transaction closure completes.
 
-To roll back a transaction instead, set `command` to `.rollback` in the transaction block:
+To roll back a transaction instead, set `command` to `.rollback`:
 
 ```swift
 try connection.transaction { connection, command in
-    // If a condition occurs that should prevent the transaction from committing:
+    // If a condition occurs that prevents the transaction from committing:
     command = .rollback
 }
 ```
 
-A rollback is not considered an error.
+A rollback is not considered an error condition unless execution of the rollback fails.
 
 Transactions may also return a value:
 
@@ -198,7 +198,7 @@ let (command, value) = try connection.transaction { connection, command -> Int64
 }
 ```
 
-*command* contains the result of the transaction (whether it was committed or rolled back), and *value* is the value returned from the transaction block.
+`command` contains the result of the transaction (whether it was committed or rolled back), and `value` is the value returned from the transaction closure.
 
 Database transactions may also be performed asynchronously using `ConnectionQueue`.
 
