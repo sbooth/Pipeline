@@ -269,7 +269,7 @@ struct Event {
 
 let eventConverter = RowConverter<Event> { row in
     let description = try row.text(at: 0)
-    let date = try row.get(.timeIntervalSinceReferenceDate, at: 1)
+    let date = try row.get(.dateWithTimeIntervalSinceReferenceDate, at: 1)
     return Event(description: description, date: date)
 }
 
