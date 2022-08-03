@@ -26,9 +26,11 @@ Add a package dependency to https://github.com/sbooth/Pipeline in Xcode.
 1. Clone the [Pipeline](https://github.com/sbooth/Pipeline) repository.
 2. `swift build`.
 
-### CSQLite
+### CSQLite and SQLite Build Options
 
-Pipeline uses the [CSQLite](https://github.com/sbooth/CSQLite) package for the SQLite library. For performance reasons CSQLite is built without pre-update hook support. In order to enable the pre-update hook in Pipeline it is necessary to clone a local copy of CSQLite and edit the build options appropriately in [Package.swift](https://github.com/sbooth/CSQLite/blob/main/Package.swift).
+Pipeline is built atop [CSQLite](https://github.com/sbooth/CSQLite), a Swift package of the SQLite [amalgamation](https://sqlite.org/amalgamation.html) with the [carray](https://www.sqlite.org/carray.html), [decimal](https://sqlite.org/src/file/ext/misc/decimal.c), [ieee754](https://sqlite.org/src/file/ext/misc/ieee754.c), [series](https://sqlite.org/src/file/ext/misc/series.c), [sha3](https://sqlite.org/src/file/ext/misc/shathree.c), and [uuid](https://sqlite.org/src/file/ext/misc/uuid.c) extensions added, along with wrappers for C functions not easily usable from Swift.
+
+For performance reasons CSQLite is built without pre-update hook support. Unfortunately there is no way using Swift Package Manager to expose [package features](https://forums.swift.org/t/my-swiftpm-wishlist-aka-proposal-proposals/35292) or build options, in this case the SQLite [pre-update hook](https://sqlite.org/c3ref/preupdate_count.html) and the [session](https://sqlite.org/sessionintro.html) extension. For this reason SQLite build options must be customized by changing to a local CSQLite package dependency and editing [CSQLite/Package.swift](https://github.com/sbooth/CSQLite/blob/main/Package.swift).
 
 ## Quick Start
 
