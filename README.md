@@ -277,7 +277,7 @@ let connection = try Connection()
 
 let sevenDaysAgo = Date() - 7 * 24 * 60 * 60
 
-let publisher = connection.rowPublisher(sql: "select what, when from event where when >= ?;") {
+let publisher = connection.rowPublisher(sql: "SELECT description, date FROM event WHERE date >= ?1;") {
     try $0.bind(.timeIntervalSinceReferenceDate(sevenDaysAgo), toParameter: 1)
 }
 
