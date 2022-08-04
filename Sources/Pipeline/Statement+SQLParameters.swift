@@ -22,7 +22,7 @@ extension Statement {
 	/// - returns: The name of the specified parameter.
 	public func nameOfParameter(_ index: Int) throws -> String {
 		guard let name = sqlite3_bind_parameter_name(preparedStatement, Int32(index)) else {
-			throw DatabaseError(message: "SQL parameter at index \(index) not found or nameless")
+			throw DatabaseError("SQL parameter at index \(index) not found or nameless")
 		}
 		return String(cString: name)
 	}
@@ -35,7 +35,7 @@ extension Statement {
 	public func indexOfParameter(_ name: String) throws -> Int {
 		let index = sqlite3_bind_parameter_index(preparedStatement, name)
 		guard index != 0 else {
-			throw DatabaseError(message: "SQL parameter \"\(name)\" not found")
+			throw DatabaseError("SQL parameter \"\(name)\" not found")
 		}
 		return Int(index)
 	}
@@ -47,7 +47,7 @@ extension Statement {
 	/// - returns: `self`.
 	@discardableResult public func clearBindings() throws -> Statement {
 		guard sqlite3_clear_bindings(preparedStatement) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
+			throw SQLiteError("Error clearing bindings", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 		}
 		return self
 	}
@@ -68,27 +68,27 @@ extension Statement {
 		switch value {
 		case .integer(let i):
 			guard sqlite3_bind_int64(preparedStatement, Int32(index), i) == SQLITE_OK else {
-				throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
+				throw SQLiteError("Error binding Int64 \(i) to parameter \(index)", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 			}
 		case .real(let r):
 			guard sqlite3_bind_double(preparedStatement, Int32(index), r) == SQLITE_OK else {
-				throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
+				throw SQLiteError("Error binding Double \(r) to parameter \(index)", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 			}
 		case .text(let t):
 			try t.withCString {
-				guard sqlite3_bind_text(preparedStatement, Int32(index), $0, -1, SQLiteTransientStorage) == SQLITE_OK else {
-					throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
+				guard sqlite3_bind_text(preparedStatement, Int32(index), $0, -1, SQLite.transientStorage) == SQLITE_OK else {
+					throw SQLiteError("Error binding String \"\(t)\" to parameter \(index)", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 				}
 			}
 		case .blob(let b):
 			try b.withUnsafeBytes {
-				guard sqlite3_bind_blob(preparedStatement, Int32(index), $0.baseAddress, Int32($0.count), SQLiteTransientStorage) == SQLITE_OK else {
-					throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
+				guard sqlite3_bind_blob(preparedStatement, Int32(index), $0.baseAddress, Int32($0.count), SQLite.transientStorage) == SQLITE_OK else {
+					throw SQLiteError("Error binding Data to parameter \(index)", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 				}
 			}
 		case .null:
 			guard sqlite3_bind_null(preparedStatement, Int32(index)) == SQLITE_OK else {
-				throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
+				throw SQLiteError("Error binding null to parameter \(index)", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 			}
 		}
 		return self
@@ -120,7 +120,7 @@ extension Statement {
 	/// - returns: `self`.
 	@discardableResult public func bind(integer value: Int64, toParameter index: Int) throws -> Statement {
 		guard sqlite3_bind_int64(preparedStatement, Int32(index), value) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
+			throw SQLiteError("Error binding Int64 \(value) to parameter \(index)", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 		}
 		return self
 	}
@@ -137,7 +137,7 @@ extension Statement {
 	/// - returns: `self`.
 	@discardableResult public func bind(real value: Double, toParameter index: Int) throws -> Statement {
 		guard sqlite3_bind_double(preparedStatement, Int32(index), value) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
+			throw SQLiteError("Error binding Double \(value) to parameter \(index)", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 		}
 		return self
 	}
@@ -154,8 +154,8 @@ extension Statement {
 	/// - returns: `self`.
 	@discardableResult public func bind(text value: String, toParameter index: Int) throws -> Statement {
 		try value.withCString {
-			guard sqlite3_bind_text(preparedStatement, Int32(index), $0, -1, SQLiteTransientStorage) == SQLITE_OK else {
-				throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
+			guard sqlite3_bind_text(preparedStatement, Int32(index), $0, -1, SQLite.transientStorage) == SQLITE_OK else {
+				throw SQLiteError("Error binding String \(value) to parameter \(index)", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 			}
 		}
 		return self
@@ -173,8 +173,8 @@ extension Statement {
 	/// - returns: `self`.
 	@discardableResult public func bind(blob value: Data, toParameter index: Int) throws -> Statement {
 		try value.withUnsafeBytes {
-			guard sqlite3_bind_blob(preparedStatement, Int32(index), $0.baseAddress, Int32($0.count), SQLiteTransientStorage) == SQLITE_OK else {
-				throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
+			guard sqlite3_bind_blob(preparedStatement, Int32(index), $0.baseAddress, Int32($0.count), SQLite.transientStorage) == SQLITE_OK else {
+				throw SQLiteError("Error binding Data to parameter \(index)", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 			}
 		}
 		return self
@@ -191,7 +191,7 @@ extension Statement {
 	/// - returns: `self`.
 	@discardableResult public func bindNull(toParameter index: Int) throws -> Statement {
 		guard sqlite3_bind_null(preparedStatement, Int32(index)) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: database.databaseConnection)
+			throw SQLiteError("Error binding null to parameter \(index)", takingErrorCodeFromDatabaseConnection: connection.databaseConnection)
 		}
 		return self
 	}

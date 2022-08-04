@@ -69,7 +69,7 @@ public enum VirtualTableModuleBestIndexResult {
 public protocol VirtualTableModule {
 	/// Opens a connection to an SQLite virtual table module.
 	///
-	/// - parameter database: The database to which this virtual table module is being added.
+	/// - parameter connection: The database connection to which this virtual table module is being added.
 	/// - parameter arguments: The arguments used to create the virtual table module. The first argument is the name of the module being invoked.
 	/// The second argument is the name of the database in which the virtual table is being created. The third argument is the name of the new virtual table.
 	/// Any additional arguments are those passed to the module name in the `CREATE VIRTUAL TABLE` statement.
@@ -77,10 +77,10 @@ public protocol VirtualTableModule {
 	/// and should create any persistent state.
 	///
 	/// - throws: `SQLiteError` if the module could not be created.
-	init(database: Database, arguments: [String], create: Bool) throws
+	init(connection: Connection, arguments: [String], create: Bool) throws
 
 	/// The options supported by this virtual table module.
-	var options: Database.VirtualTableModuleOptions { get }
+	var options: Connection.VirtualTableModuleOptions { get }
 
 	/// The SQL `CREATE TABLE` statement used to tell SQLite about the virtual table's columns and datatypes.
 	///
@@ -110,7 +110,7 @@ public protocol VirtualTableModule {
 }
 
 extension VirtualTableModule {
-	var options: Database.VirtualTableModuleOptions {
+	var options: Connection.VirtualTableModuleOptions {
 		return []
 	}
 
@@ -125,23 +125,23 @@ extension VirtualTableModule {
 public protocol EponymousVirtualTableModule: VirtualTableModule {
 	/// Opens a connection to an SQLite eponymous virtual table module.
 	///
-	/// - parameter database: The database to which this virtual table module is being added.
+	/// - parameter connection: The database connection to which this virtual table module is being added.
 	/// - parameter arguments: The arguments used to create the virtual table module. The first argument is the name of the module being invoked.
 	/// The second argument is the name of the database in which the virtual table is being created. The third argument is the name of the new virtual table.
 	///
 	/// - throws: `SQLiteError` if the module could not be created.
-	init(database: Database, arguments: [String]) throws
+	init(connection: Connection, arguments: [String]) throws
 }
 
 extension VirtualTableModule where Self: EponymousVirtualTableModule {
-	init(database: Database, arguments: [String], create: Bool) throws {
+	init(connection: Connection, arguments: [String], create: Bool) throws {
 		precondition(create == false)
 		// Eponymous-only virtual tables have no state
-		try self.init(database: database, arguments: arguments)
+		try self.init(connection: connection, arguments: arguments)
 	}
 }
 
-extension Database {
+extension Connection {
 	/// Glue for creating a generic Swift type in a C callback.
 	final class VirtualTableModuleClientData {
 		/// The constructor closure.
@@ -181,7 +181,7 @@ extension Database {
 		public static let directOnly = VirtualTableModuleOptions(rawValue: 1 << 3)
 	}
 
-	/// Adds a virtual table module to the database.
+	/// Adds a virtual table module to the database connection.
 	///
 	/// - parameter name: The name of the virtual table module.
 	/// - parameter type: The class implementing the virtual table module.
@@ -197,10 +197,10 @@ extension Database {
 
 		// client_data must live until the xDestroy function is invoked; store it as a +1 object
 		let client_data = VirtualTableModuleClientData(module: &module_struct) { [weak self] args, create -> VirtualTableModule in
-			guard let database = self else {
-				throw DatabaseError(message: "Database instance missing (weak reference was set to nil)")
+			guard let connection = self else {
+				throw DatabaseError("Connection instance missing (weak reference was set to nil)")
 			}
-			return try T(database: database, arguments: args, create: create)
+			return try T(connection: connection, arguments: args, create: create)
 		}
 		let client_data_ptr = Unmanaged.passRetained(client_data).toOpaque()
 
@@ -208,11 +208,11 @@ extension Database {
 			// Balance the +1 retain above
 			Unmanaged<VirtualTableModuleClientData>.fromOpaque(UnsafeRawPointer(client_data.unsafelyUnwrapped)).release()
 		}) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error adding module \"\(name)\"", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 
-	/// Adds an eponymous virtual table module to the database.
+	/// Adds an eponymous virtual table module to the database connection.
 	///
 	/// An eponymous virtual table module presents a virtual table with the same name as the module and
 	/// does not require a `CREATE VIRTUAL TABLE` statement to be available.
@@ -244,15 +244,15 @@ extension Database {
 	/// 		}
 	/// 	}
 	///
-	/// 	required init(database: Database, arguments: [String]) {
-	/// 		// database and arguments not used
+	/// 	required init(connection: Connection, arguments: [String]) {
+	/// 		// connection and arguments not used
 	/// 	}
 	///
 	/// 	var declaration: String {
 	/// 		"CREATE TABLE x(value)"
 	/// 	}
 	///
-	/// 	var options: Database.VirtualTableModuleOptions {
+	/// 	var options: Connection.VirtualTableModuleOptions {
 	/// 		[.innocuous]
 	/// 	}
 	///
@@ -280,10 +280,10 @@ extension Database {
 
 		// client_data must live until the xDestroy function is invoked; store it as a +1 object
 		let client_data = VirtualTableModuleClientData(module: &module_struct) { [weak self] args, create -> VirtualTableModule in
-			guard let database = self else {
-				throw DatabaseError(message: "Database instance missing (weak reference was set to nil)")
+			guard let connection = self else {
+				throw DatabaseError("Connection instance missing (weak reference was set to nil)")
 			}
-			return try T(database: database, arguments: args, create: create)
+			return try T(connection: connection, arguments: args, create: create)
 		}
 		let client_data_ptr = Unmanaged.passRetained(client_data).toOpaque()
 
@@ -291,22 +291,22 @@ extension Database {
 			// Balance the +1 retain above
 			Unmanaged<VirtualTableModuleClientData>.fromOpaque(UnsafeRawPointer(client_data.unsafelyUnwrapped)).release()
 		}) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error adding module \"\(name)\"", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 
-	/// Removes a virtual table module from the database.
+	/// Removes a virtual table module from the database connection.
 	///
 	/// - parameter name: The name of the virtual table module.
 	///
 	/// - throws: An error if the virtual table module couldn't be removed.
 	public func removeModule(_ name: String) throws {
 		guard sqlite3_create_module(databaseConnection, name, nil, nil) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error removing module \"\(name)\"", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 
-	/// Removes all virtual table modules from the database.
+	/// Removes all virtual table modules from the database connection.
 	///
 	/// - parameter except: An array containing the names of virtual table modules to keep.
 	///
@@ -314,10 +314,9 @@ extension Database {
 	public func removeAllModules(except: [String] = []) throws {
 		if except.isEmpty {
 			guard sqlite3_drop_modules(databaseConnection, nil) == SQLITE_OK else {
-				throw SQLiteError(fromDatabaseConnection: databaseConnection)
+				throw SQLiteError("Error removing all modules", takingErrorCodeFromDatabaseConnection: databaseConnection)
 			}
-		}
-		else {
+		} else {
 			// This could be done more efficiently using something similar to
 			// https://github.com/apple/swift/blob/dc39fc9f244aeb883c26bcd043e895178637fdf8/stdlib/private/SwiftPrivate/SwiftPrivate.swift#L60
 			// to avoid multiple memory allocations
@@ -332,7 +331,7 @@ extension Database {
 			}
 
 			guard sqlite3_drop_modules(databaseConnection, &module_names_to_keep) == SQLITE_OK else {
-				throw SQLiteError(fromDatabaseConnection: databaseConnection)
+				throw SQLiteError("Error removing all modules except \"\(except)\"", takingErrorCodeFromDatabaseConnection: databaseConnection)
 			}
 		}
 	}
@@ -340,25 +339,21 @@ extension Database {
 
 // MARK: - Implementations
 
-func xCreate(_ db: OpaquePointer?, _ pAux: UnsafeMutableRawPointer?, _ argc: Int32, _ argv: UnsafePointer<UnsafePointer<Int8>?>?, _ ppVTab:UnsafeMutablePointer<UnsafeMutablePointer<sqlite3_vtab>?>?, _ pzErr: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+private func xCreate(_ db: OpaquePointer?, _ pAux: UnsafeMutableRawPointer?, _ argc: Int32, _ argv: UnsafePointer<UnsafePointer<Int8>?>?, _ ppVTab:UnsafeMutablePointer<UnsafeMutablePointer<sqlite3_vtab>?>?, _ pzErr: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
 	return init_vtab(db, pAux, argc, argv, ppVTab, pzErr, true)
 }
 
-func xDestroy(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?) -> Int32 {
+private func xDestroy(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?) -> Int32 {
 	let rc = pVTab.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab.self, capacity: 1) { vtab -> Int32 in
 		let virtualTable = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(vtab.pointee.virtual_table_module_ptr.unsafelyUnwrapped)).takeUnretainedValue() as! VirtualTableModule
 		do {
 			try virtualTable.destroy()
-		}
-
-		catch let error as SQLiteError {
+		} catch let error as SQLiteError {
 			os_log("Error in destroy(): %{public}@", type: .info, error.description)
 			sqlite3_free(vtab.pointee.base.zErrMsg)
 			vtab.pointee.base.zErrMsg = csqlite_sqlite3_strdup(error.details)
 			return error.code
-		}
-
-		catch let error {
+		} catch let error {
 			os_log("Error in destroy(): %{public}@", type: .info, error.localizedDescription)
 			sqlite3_free(vtab.pointee.base.zErrMsg)
 			vtab.pointee.base.zErrMsg = csqlite_sqlite3_strdup(error.localizedDescription)
@@ -375,27 +370,23 @@ func xDestroy(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?) -> Int32 {
 	return xDisconnect(pVTab)
 }
 
-func xConnect(_ db: OpaquePointer?, _ pAux: UnsafeMutableRawPointer?, _ argc: Int32, _ argv: UnsafePointer<UnsafePointer<Int8>?>?, _ ppVTab: UnsafeMutablePointer<UnsafeMutablePointer<sqlite3_vtab>?>?, _ pzErr: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
+private func xConnect(_ db: OpaquePointer?, _ pAux: UnsafeMutableRawPointer?, _ argc: Int32, _ argv: UnsafePointer<UnsafePointer<Int8>?>?, _ ppVTab: UnsafeMutablePointer<UnsafeMutablePointer<sqlite3_vtab>?>?, _ pzErr: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
 	return init_vtab(db, pAux, argc, argv, ppVTab, pzErr, false)
 }
 
-func init_vtab(_ db: OpaquePointer?, _ pAux: UnsafeMutableRawPointer?, _ argc: Int32, _ argv: UnsafePointer<UnsafePointer<Int8>?>?, _ ppVTab: UnsafeMutablePointer<UnsafeMutablePointer<sqlite3_vtab>?>?, _ pzErr: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?, _ create: Bool) -> Int32 {
+private func init_vtab(_ db: OpaquePointer?, _ pAux: UnsafeMutableRawPointer?, _ argc: Int32, _ argv: UnsafePointer<UnsafePointer<Int8>?>?, _ ppVTab: UnsafeMutablePointer<UnsafeMutablePointer<sqlite3_vtab>?>?, _ pzErr: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?, _ create: Bool) -> Int32 {
 	let args = UnsafeBufferPointer(start: argv, count: Int(argc))
 	let arguments = args.map { String(utf8String: $0.unsafelyUnwrapped).unsafelyUnwrapped }
 
 	let virtualTable: VirtualTableModule
 	do {
-		let clientData = Unmanaged<Database.VirtualTableModuleClientData>.fromOpaque(UnsafeRawPointer(pAux.unsafelyUnwrapped)).takeUnretainedValue()
+		let clientData = Unmanaged<Connection.VirtualTableModuleClientData>.fromOpaque(UnsafeRawPointer(pAux.unsafelyUnwrapped)).takeUnretainedValue()
 		virtualTable = try clientData.construct(arguments, create)
-	}
-
-	catch let error as SQLiteError {
+	} catch let error as SQLiteError {
 		os_log("Error connecting to virtual table module: %{public}@", type: .info, error.description)
 		pzErr.unsafelyUnwrapped.pointee = csqlite_sqlite3_strdup(error.details)
 		return error.code
-	}
-
-	catch let error {
+	} catch let error {
 		os_log("Error connecting to virtual table module: %{public}@", type: .info, error.localizedDescription)
 		pzErr.unsafelyUnwrapped.pointee = csqlite_sqlite3_strdup(error.localizedDescription)
 		return SQLITE_ERROR
@@ -432,7 +423,7 @@ func init_vtab(_ db: OpaquePointer?, _ pAux: UnsafeMutableRawPointer?, _ argc: I
 	return SQLITE_OK
 }
 
-func xDisconnect(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?) -> Int32 {
+private func xDisconnect(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?) -> Int32 {
 	pVTab.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab.self, capacity: 1) { vtab in
 		// Balance the +1 retain in xConnect()
 		Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(vtab.pointee.virtual_table_module_ptr)).release()
@@ -441,25 +432,23 @@ func xDisconnect(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?) -> Int32 {
 	return SQLITE_OK
 }
 
-func xBestIndex(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?, _ pIdxInfo: UnsafeMutablePointer<sqlite3_index_info>?) -> Int32  {
+private func xBestIndex(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?, _ pIdxInfo: UnsafeMutablePointer<sqlite3_index_info>?) -> Int32  {
 	return pVTab.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab.self, capacity: 1) { vtab -> Int32 in
 		let virtualTable = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(vtab.pointee.virtual_table_module_ptr.unsafelyUnwrapped)).takeUnretainedValue() as! VirtualTableModule
 		do {
 			let result = try virtualTable.bestIndex(&pIdxInfo.unsafelyUnwrapped.pointee)
 			switch result {
-			case .ok: 			return SQLITE_OK
-			case .constraint: 	return SQLITE_CONSTRAINT
+			case .ok:
+				return SQLITE_OK
+			case .constraint:
+				return SQLITE_CONSTRAINT
 			}
-		}
-
-		catch let error as SQLiteError {
+		} catch let error as SQLiteError {
 			os_log("Error in bestIndex(): %{public}@", type: .info, error.description)
 			sqlite3_free(vtab.pointee.base.zErrMsg)
 			vtab.pointee.base.zErrMsg = csqlite_sqlite3_strdup(error.details)
 			return error.code
-		}
-
-		catch let error {
+		} catch let error {
 			os_log("Error in bestIndex(): %{public}@", type: .info, error.localizedDescription)
 			sqlite3_free(vtab.pointee.base.zErrMsg)
 			vtab.pointee.base.zErrMsg = csqlite_sqlite3_strdup(error.localizedDescription)
@@ -468,23 +457,19 @@ func xBestIndex(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?, _ pIdxInfo: Unsafe
 	}
 }
 
-func xOpen(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?, _ ppCursor: UnsafeMutablePointer<UnsafeMutablePointer<sqlite3_vtab_cursor>?>?) -> Int32 {
+private func xOpen(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?, _ ppCursor: UnsafeMutablePointer<UnsafeMutablePointer<sqlite3_vtab_cursor>?>?) -> Int32 {
 	return pVTab.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab.self, capacity: 1) { vtab -> Int32 in
 		let virtualTable = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(vtab.pointee.virtual_table_module_ptr.unsafelyUnwrapped)).takeUnretainedValue() as! VirtualTableModule
 
 		let cursor: VirtualTableCursor
 		do {
 			cursor = try virtualTable.openCursor()
-		}
-
-		catch let error as SQLiteError {
+		} catch let error as SQLiteError {
 			os_log("Error in openCursor(): %{public}@", type: .info, error.description)
 			sqlite3_free(vtab.pointee.base.zErrMsg)
 			vtab.pointee.base.zErrMsg = csqlite_sqlite3_strdup(error.details)
 			return error.code
-		}
-
-		catch let error {
+		} catch let error {
 			os_log("Error in openCursor(): %{public}@", type: .info, error.localizedDescription)
 			sqlite3_free(vtab.pointee.base.zErrMsg)
 			vtab.pointee.base.zErrMsg = csqlite_sqlite3_strdup(error.localizedDescription)
@@ -509,7 +494,7 @@ func xOpen(_ pVTab: UnsafeMutablePointer<sqlite3_vtab>?, _ ppCursor: UnsafeMutab
 	}
 }
 
-func xClose(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?) -> Int32 {
+private func xClose(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?) -> Int32 {
 	pCursor.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab_cursor.self, capacity: 1) { curs in
 		// Balance the +1 retain above
 		Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(curs.pointee.virtual_table_cursor_ptr)).release()
@@ -518,9 +503,9 @@ func xClose(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?) -> Int32 {
 	return SQLITE_OK
 }
 
-func xFilter(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?, _ idxNum: Int32, _ idxStr: UnsafePointer<Int8>?, _ argc: Int32, _ argv: UnsafeMutablePointer<OpaquePointer?>?) -> Int32 {
+private func xFilter(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?, _ idxNum: Int32, _ idxStr: UnsafePointer<Int8>?, _ argc: Int32, _ argv: UnsafeMutablePointer<OpaquePointer?>?) -> Int32 {
 	let args = UnsafeBufferPointer(start: argv, count: Int(argc))
-	let arguments = args.map { DatabaseValue(sqliteValue: $0.unsafelyUnwrapped) }
+	let arguments = args.map { DatabaseValue($0.unsafelyUnwrapped) }
 
 	return pCursor.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab_cursor.self, capacity: 1) { curs -> Int32 in
 		let cursor = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(curs.pointee.virtual_table_cursor_ptr.unsafelyUnwrapped)).takeUnretainedValue() as! VirtualTableCursor
@@ -532,16 +517,12 @@ func xFilter(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?, _ idxNum: In
 		do {
 			try cursor.filter(arguments, indexNumber: idxNum, indexName: name)
 			return SQLITE_OK
-		}
-
-		catch let error as SQLiteError {
+		} catch let error as SQLiteError {
 			os_log("Error in filter(): %{public}@", type: .info, error.description)
 			sqlite3_free(curs.pointee.base.pVtab.pointee.zErrMsg)
 			curs.pointee.base.pVtab.pointee.zErrMsg = csqlite_sqlite3_strdup(error.details)
 			return error.code
-		}
-
-		catch let error {
+		} catch let error {
 			os_log("Error in filter(): %{public}@", type: .info, error.localizedDescription)
 			sqlite3_free(curs.pointee.base.pVtab.pointee.zErrMsg)
 			curs.pointee.base.pVtab.pointee.zErrMsg = csqlite_sqlite3_strdup(error.localizedDescription)
@@ -550,22 +531,18 @@ func xFilter(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?, _ idxNum: In
 	}
 }
 
-func xNext(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?) -> Int32 {
+private func xNext(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?) -> Int32 {
 	return pCursor.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab_cursor.self, capacity: 1) { curs -> Int32 in
 		let cursor = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(curs.pointee.virtual_table_cursor_ptr.unsafelyUnwrapped)).takeUnretainedValue() as! VirtualTableCursor
 		do {
 			try cursor.next()
 			return SQLITE_OK
-		}
-
-		catch let error as SQLiteError {
+		} catch let error as SQLiteError {
 			os_log("Error in next(): %{public}@", type: .info, error.description)
 			sqlite3_free(curs.pointee.base.pVtab.pointee.zErrMsg)
 			curs.pointee.base.pVtab.pointee.zErrMsg = csqlite_sqlite3_strdup(error.details)
 			return error.code
-		}
-
-		catch let error {
+		} catch let error {
 			os_log("Error in next(): %{public}@", type: .info, error.localizedDescription)
 			sqlite3_free(curs.pointee.base.pVtab.pointee.zErrMsg)
 			curs.pointee.base.pVtab.pointee.zErrMsg = csqlite_sqlite3_strdup(error.localizedDescription)
@@ -574,30 +551,26 @@ func xNext(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?) -> Int32 {
 	}
 }
 
-func xEof(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?) -> Int32 {
+private func xEof(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?) -> Int32 {
 	return pCursor.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab_cursor.self, capacity: 1) { curs -> Int32 in
 		let cursor = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(curs.pointee.virtual_table_cursor_ptr.unsafelyUnwrapped)).takeUnretainedValue() as! VirtualTableCursor
 		return cursor.eof ? 1 : 0
 	}
 }
 
-func xColumn(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?, _ pCtx: OpaquePointer?, _ i: Int32) -> Int32 {
+private func xColumn(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?, _ pCtx: OpaquePointer?, _ i: Int32) -> Int32 {
 	return pCursor.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab_cursor.self, capacity: 1) { curs -> Int32 in
 		let cursor = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(curs.pointee.virtual_table_cursor_ptr.unsafelyUnwrapped)).takeUnretainedValue() as! VirtualTableCursor
 		do {
 			let value = try cursor.column(i)
 			set_sqlite3_result(pCtx, value: value)
 			return SQLITE_OK
-		}
-
-		catch let error as SQLiteError {
+		} catch let error as SQLiteError {
 			os_log("Error in column(%i): %{public}@", type: .info, i, error.description)
 			sqlite3_free(curs.pointee.base.pVtab.pointee.zErrMsg)
 			curs.pointee.base.pVtab.pointee.zErrMsg = csqlite_sqlite3_strdup(error.details)
 			return error.code
-		}
-
-		catch let error {
+		} catch let error {
 			os_log("Error in column(%i): %{public}@", type: .info, i, error.localizedDescription)
 			sqlite3_free(curs.pointee.base.pVtab.pointee.zErrMsg)
 			curs.pointee.base.pVtab.pointee.zErrMsg = csqlite_sqlite3_strdup(error.localizedDescription)
@@ -606,23 +579,19 @@ func xColumn(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?, _ pCtx: Opaq
 	}
 }
 
-func xRowid(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?, _ pRowid: UnsafeMutablePointer<sqlite3_int64>?) -> Int32 {
+private func xRowid(_ pCursor: UnsafeMutablePointer<sqlite3_vtab_cursor>?, _ pRowid: UnsafeMutablePointer<sqlite3_int64>?) -> Int32 {
 	return pCursor.unsafelyUnwrapped.withMemoryRebound(to: cpipeline_sqlite3_vtab_cursor.self, capacity: 1) { curs -> Int32 in
 		let cursor = Unmanaged<AnyObject>.fromOpaque(UnsafeRawPointer(curs.pointee.virtual_table_cursor_ptr.unsafelyUnwrapped)).takeUnretainedValue() as! VirtualTableCursor
 		do {
 			let rowid = try cursor.rowid()
 			pRowid.unsafelyUnwrapped.pointee = rowid
 			return SQLITE_OK
-		}
-
-		catch let error as SQLiteError {
+		} catch let error as SQLiteError {
 			os_log("Error in rowid(): %{public}@", type: .info, error.description)
 			sqlite3_free(curs.pointee.base.pVtab.pointee.zErrMsg)
 			curs.pointee.base.pVtab.pointee.zErrMsg = csqlite_sqlite3_strdup(error.details)
 			return error.code
-		}
-
-		catch let error {
+		} catch let error {
 			os_log("Error in rowid(): %{public}@", type: .info, error.localizedDescription)
 			sqlite3_free(curs.pointee.base.pVtab.pointee.zErrMsg)
 			curs.pointee.base.pVtab.pointee.zErrMsg = csqlite_sqlite3_strdup(error.localizedDescription)

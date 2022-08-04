@@ -7,56 +7,34 @@
 import Foundation
 import CSQLite
 
-extension Database {
-	/// A custom SQL function.
-	///
-	/// - parameter values: The SQL function parameters.
-	///
-	/// - throws: `Error`.
-	///
-	/// - returns: The result of applying the function to `values`.
-	public typealias SQLFunction = (_ values: [DatabaseValue]) throws -> DatabaseValue
+/// A custom SQL function.
+///
+/// - parameter values: The SQL function parameters.
+///
+/// - throws: `Error`.
+///
+/// - returns: The result of applying the function to `values`.
+public typealias SQLFunction = (_ values: [DatabaseValue]) throws -> DatabaseValue
 
-	/// Custom SQL function flags.
-	///
-	/// - seealso: [Function Flags](https://www.sqlite.org/c3ref/c_deterministic.html)
-	public struct SQLFunctionFlags: OptionSet {
-		public let rawValue: Int
-		public init(rawValue: Int) {
-			self.rawValue = rawValue
-		}
-
-		/// The function gives the same output when the input parameters are the same.
-		public static let deterministic = SQLFunctionFlags(rawValue: 1 << 0)
-		/// The function may only be invoked from top-level SQL, and cannot be used in views or triggers.
-		/// nor in schema structures such as `CHECK` constraints, `DEFAULT` clauses, expression indexes, partial indexes, or generated columns.
-		public static let directOnly = SQLFunctionFlags(rawValue: 1 << 1)
-		/// Indicates to SQLite that a function may call `sqlite3_value_subtype() `to inspect the sub-types of its arguments.
-		public static let subtype = SQLFunctionFlags(rawValue: 1 << 2)
-		/// The function is unlikely to cause problems even if misused.
-		/// An innocuous function should have no side effects and should not depend on any values other than its input parameters.
-		public static let innocuous = SQLFunctionFlags(rawValue: 1 << 3)
+/// Custom SQL function flags.
+///
+/// - seealso: [Function Flags](https://www.sqlite.org/c3ref/c_deterministic.html)
+public struct SQLFunctionFlags: OptionSet {
+	public let rawValue: Int
+	public init(rawValue: Int) {
+		self.rawValue = rawValue
 	}
-}
 
-extension Database.SQLFunctionFlags {
-	/// Returns the value of `self` using SQLite's flag values.
-	func asSQLiteFlags() -> Int32 {
-		var flags: Int32 = 0
-		if contains(.deterministic) {
-			flags |= SQLITE_DETERMINISTIC
-		}
-		if contains(.directOnly) {
-			flags |= SQLITE_DIRECTONLY
-		}
-		if contains(.subtype) {
-			flags |= SQLITE_SUBTYPE
-		}
-		if contains(.innocuous) {
-			flags |= SQLITE_INNOCUOUS
-		}
-		return flags
-	}
+	/// The function gives the same output when the input parameters are the same.
+	public static let deterministic = SQLFunctionFlags(rawValue: 1 << 0)
+	/// The function may only be invoked from top-level SQL, and cannot be used in views or triggers.
+	/// nor in schema structures such as `CHECK` constraints, `DEFAULT` clauses, expression indexes, partial indexes, or generated columns.
+	public static let directOnly = SQLFunctionFlags(rawValue: 1 << 1)
+	/// Indicates to SQLite that a function may call `sqlite3_value_subtype() `to inspect the sub-types of its arguments.
+	public static let subtype = SQLFunctionFlags(rawValue: 1 << 2)
+	/// The function is unlikely to cause problems even if misused.
+	/// An innocuous function should have no side effects and should not depend on any values other than its input parameters.
+	public static let innocuous = SQLFunctionFlags(rawValue: 1 << 3)
 }
 
 /// A custom SQL aggregate function.
@@ -95,7 +73,7 @@ public protocol SQLAggregateWindowFunction: SQLAggregateFunction {
 	func value() throws -> DatabaseValue
 }
 
-extension Database {
+extension Connection {
 	/// Adds a custom SQL scalar function.
 	///
 	/// For example, a localized uppercase scalar function could be implemented as:
@@ -127,7 +105,7 @@ extension Database {
 			let context = sqlite3_user_data(sqlite_context)
 			let function_ptr = context.unsafelyUnwrapped.assumingMemoryBound(to: SQLFunction.self)
 			let args = UnsafeBufferPointer(start: argv, count: Int(argc))
-			let arguments = args.map { DatabaseValue(sqliteValue: $0.unsafelyUnwrapped) }
+			let arguments = args.map { DatabaseValue($0.unsafelyUnwrapped) }
 			do {
 				set_sqlite3_result(sqlite_context, value: try function_ptr.pointee(arguments))
 			} catch let error {
@@ -138,7 +116,7 @@ extension Database {
 			function_ptr.deinitialize(count: 1)
 			function_ptr.deallocate()
 		}) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error adding SQL scalar function \"\(name)\"", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -153,7 +131,7 @@ extension Database {
 	///             case .integer(let i):
 	///                 sum += i
 	///             default:
-	///                 throw DatabaseError(message: "Only integer values supported")
+	///                 throw DatabaseError("Only integer values supported")
 	///         }
 	///     }
 	///
@@ -186,7 +164,7 @@ extension Database {
 			let context_ptr = context.unsafelyUnwrapped.assumingMemoryBound(to: SQLAggregateFunction.self)
 			let function = context_ptr.pointee
 			let args = UnsafeBufferPointer(start: argv, count: Int(argc))
-			let arguments = args.map { DatabaseValue(sqliteValue: $0.unsafelyUnwrapped) }
+			let arguments = args.map { DatabaseValue($0.unsafelyUnwrapped) }
 			do {
 				try function.step(arguments)
 			} catch let error {
@@ -206,7 +184,7 @@ extension Database {
 			context_ptr.deinitialize(count: 1)
 			context_ptr.deallocate()
 		}) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error adding SQL aggregate function \"\(name)\"", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -221,7 +199,7 @@ extension Database {
 	///             case .integer(let i):
 	///                 sum += i
 	///             default:
-	///                 throw DatabaseError(message: "Only integer values supported")
+	///                 throw DatabaseError("Only integer values supported")
 	///         }
 	///     }
 	///
@@ -231,7 +209,7 @@ extension Database {
 	///             case .integer(let i):
 	///                 sum -= i
 	///             default:
-	///                 throw DatabaseError(message: "Only integer values supported")
+	///                 throw DatabaseError("Only integer values supported")
 	///         }
 	///     }
 	///
@@ -267,7 +245,7 @@ extension Database {
 			let context_ptr = context.unsafelyUnwrapped.assumingMemoryBound(to: SQLAggregateWindowFunction.self)
 			let function = context_ptr.pointee
 			let args = UnsafeBufferPointer(start: argv, count: Int(argc))
-			let arguments = args.map { DatabaseValue(sqliteValue: $0.unsafelyUnwrapped) }
+			let arguments = args.map { DatabaseValue($0.unsafelyUnwrapped) }
 			do {
 				try function.step(arguments)
 			} catch let error {
@@ -296,7 +274,7 @@ extension Database {
 			let context_ptr = context.unsafelyUnwrapped.assumingMemoryBound(to: SQLAggregateWindowFunction.self)
 			let function = context_ptr.pointee
 			let args = UnsafeBufferPointer(start: argv, count: Int(argc))
-			let arguments = args.map { DatabaseValue(sqliteValue: $0.unsafelyUnwrapped) }
+			let arguments = args.map { DatabaseValue($0.unsafelyUnwrapped) }
 			do {
 				try function.inverse(arguments)
 			} catch let error {
@@ -307,7 +285,7 @@ extension Database {
 			context_ptr.deinitialize(count: 1)
 			context_ptr.deallocate()
 		}) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error adding SQL aggregate window function \"\(name)\"", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -319,26 +297,51 @@ extension Database {
 	/// - throws: An error if the SQL function couldn't be removed.
 	public func removeFunction(_ name: String, arity: Int = -1) throws {
 		guard sqlite3_create_function_v2(databaseConnection, name, Int32(arity), SQLITE_UTF8, nil, nil, nil, nil, nil) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error removing SQL function \"\(name)\"", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 }
+
+private extension SQLFunctionFlags {
+	/// Returns the value of `self` using SQLite's flag values.
+	func asSQLiteFlags() -> Int32 {
+		var flags: Int32 = 0
+		if contains(.deterministic) {
+			flags |= SQLITE_DETERMINISTIC
+		}
+		if contains(.directOnly) {
+			flags |= SQLITE_DIRECTONLY
+		}
+		if contains(.subtype) {
+			flags |= SQLITE_SUBTYPE
+		}
+		if contains(.innocuous) {
+			flags |= SQLITE_INNOCUOUS
+		}
+		return flags
+	}
+}
+
+/// An `sqlite3_context *` object.
+///
+/// - seealso: [SQL Function Context Object](https://sqlite.org/c3ref/context.html)
+typealias SQLiteContext = OpaquePointer
 
 /// Passes `value` to the appropriate `sqlite3_result` function.
 ///
 /// - parameter sqlite_context: An `sqlite3_context *` object.
 /// - parameter value: The value to pass.
-func set_sqlite3_result(_ sqlite_context: OpaquePointer!, value: DatabaseValue) {
+func set_sqlite3_result(_ sqlite_context: SQLiteContext!, value: DatabaseValue) {
 	switch value {
 	case .integer(let i):
 		sqlite3_result_int64(sqlite_context, i)
 	case .real(let r):
 		sqlite3_result_double(sqlite_context, r)
 	case .text(let t):
-		sqlite3_result_text(sqlite_context, t, -1, SQLiteTransientStorage)
+		sqlite3_result_text(sqlite_context, t, -1, SQLite.transientStorage)
 	case .blob(let b):
 		b.withUnsafeBytes {
-			sqlite3_result_blob(sqlite_context, $0.baseAddress, Int32($0.count), SQLiteTransientStorage)
+			sqlite3_result_blob(sqlite_context, $0.baseAddress, Int32($0.count), SQLite.transientStorage)
 		}
 	case .null:
 		sqlite3_result_null(sqlite_context)
@@ -354,7 +357,7 @@ extension DatabaseValue {
 	/// Creates an instance containing `value`.
 	///
 	/// - parameter value: An `sqlite3_value *` object.
-	init(sqliteValue value: SQLiteValue) {
+	init(_ value: SQLiteValue) {
 		let type = sqlite3_value_type(value)
 		switch type {
 		case SQLITE_INTEGER:

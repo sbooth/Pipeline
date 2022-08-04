@@ -30,7 +30,7 @@ public struct SQLite {
 	public static func initialize() throws {
 		let rc = sqlite3_initialize()
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Error initializing sqlite3")
+			throw SQLiteError("Error initializing sqlite3", code: rc)
 		}
 	}
 
@@ -42,7 +42,7 @@ public struct SQLite {
 	public static func shutdown() throws {
 		let rc = sqlite3_shutdown()
 		guard rc == SQLITE_OK else {
-			throw SQLiteError(code: rc, details: "Error shutting down sqlite3")
+			throw SQLiteError("Error shutting down sqlite3", code: rc)
 		}
 	}
 
@@ -132,4 +132,14 @@ public struct SQLite {
 	public static func compileOptionUsed(_ option: String) -> Bool {
 		sqlite3_compileoption_used(option) != 0
 	}
+
+	/// The content pointer is constant and will never change.
+	///
+	/// - seealso: [Constants Defining Special Destructor Behavior](https://sqlite.org/c3ref/c_static.html)
+	public static let staticStorage = unsafeBitCast(0, to: sqlite3_destructor_type.self)
+
+	/// The content will likely change in the near future and that SQLite should make its own private copy of the content before returning.
+	///
+	/// - seealso: [Constants Defining Special Destructor Behavior](https://sqlite.org/c3ref/c_static.html)
+	public static let transientStorage = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 }

@@ -4,6 +4,7 @@
 // MIT license
 //
 
+import os.log
 import Foundation
 import CSQLite
 
@@ -13,30 +14,20 @@ import Combine
 
 /// An `sqlite3 *` object.
 ///
-/// - seealso: [SQLite Database Connection Handle](https://sqlite.org/c3ref/sqlite3.html)
+/// - seealso: [Database Connection Handle](https://sqlite.org/c3ref/sqlite3.html)
 public typealias SQLiteDatabaseConnection = OpaquePointer
 
-/// The content pointer is constant and will never change.
-///
-/// - seealso: [Constants Defining Special Destructor Behavior](https://sqlite.org/c3ref/c_static.html)
-public let SQLiteStaticStorage = unsafeBitCast(0, to: sqlite3_destructor_type.self)
-
-/// The content will likely change in the near future and that SQLite should make its own private copy of the content before returning.
-///
-/// - seealso: [Constants Defining Special Destructor Behavior](https://sqlite.org/c3ref/c_static.html)
-public let SQLiteTransientStorage = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
-
-/// An [SQLite](https://sqlite.org) database.
-public final class Database {
-	/// The underlying `sqlite3 *` database.
+/// A connection to an [SQLite](https://sqlite.org) database.
+public final class Connection {
+	/// The underlying `sqlite3 *` connection handle.
 	let databaseConnection: SQLiteDatabaseConnection
 
-	/// The database's custom busy handler.
+	/// The connection's custom busy handler.
 	var busyHandler: UnsafeMutablePointer<BusyHandler>?
 
-	/// Creates a database from an existing `sqlite3 *` database connection handle.
+	/// Creates a connection from an existing `sqlite3 *` database connection handle.
 	///
-	/// - attention: The database takes ownership of `databaseConnection`.  The result of further use of `databaseConnection` is undefined.
+	/// - attention: The connection takes ownership of `databaseConnection`.  The result of further use of `databaseConnection` is undefined.
 	///
 	/// - parameter databaseConnection: An `sqlite3 *` database connection handle.
 	public init(databaseConnection: SQLiteDatabaseConnection) {
@@ -44,53 +35,64 @@ public final class Database {
 	}
 
 	deinit {
-		_ = sqlite3_close(databaseConnection)
+		let result = sqlite3_close(databaseConnection)
+		if result != SQLITE_OK  {
+			if result == SQLITE_BUSY {
+				var preparedStatement: SQLitePreparedStatement? = sqlite3_next_stmt(databaseConnection, nil)
+				while preparedStatement != nil {
+					os_log(.info, "Prepared statement not finalized in sqlite3_close: \"%{public}@\"", sqlite3_sql(preparedStatement))
+					preparedStatement = sqlite3_next_stmt(databaseConnection, preparedStatement)
+				}
+			} else {
+				os_log(.info, "Error closing database connection: %{public}@ [%d]", sqlite3_errstr(result), result)
+			}
+		}
 //		_ = sqlite3_close_v2(databaseConnection)
 		busyHandler?.deinitialize(count: 1)
 		busyHandler?.deallocate()
 	}
 
-	/// Creates a temporary database.
+	/// Creates and connects to a temporary database.
 	///
 	/// - parameter inMemory: Whether the temporary database should be created in-memory or on-disk.
 	///
-	/// - throws: An error if the database could not be created.
+	/// - throws: An error if the connection could not be created.
 	public convenience init(inMemory: Bool = true) throws {
 		var db: SQLiteDatabaseConnection?
 		let path = inMemory ? ":memory:" : ""
 		let result = sqlite3_open_v2(path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil)
 		guard result == SQLITE_OK else {
 			_ = sqlite3_close(db)
-			throw SQLiteError(code: result)
+			throw SQLiteError("Error creating temporary database", code: result)
 		}
 		precondition(db != nil)
 		self.init(databaseConnection: db.unsafelyUnwrapped)
 	}
 
-	/// Creates a read-only database from a file.
+	/// Creates a read-only connection to an on-disk database.
 	///
 	/// - parameter url: The location of the SQLite database.
 	///
-	/// - throws: An error if the database could not be created.
+	/// - throws: An error if the connection could not be created.
 	public convenience init(readingFrom url: URL) throws {
 		var db: SQLiteDatabaseConnection?
 		try url.withUnsafeFileSystemRepresentation { path in
 			let result = sqlite3_open_v2(path, &db, SQLITE_OPEN_READONLY, nil)
 			guard result == SQLITE_OK else {
 				_ = sqlite3_close(db)
-				throw SQLiteError(code: result)
+				throw SQLiteError("Error opening database \(url)", code: result)
 			}
 		}
 		precondition(db != nil)
 		self.init(databaseConnection: db.unsafelyUnwrapped)
 	}
 
-	/// Creates a database from a file.
+	/// Creates a connection to an on-disk database.
 	///
 	/// - parameter url: The location of the SQLite database.
 	/// - parameter create: Whether to create the database if it doesn't exist.
 	///
-	/// - throws: An error if the database could not be created.
+	/// - throws: An error if the connection could not be created.
 	public convenience init(url: URL, create: Bool = true) throws {
 		var db: SQLiteDatabaseConnection?
 		try url.withUnsafeFileSystemRepresentation { path in
@@ -101,7 +103,7 @@ public final class Database {
 			let result = sqlite3_open_v2(path, &db, flags, nil)
 			guard result == SQLITE_OK else {
 				_ = sqlite3_close(db)
-				throw SQLiteError(code: result)
+				throw SQLiteError("Error opening database \(url)", code: result)
 			}
 		}
 		precondition(db != nil)
@@ -122,8 +124,8 @@ public final class Database {
 #endif
 }
 
-extension Database {
-	/// `true` if this database is read only, `false` otherwise.
+extension Connection {
+	/// `true` if this database connection is read only, `false` otherwise.
 	public var isReadOnly: Bool {
 		sqlite3_db_readonly(self.databaseConnection, nil) == 1
 	}
@@ -165,7 +167,7 @@ extension Database {
 	/// - returns: The name of the *n*th attached database.
 	public func name(ofDatabase n: Int32) throws -> String {
 		guard let name = sqlite3_db_name(databaseConnection, n) else {
-			throw DatabaseError(message: "The database at index \(n) does not exist")
+			throw DatabaseError("The database at index \(n) does not exist")
 		}
 		return String(cString: name)
 	}
@@ -181,16 +183,20 @@ extension Database {
 	/// - returns: The URL for the file associated with database `name`.
 	public func url(forDatabase name: String = "main") throws -> URL {
 		guard let path = sqlite3_db_filename(databaseConnection, name) else {
-			throw DatabaseError(message: "The database \"\(name)\" does not exist or is a temporary or in-memory database")
+			throw DatabaseError("The database \"\(name)\" does not exist")
 		}
-		return URL(fileURLWithPath: String(cString: path))
+		let pathString = String(cString: path)
+		guard !pathString.isEmpty else {
+			throw DatabaseError("The database \"\(name)\" is a temporary or in-memory database")
+		}
+		return URL(fileURLWithPath: pathString)
 	}
 
-	/// Performs a low-level SQLite database operation.
+	/// Performs a low-level SQLite operation on the database connection handle.
 	///
 	/// - attention: **Use of this function should be avoided whenever possible.**
 	///
-	/// - parameter block: A closure performing the database operation.
+	/// - parameter block: A closure performing the operation.
 	/// - parameter databaseConnection: The raw `sqlite3 *` database connection handle.
 	///
 	/// - throws: Any error thrown in `block`.
@@ -201,7 +207,7 @@ extension Database {
 	}
 }
 
-extension Database {
+extension Connection {
 	/// Executes an SQL statement.
 	///
 	/// - parameter sql: The SQL statement to execute.
@@ -210,7 +216,7 @@ extension Database {
 	public func execute(sql: String) throws {
 		let result = sqlite3_exec(databaseConnection, sql, nil, nil, nil)
 		guard result == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error executing SQL \"\(sql)\"", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -222,7 +228,7 @@ extension Database {
 	///
 	/// - returns: A compiled SQL statement.
 	public func prepare(sql: String) throws -> Statement {
-		try Statement(database: self, sql: sql)
+		try Statement(connection: self, sql: sql)
 	}
 
 	/// Executes one or more SQL statements and optionally applies `block` to each result row.
@@ -251,10 +257,8 @@ extension Database {
 
 				var row = [String: String]()
 				for i in 0 ..< Int(count) {
-					let raw_value = values[i].unsafelyUnwrapped
-					let value = String(bytesNoCopy: raw_value, length: strlen(raw_value), encoding: .utf8, freeWhenDone: false).unsafelyUnwrapped
-					let raw_name = names[i].unsafelyUnwrapped
-					let name = String(bytesNoCopy: raw_name, length: strlen(raw_name), encoding: .utf8, freeWhenDone: false).unsafelyUnwrapped
+					let value = String(cString: values[i].unsafelyUnwrapped)
+					let name = String(cString: names[i].unsafelyUnwrapped)
 					row[name] = value
 				}
 
@@ -267,13 +271,12 @@ extension Database {
 			result = sqlite3_exec(databaseConnection, sql, nil, nil, &errmsg)
 		}
 		guard result == SQLITE_OK else {
-			let details = errmsg != nil ? String(bytesNoCopy: errmsg.unsafelyUnwrapped, length: strlen(errmsg.unsafelyUnwrapped), encoding: .utf8, freeWhenDone: true).unsafelyUnwrapped : nil
-			throw DatabaseError(message: "Error executing SQL", details: details)
+			throw SQLiteError("Error executing SQL \"\(sql)\"", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}	
 }
 
-extension Database {
+extension Connection {
 	/// Returns the result or error code associated with the most recent `sqlite3_` API call.
 	public var errorCode: Int32 {
 		sqlite3_errcode(databaseConnection) & 0xff
@@ -308,7 +311,7 @@ extension Database {
 	}
 }
 
-extension Database {
+extension Connection {
 	/// Returns `true` if the last `sqlite3_` API call succeeded.
 	public var success: Bool {
 		let result = sqlite3_errcode(databaseConnection) & 0xff

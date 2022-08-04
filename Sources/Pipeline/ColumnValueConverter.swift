@@ -17,13 +17,14 @@ import CSQLite
 ///
 /// ```swift
 /// extension ColumnValueConverter where T == UUID {
-/// 	public static let uuid = ColumnValueConverter { row, index in
-/// 		let t = try row.text(forColumn: index)
-/// 		guard let u = UUID(uuidString: t) else {
-/// 			throw DatabaseError(message: "text \"\(t)\" isn't a valid UUID")
-/// 		}
-/// 		return u
-/// 	}
+///     public static let uuid = ColumnValueConverter { row, index in
+///         let t = try row.text(forColumn: index)
+///         guard let u = UUID(uuidString: t) else {
+///             throw DatabaseError("text \"\(t)\" isn't a valid UUID")
+///         }
+///         return u
+///     }
+/// }
 ///  ```
 public struct ColumnValueConverter<T> {
 	/// Converts the value at `index` in `row` to `T` and returns the result.
@@ -35,6 +36,15 @@ public struct ColumnValueConverter<T> {
 	///
 	/// - throws: An error if the type conversion could not be accomplished.
 	public let convert: (_ row: Row, _ index: Int) throws -> T
+
+	/// Creates a new column value converter.
+	///
+	/// - parameter convert: A closure converting the value at `index` in `row` to `T`.
+	/// - parameter row: A `Row` object containing the desired value.
+	/// - parameter index: The index of the desired column.
+	public init(convert: @escaping (_ row: Row, _ index: Int) throws -> T) {
+		self.convert = convert
+	}
 }
 
 extension Row {
@@ -50,9 +60,9 @@ extension Row {
 	/// - throws: An error if `index` is out of bounds, the column contains a null value, or type conversion could not be accomplished.
 	///
 	/// - returns: The column's value as `type`.
-	public func value<T>(at index: Int, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> T {
-		guard try self.typeOfColumn(index) != .null else {
-			throw DatabaseError(message: "SQL NULL encountered for column \(index)")
+	public func get<T>(as type: T.Type = T.self, _ converter: ColumnValueConverter<T>, at index: Int) throws -> T {
+		guard try typeOfColumn(index) != .null else {
+			throw DatabaseError("SQL NULL encountered for column \(index)")
 		}
 		return try converter.convert(self, index)
 	}
@@ -69,8 +79,8 @@ extension Row {
 	/// - throws: An error if `index` is out of bounds or type conversion could not be accomplished.
 	///
 	/// - returns: The column's value as `type` or `nil` if null.
-	public func valueOrNil<T>(at index: Int, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> T? {
-		if try self.typeOfColumn(index) == .null {
+	public func optional<T>(as type: T.Type = T.self, _ converter: ColumnValueConverter<T>, at index: Int) throws -> T? {
+		if try typeOfColumn(index) == .null {
 			return nil
 		}
 		return try converter.convert(self, index)
@@ -89,8 +99,8 @@ extension Row {
 	/// - throws: An error if the column doesn't exist, the column contains a null value, or type conversion could not be accomplished.
 	///
 	/// - returns: The column's value as `type`.
-	public func value<T>(named name: String, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> T {
-		try value(at: statement.indexOfColumn(name), as: type, converter)
+	public func get<T>(as type: T.Type = T.self, _ converter: ColumnValueConverter<T>, named name: String) throws -> T {
+		try get(as: type, converter, at: statement.indexOfColumn(name))
 	}
 
 	/// Returns the value of the column with name `name` converted to `type`.
@@ -104,8 +114,8 @@ extension Row {
 	/// - throws: An error if the column doesn't exist or type conversion could not be accomplished.
 	///
 	/// - returns: The column's value as `type` or `nil` if null.
-	public func valueOrNil<T>(named name: String, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> T? {
-		try valueOrNil(at: statement.indexOfColumn(name), as: type, converter)
+	public func optional<T>(as type: T.Type = T.self, _ converter: ColumnValueConverter<T>, named name: String) throws -> T? {
+		try optional(as: type, converter, at: statement.indexOfColumn(name))
 	}
 }
 
@@ -124,7 +134,7 @@ extension Statement {
 	public func column<T>(_ index: Int, as type: T.Type = T.self, _ converter: ColumnValueConverter<T>) throws -> [T] {
 		var values = [T]()
 		try results { row in
-			values.append(try row.value(at: index, as: type, converter))
+			values.append(try row.get(as: type, converter, at: index))
 		}
 		return values
 	}
@@ -298,7 +308,7 @@ extension ColumnValueConverter where T == UUID {
 	public static let uuidWithString = ColumnValueConverter { row, index in
 		let t = try row.text(at: index)
 		guard let u = UUID(uuidString: t) else {
-			throw DatabaseError(message: "text \"\(t)\" isn't a valid UUID")
+			throw DatabaseError("text \"\(t)\" isn't a valid UUID")
 		}
 		return u
 	}
@@ -308,7 +318,7 @@ extension ColumnValueConverter where T == UUID {
 	public static let uuidWithBytes = ColumnValueConverter { row, index in
 		let b = try row.blob(at: index)
 		guard b.count == 16 else {
-			throw DatabaseError(message: "BLOB '\(b)' isn't a valid UUID")
+			throw DatabaseError("BLOB '\(b)' isn't a valid UUID")
 		}
 		let bytes = b.withUnsafeBytes {
 			$0.load(as: uuid_t.self)
@@ -323,7 +333,7 @@ extension ColumnValueConverter where T == URL {
 	public static let urlWithString = ColumnValueConverter { row, index in
 		let t = try row.text(at: index)
 		guard let u = URL(string: t) else {
-			throw DatabaseError(message: "text \"\(t)\" isn't a valid URL")
+			throw DatabaseError("text \"\(t)\" isn't a valid URL")
 		}
 		return u
 	}
@@ -348,7 +358,7 @@ extension ColumnValueConverter where T == Date {
 		ColumnValueConverter { row, index in
 			let t = try row.text(at: index)
 			guard let date = formatter.date(from: t) else {
-				throw DatabaseError(message: "text \"\(t)\" isn't a valid ISO 8601 date representation")
+				throw DatabaseError("text \"\(t)\" isn't a valid ISO 8601 date representation")
 			}
 			return date
 		}
@@ -376,7 +386,7 @@ extension ColumnValueConverter where T == NSNumber {
 		case .real:
 			return NSNumber(value: try $0.real(at: $1))
 		default:
-			throw DatabaseError(message: "\(type) is not a number")
+			throw DatabaseError("\(type) is not a number")
 		}
 	}
 }
@@ -387,7 +397,7 @@ extension ColumnValueConverter where T: NSObject, T: NSCoding {
 		ColumnValueConverter { row, index in
 			let b = try row.blob(at: index)
 			guard let result = try NSKeyedUnarchiver.unarchivedObject(ofClass: type, from: b) else {
-				throw DatabaseError(message: "\(b) is not a valid instance of \(type)")
+				throw DatabaseError("\(b) is not a valid instance of \(type)")
 			}
 			return result
 		}

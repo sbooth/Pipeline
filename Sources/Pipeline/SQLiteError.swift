@@ -7,8 +7,11 @@
 import Foundation
 import CSQLite
 
-/// An `Error` supplying an SQLite error code and description.
+/// An error supplying a message, an SQLite error code, and description.
 public struct SQLiteError: Error {
+	/// A brief message describing the circumstances leading to the error.
+	public let message: String
+
 	/// A result code specifying the error.
 	///
 	/// - seealso: [Result and Error Codes](https://www.sqlite.org/rescode.html)
@@ -17,16 +20,18 @@ public struct SQLiteError: Error {
 	/// A more detailed description of the error's cause.
 	public let details: String?
 
-	/// Creates an error with the given SQLite error code and details.
+	/// Creates an error with the given message, SQLite error code, and details.
 	///
 	/// - precondition: `code` is not equal to `SQLITE_OK`, `SQLITE_ROW`, or `SQLITE_DONE`.
 	///
+	/// - parameter message: A brief message describing the circumstances leading to the error.
 	/// - parameter code: An SQLite error code.
 	/// - parameter details: A description of the error's cause.
-	public init(code: Int32, details: String?) {
+	public init(message: String, code: Int32, details: String?) {
 		precondition(code & 0xff != SQLITE_OK)
 		precondition(code != SQLITE_ROW)
 		precondition(code != SQLITE_DONE)
+		self.message = message
 		self.code = code
 		self.details = details
 	}
@@ -37,6 +42,7 @@ extension SQLiteError {
 	public var primaryCode: Int32 {
 		code & 0xff
 	}
+
 	/// The extended error code.
 	public var extendedCode: Int32 {
 		code >> 8
@@ -44,42 +50,55 @@ extension SQLiteError {
 }
 
 extension SQLiteError {
-	/// Creates an error with the given code.
+	/// Creates an error with the given message and code.
 	///
 	/// The description is obtained using `sqlite3_errstr(code)`.
 	///
-	/// - parameter code: An SQLite error code.
-	public init(code: Int32) {
-		self.init(code: code, details: String(cString: sqlite3_errstr(code)))
+	/// - parameter message: A brief message describing the circumstances leading to the error.
+	/// - parameter code: An SQLite error code
+	public init(_ message: String, code: Int32 = SQLITE_ERROR) {
+		self.init(message: message, code: code, details: String(cString: sqlite3_errstr(code)))
 	}
 
-	/// Creates an error with result code and description obtained from `db`.
+	/// Creates an error with the given message, with result code and description obtained from `preparedStatement`.
 	///
-	/// The error code is obtained using `sqlite3_extended_errcode(db)`.
-	/// The description is obtained using `sqlite3_errmsg(db)`.
+	/// The error code is obtained using `sqlite3_extended_errcode(sqlite3_db_handle(preparedStatement))`.
+	/// The description is obtained using `sqlite3_errmsg(sqlite3_db_handle(preparedStatement))`.
 	///
-	/// - parameter db: An `sqlite3 *` database connection handle.
-	public init(fromDatabaseConnection db: SQLiteDatabaseConnection) {
-		self.init(code: sqlite3_extended_errcode(db), details: String(cString: sqlite3_errmsg(db)))
+	/// - parameter message: A brief message describing the circumstances leading to the error.
+	/// - parameter preparedStatement: An `sqlite3_stmt *` object.
+	init(_ message: String, takingErrorCodeFromPreparedStatement preparedStatement: SQLitePreparedStatement) {
+		self.init(message, takingErrorCodeFromDatabaseConnection: sqlite3_db_handle(preparedStatement))
 	}
 
-	/// Creates an error with result code and description obtained from `stmt`.
+	/// Creates an error with the given message, with result code and description obtained from `databaseConnection`.
 	///
-	/// The error code is obtained using `sqlite3_extended_errcode(sqlite3_db_handle(stmt))`.
-	/// The description is obtained using `sqlite3_errmsg(sqlite3_db_handle(stmt))`.
+	/// The error code is obtained using `sqlite3_extended_errcode(databaseConnection)`.
+	/// The description is obtained using `sqlite3_errmsg(databaseConnection)`.
 	///
-	/// - parameter stmt: An `sqlite3_stmt *` object.
-	public init(fromPreparedStatement stmt: SQLitePreparedStatement) {
-		self.init(fromDatabaseConnection: sqlite3_db_handle(stmt))
+	/// - parameter message: A brief message describing the circumstances leading to the error.
+	/// - parameter databaseConnection: An `sqlite3 *` database connection handle.
+	init(_ message: String, takingErrorCodeFromDatabaseConnection databaseConnection: SQLiteDatabaseConnection) {
+		self.init(message: message, code: sqlite3_extended_errcode(databaseConnection), details: String(cString: sqlite3_errmsg(databaseConnection)))
 	}
 }
 
 extension SQLiteError: CustomStringConvertible {
 	public var description: String {
 		if let details = details {
-			return "\(code): \(details)"
+			return "\(message) [\(code)]: \(details)"
 		} else {
-			return "\(code)"
+			return "\(message) [\(code)]"
 		}
+	}
+}
+
+extension SQLiteError: LocalizedError {
+	public var errorDescription: String? {
+		return message
+	}
+
+	public var failureReason: String? {
+		return details
 	}
 }

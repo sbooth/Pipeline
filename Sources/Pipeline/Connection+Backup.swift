@@ -7,7 +7,7 @@
 import Foundation
 import CSQLite
 
-extension Database {
+extension Connection {
 	/// A callback for reporting the progress of a database backup.
 	///
 	/// - parameter remaining: The number of database pages left to copy.
@@ -24,7 +24,7 @@ extension Database {
 	/// - seealso: [Online Backup API](https://www.sqlite.org/c3ref/backup_finish.html)
 	/// - seealso: [Using the SQLite Online Backup API](https://www.sqlite.org/backup.html)
 	public func backup(to url: URL, progress callback: BackupProgress? = nil) throws {
-		let destination = try Database(url: url)
+		let destination = try Connection(url: url)
 
 		if let backup = sqlite3_backup_init(destination.databaseConnection, "main", self.databaseConnection, "main") {
 			var result: Int32
@@ -40,7 +40,7 @@ extension Database {
 		}
 
 		guard sqlite3_errcode(destination.databaseConnection) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: destination.databaseConnection)
+			throw SQLiteError("Unable to backup database", takingErrorCodeFromDatabaseConnection: destination.databaseConnection)
 		}
 	}
 }

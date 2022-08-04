@@ -7,7 +7,7 @@
 import Foundation
 import CSQLite
 
-extension Database {
+extension Connection {
 	/// Enables or disables the enforcement of foreign key constraints for the database connection.
 	/// - seealso: [SQLite Foreign Key Support](https://sqlite.org/foreignkeys.html)
 	public var enforcesForeignKeyConstraints: Bool {

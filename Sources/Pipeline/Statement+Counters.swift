@@ -39,13 +39,20 @@ extension Statement {
 	public func count(of counter: Counter, reset: Bool = false) -> Int {
 		let op: Int32
 		switch counter {
-		case .fullscanStep: 	op = SQLITE_STMTSTATUS_FULLSCAN_STEP
-		case .sort:				op = SQLITE_STMTSTATUS_SORT
-		case .autoindex:		op = SQLITE_STMTSTATUS_AUTOINDEX
-		case .vmStep:			op = SQLITE_STMTSTATUS_VM_STEP
-		case .reprepare:		op = SQLITE_STMTSTATUS_REPREPARE
-		case .run:				op = SQLITE_STMTSTATUS_RUN
-		case .memused:			op = SQLITE_STMTSTATUS_MEMUSED
+		case .fullscanStep:
+			op = SQLITE_STMTSTATUS_FULLSCAN_STEP
+		case .sort:
+			op = SQLITE_STMTSTATUS_SORT
+		case .autoindex:
+			op = SQLITE_STMTSTATUS_AUTOINDEX
+		case .vmStep:
+			op = SQLITE_STMTSTATUS_VM_STEP
+		case .reprepare:
+			op = SQLITE_STMTSTATUS_REPREPARE
+		case .run:
+			op = SQLITE_STMTSTATUS_RUN
+		case .memused:
+			op = SQLITE_STMTSTATUS_MEMUSED
 		}
 
 		return Int(sqlite3_stmt_status(preparedStatement, op, reset ? 1 : 0))

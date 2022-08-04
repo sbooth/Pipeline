@@ -66,7 +66,7 @@ private struct RowDecoderGuts {
 	var iso8601DateFormatter: ISO8601DateFormatter?
 }
 
-extension RowDecoderGuts {
+private extension RowDecoderGuts {
 	init(payload: Payload, codingPath: [CodingKey], userInfo: [CodingUserInfoKey: Any], options: RowDecoder.Options) {
 		self.payload = payload
 		self.codingPath = codingPath
@@ -103,7 +103,7 @@ extension RowDecoderGuts: Decoder {
 	}
 }
 
-extension RowDecoderGuts {
+private extension RowDecoderGuts {
 	func decode<T>(as type: T.Type) throws -> T where T : Decodable {
 		guard case let .value(value) = payload else {
 			throw DecodingError.typeMismatch(DatabaseValue.self, DecodingError.Context(codingPath: codingPath, debugDescription: "Expected to decode DatabaseValue but found Row."))
@@ -135,7 +135,7 @@ extension RowDecoderGuts {
 		return T(r)
 	}
 
-	private func decodeDate(_ value: DatabaseValue) throws -> Date {
+	func decodeDate(_ value: DatabaseValue) throws -> Date {
 		switch options.dateDecodingStrategy {
 		case .deferredToDate:
 			return try Date(from: self)
@@ -176,7 +176,7 @@ extension RowDecoderGuts {
 		}
 	}
 
-	private func decodeURL(_ value: DatabaseValue) throws -> URL {
+	func decodeURL(_ value: DatabaseValue) throws -> URL {
 		guard case let .text(t) = value else {
 			throw DecodingError.typeMismatch(Date.self, DecodingError.Context(codingPath: codingPath, debugDescription: "Database value type is not text."))
 		}

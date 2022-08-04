@@ -1,3 +1,9 @@
+//
+// Copyright © 2015 - 2022 Stephen F. Booth <me@sbooth.org>
+// Part of https://github.com/sbooth/Pipeline
+// MIT license
+//
+
 import XCTest
 import CSQLite
 #if canImport(Combine)
@@ -37,67 +43,67 @@ final class PipelineTests: XCTestCase {
 		_ = v
 	}
 
-	func testDatabase() {
-		let db = try! Database()
-		XCTAssertNoThrow(try db.execute(sql: "create table t1(v1);"))
+	func testConnection() {
+		let connection = try! Connection()
+		XCTAssertNoThrow(try connection.execute(sql: "create table t1(v1);"))
 
 		let rowCount = 10
 		for _ in 0 ..< rowCount {
-			XCTAssertNoThrow(try db.execute(sql: "insert into t1 default values;"))
+			XCTAssertNoThrow(try connection.execute(sql: "insert into t1 default values;"))
 		}
 
-		let count = try! db.prepare(sql: "select count(*) from t1;").step()!.value(at: 0, .int)
+		let count = try! connection.prepare(sql: "select count(*) from t1;").step()!.get(.int, at: 0)
 		XCTAssertEqual(count, rowCount)
 	}
 
 	func testBatch() {
-		let db = try! Database()
+		let connection = try! Connection()
 
-		try! db.batch(sql: "pragma application_id;")
-		try! db.batch(sql: "pragma application_id; pragma foreign_keys;")
+		try! connection.batch(sql: "pragma application_id;")
+		try! connection.batch(sql: "pragma application_id; pragma foreign_keys;")
 
-		XCTAssertThrowsError(try db.batch(sql: "lulu"))
+		XCTAssertThrowsError(try connection.batch(sql: "lulu"))
 
-		try! db.batch(sql: "pragma application_id;") { row in
+		try! connection.batch(sql: "pragma application_id;") { row in
 			XCTAssertEqual(row.keys.count, 1)
 			XCTAssertEqual(row["application_id"], "0")
 		}
 	}
 
 	func testInsert() {
-		let db = try! Database()
+		let connection = try! Connection()
 
-		try! db.execute(sql: "create table t1(a text);")
+		try! connection.execute(sql: "create table t1(a text);")
 
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: [1])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: ["feisty"])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: 2.5)
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: .data(Data(count: 8)))
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: [1])
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: ["feisty"])
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: 2.5)
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: .data(Data(count: 8)))
 
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(.urlString(URL(fileURLWithPath: "/tmp")), toParameter: 1).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(.uuidString(UUID())).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind([.timeIntervalSinceReferenceDate(Date())]).execute()
+		try! connection.prepare(sql: "insert into t1(a) values (?);").bind(.urlString(URL(fileURLWithPath: "/tmp")), toParameter: 1).execute()
+		try! connection.prepare(sql: "insert into t1(a) values (?);").bind(.uuidString(UUID())).execute()
+		try! connection.prepare(sql: "insert into t1(a) values (?);").bind([.timeIntervalSinceReferenceDate(Date())]).execute()
 
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: [.null])
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: [.null])
 	}
 
 	func testIteration() {
-		let db = try! Database()
+		let connection = try! Connection()
 
-		try! db.execute(sql: "create table t1(a);")
+		try! connection.execute(sql: "create table t1(a);")
 
 		let rowCount = 10
 
 		for i in 0..<rowCount {
-			try! db.prepare(sql: "insert into t1(a) values (?);").bind(.int(i)).execute()
+			try! connection.prepare(sql: "insert into t1(a) values (?);").bind(.int(i)).execute()
 		}
 
-		let s = try! db.prepare(sql: "select * from t1;")
+		let s = try! connection.prepare(sql: "select * from t1;")
 		var count = 0
 
 		for row in s {
 			for _ in row {
-				XCTAssert(try! row.value(at: 0, .int) == count)
+				XCTAssert(try! row.get(.int, at: 0) == count)
 			}
 			count += 1
 		}
@@ -106,16 +112,16 @@ final class PipelineTests: XCTestCase {
 	}
 
 	func testIteration2() {
-		let db = try! Database()
+		let connection = try! Connection()
 
-		try! db.execute(sql: "create table t1(a,b,c,d);")
+		try! connection.execute(sql: "create table t1(a,b,c,d);")
 
-		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(1,2,3,4).execute()
-		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind("a","b","c","d").execute()
-		try! db.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind("a",2,"c",4).execute()
+		try! connection.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind(1,2,3,4).execute()
+		try! connection.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind("a","b","c","d").execute()
+		try! connection.prepare(sql: "insert into t1(a,b,c,d) values (?,?,?,?);").bind("a",2,"c",4).execute()
 
 		do {
-			let s = try! db.prepare(sql: "select * from t1 limit 1 offset 0;")
+			let s = try! connection.prepare(sql: "select * from t1 limit 1 offset 0;")
 			let r = try! s.step()!
 			let v = [DatabaseValue](r)
 
@@ -123,7 +129,7 @@ final class PipelineTests: XCTestCase {
 		}
 
 		do {
-			let s = try! db.prepare(sql: "select * from t1 limit 1 offset 1;")
+			let s = try! connection.prepare(sql: "select * from t1 limit 1 offset 1;")
 			let r = try! s.step()!
 			let v = [DatabaseValue](r)
 
@@ -132,7 +138,7 @@ final class PipelineTests: XCTestCase {
 	}
 
 	func testCodable() {
-		let db = try! Database()
+		let connection = try! Connection()
 
 		struct TestStruct: Codable {
 			let a: Int
@@ -141,13 +147,13 @@ final class PipelineTests: XCTestCase {
 			let d: String
 		}
 
-		try! db.execute(sql: "create table t1(a);")
+		try! connection.execute(sql: "create table t1(a);")
 
 		let a = TestStruct(a: 1, b: 3.14, c: Date(), d: "Lu")
 
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(.json(a), toParameter: 1).execute()
+		try! connection.prepare(sql: "insert into t1(a) values (?);").bind(.json(a), toParameter: 1).execute()
 
-		let b = try! db.prepare(sql: "select * from t1 limit 1;").step()!.value(at: 0, .json(TestStruct.self))
+		let b = try! connection.prepare(sql: "select * from t1 limit 1;").step()!.get(.json(TestStruct.self), at: 0)
 
 		XCTAssertEqual(a.a, b.a)
 		XCTAssertEqual(a.b, b.b)
@@ -156,23 +162,23 @@ final class PipelineTests: XCTestCase {
 	}
 
 	func testCustomCollation() {
-		let db = try! Database()
+		let connection = try! Connection()
 
-		try! db.addCollation("reversed", { (a, b) -> ComparisonResult in
+		try! connection.addCollation("reversed", { (a, b) -> ComparisonResult in
 			return b.compare(a)
 		})
 
-		try! db.execute(sql: "create table t1(a text);")
+		try! connection.execute(sql: "create table t1(a text);")
 
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: "a")
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: ["c"])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: .string("z"))
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: [.string("e")])
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: "a")
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: ["c"])
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: .string("z"))
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: [.string("e")])
 
 		var str = ""
-		let s = try! db.prepare(sql: "select * from t1 order by a collate reversed;")
+		let s = try! connection.prepare(sql: "select * from t1 order by a collate reversed;")
 		try! s.results { row in
-			let c = try row.string(at: 0)
+			let c = try row.get(.string, at: 0)
 			str.append(c)
 		}
 
@@ -180,7 +186,7 @@ final class PipelineTests: XCTestCase {
 	}
 
 	func testCustomFunction() {
-		let db = try! Database()
+		let connection = try! Connection()
 
 		let rot13key: [Character: Character] = [
 			"A": "N", "B": "O", "C": "P", "D": "Q", "E": "R", "F": "S", "G": "T", "H": "U", "I": "V", "J": "W", "K": "X", "L": "Y", "M": "Z",
@@ -192,7 +198,7 @@ final class PipelineTests: XCTestCase {
 			return String(s.map { rot13key[$0] ?? $0 })
 		}
 
-		try! db.addFunction("rot13", arity: 1) { values in
+		try! connection.addFunction("rot13", arity: 1) { values in
 			let value = values.first.unsafelyUnwrapped
 			switch value {
 			case .text(let s):
@@ -202,25 +208,25 @@ final class PipelineTests: XCTestCase {
 			}
 		}
 
-		try! db.execute(sql: "create table t1(a);")
+		try! connection.execute(sql: "create table t1(a);")
 
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: "this")
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: ["is"])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: .string("only"))
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: [.string("a")])
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: "test")
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: "this")
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: ["is"])
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: .string("only"))
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: [.string("a")])
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: "test")
 
-		let s = try! db.prepare(sql: "select rot13(a) from t1;")
-		let results = s.map { try! $0.value(at: 0, .string) }
+		let s = try! connection.prepare(sql: "select rot13(a) from t1;")
+		let results = s.map { try! $0.get(.string, at: 0) }
 
 		XCTAssertEqual(results, ["guvf", "vf", "bayl", "n", "grfg"])
 
-		try! db.removeFunction("rot13", arity: 1)
-		XCTAssertThrowsError(try db.prepare(sql: "select rot13(a) from t1;"))
+		try! connection.removeFunction("rot13", arity: 1)
+		XCTAssertThrowsError(try connection.prepare(sql: "select rot13(a) from t1;"))
 	}
 
 	func testCustomAggregateFunction() {
-		let db = try! Database()
+		let connection = try! Connection()
 
 		class IntegerSumAggregateFunction: SQLAggregateFunction {
 			func step(_ values: [DatabaseValue]) throws {
@@ -229,7 +235,7 @@ final class PipelineTests: XCTestCase {
 				case .integer(let i):
 					sum += i
 				default:
-					throw DatabaseError(message: "Only integer values supported")
+					throw DatabaseError("Only integer values supported")
 				}
 			}
 
@@ -243,26 +249,26 @@ final class PipelineTests: XCTestCase {
 			var sum: Int64 = 0
 		}
 
-		try! db.addAggregateFunction("integer_sum", arity: 1, IntegerSumAggregateFunction())
+		try! connection.addAggregateFunction("integer_sum", arity: 1, IntegerSumAggregateFunction())
 
-		try! db.execute(sql: "create table t1(a);")
+		try! connection.execute(sql: "create table t1(a);")
 
 		for i in  0..<10 {
-			try! db.execute(sql: "insert into t1(a) values (?);", parameters: [.int(i)])
+			try! connection.execute(sql: "insert into t1(a) values (?);", parameters: [.int(i)])
 		}
 
-		let s = try! db.prepare(sql: "select integer_sum(a) from t1;").step()!.int64(at: 0)
+		let s = try! connection.prepare(sql: "select integer_sum(a) from t1;").step()!.get(.int64, at: 0)
 		XCTAssertEqual(s, 45)
 
-		let ss = try! db.prepare(sql: "select integer_sum(a) from t1;").step()!.value(at: 0, .int64)
+		let ss = try! connection.prepare(sql: "select integer_sum(a) from t1;").step()!.get(.int64, at: 0)
 		XCTAssertEqual(ss, 45)
 
-		try! db.removeFunction("integer_sum", arity: 1)
-		XCTAssertThrowsError(try db.prepare(sql: "select integer_sum(a) from t1;"))
+		try! connection.removeFunction("integer_sum", arity: 1)
+		XCTAssertThrowsError(try connection.prepare(sql: "select integer_sum(a) from t1;"))
 	}
 
 	func testCustomAggregateWindowFunction() {
-		let db = try! Database()
+		let connection = try! Connection()
 
 		class IntegerSumAggregateWindowFunction: SQLAggregateWindowFunction {
 			func step(_ values: [DatabaseValue]) throws {
@@ -271,7 +277,7 @@ final class PipelineTests: XCTestCase {
 				case .integer(let i):
 					sum += i
 				default:
-					throw DatabaseError(message: "Only integer values supported")
+					throw DatabaseError("Only integer values supported")
 				}
 			}
 
@@ -281,7 +287,7 @@ final class PipelineTests: XCTestCase {
 				case .integer(let i):
 					sum -= i
 				default:
-					throw DatabaseError(message: "Only integer values supported")
+					throw DatabaseError("Only integer values supported")
 				}
 			}
 
@@ -299,21 +305,21 @@ final class PipelineTests: XCTestCase {
 			var sum: Int64 = 0
 		}
 
-		try! db.addAggregateWindowFunction("integer_sum", arity: 1, IntegerSumAggregateWindowFunction())
+		try! connection.addAggregateWindowFunction("integer_sum", arity: 1, IntegerSumAggregateWindowFunction())
 
-		try! db.execute(sql: "create table t1(a);")
+		try! connection.execute(sql: "create table t1(a);")
 
 		for i in  0..<10 {
-			try! db.execute(sql: "insert into t1(a) values (?);", parameters: .int(i))
+			try! connection.execute(sql: "insert into t1(a) values (?);", parameters: .int(i))
 		}
 
-		let s = try! db.prepare(sql: "select integer_sum(a) OVER (ORDER BY a ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) from t1;")
-		let results = s.map { try! $0.value(at: 0, .int64) }
+		let s = try! connection.prepare(sql: "select integer_sum(a) OVER (ORDER BY a ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) from t1;")
+		let results = s.map { try! $0.get(.int64, at: 0) }
 
 		XCTAssertEqual(results, [1, 3, 6, 9, 12, 15, 18, 21, 24, 17])
 
-		try! db.removeFunction("integer_sum", arity: 1)
-		XCTAssertThrowsError(try db.prepare(sql: "select integer_sum(a) OVER (ORDER BY a ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) from t1;"))	}
+		try! connection.removeFunction("integer_sum", arity: 1)
+		XCTAssertThrowsError(try connection.prepare(sql: "select integer_sum(a) OVER (ORDER BY a ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) from t1;"))	}
 
 	func testCustomTokenizer() {
 
@@ -325,7 +331,7 @@ final class PipelineTests: XCTestCase {
 			required init(arguments: [String]) {
 			}
 
-			func setText(_ text: String, reason: Database.FTS5TokenizationReason) {
+			func setText(_ text: String, reason: FTS5TokenizationReason) {
 				self.text = text as CFString
 				tokenizer = CFStringTokenizerCreate(kCFAllocatorDefault, self.text, CFRangeMake(0, CFStringGetLength(self.text)), kCFStringTokenizerUnitWord, nil)
 			}
@@ -351,56 +357,56 @@ final class PipelineTests: XCTestCase {
 				var bytesConverted = 0
 				let charsConverted = CFStringGetBytes(text, tokenRange, CFStringBuiltInEncodings.UTF8.rawValue, 0, false, buffer, capacity, &bytesConverted)
 				guard charsConverted > 0 else {
-					throw DatabaseError(message: "Insufficient buffer size")
+					throw DatabaseError("Insufficient buffer size")
 				}
 				return bytesConverted
 			}
 		}
 
-		let db = try! Database()
+		let connection = try! Connection()
 
-		try! db.addTokenizer("word", type: WordTokenizer.self)
+		try! connection.addTokenizer("word", type: WordTokenizer.self)
 
-		try! db.execute(sql: "create virtual table t1 USING fts5(a, tokenize = 'word');")
+		try! connection.execute(sql: "create virtual table t1 USING fts5(a, tokenize = 'word');")
 
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind("quick brown", toParameter: 1).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind("fox", toParameter: 1).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind("jumps over").execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(["the lazy dog"]).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind("🦊🐶", toParameter: 1).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(.string(""), toParameter: 1).execute()
-		try! db.prepare(sql: "insert into t1(a) values (NULL);").execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind("quick", toParameter: 1).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind(.string("brown fox")).execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind("jumps over the").execute()
-		try! db.prepare(sql: "insert into t1(a) values (?);").bind("lazy dog").execute()
+		try! connection.prepare(sql: "insert into t1(a) values (?);").bind("quick brown", toParameter: 1).execute()
+		try! connection.prepare(sql: "insert into t1(a) values (?);").bind("fox", toParameter: 1).execute()
+		try! connection.prepare(sql: "insert into t1(a) values (?);").bind("jumps over").execute()
+		try! connection.prepare(sql: "insert into t1(a) values (?);").bind(["the lazy dog"]).execute()
+		try! connection.prepare(sql: "insert into t1(a) values (?);").bind("🦊🐶", toParameter: 1).execute()
+		try! connection.prepare(sql: "insert into t1(a) values (?);").bind(.string(""), toParameter: 1).execute()
+		try! connection.prepare(sql: "insert into t1(a) values (NULL);").execute()
+		try! connection.prepare(sql: "insert into t1(a) values (?);").bind("quick", toParameter: 1).execute()
+		try! connection.prepare(sql: "insert into t1(a) values (?);").bind(.string("brown fox")).execute()
+		try! connection.prepare(sql: "insert into t1(a) values (?);").bind("jumps over the").execute()
+		try! connection.prepare(sql: "insert into t1(a) values (?);").bind("lazy dog").execute()
 
-		let s = try! db.prepare(sql: "select count(*) from t1 where t1 match 'o*';")
-		let count = try! s.step()!.value(at: 0, .int)
+		let s = try! connection.prepare(sql: "select count(*) from t1 where t1 match 'o*';")
+		let count = try! s.step()!.get(.int, at: 0)
 		XCTAssertEqual(count, 2)
 
-		let statement = try! db.prepare(sql: "select * from t1 where t1 match 'o*';")
+		let statement = try! connection.prepare(sql: "select * from t1 where t1 match 'o*';")
 		try! statement.results { row in
-			let s = try row.value(at: 0, .string)
+			let s = try row.get(.string, at: 0)
 			XCTAssert(s.starts(with: "jumps over"))
 		}
 	}
 
 	func testDatabaseBindings() {
-		let db = try! Database()
+		let connection = try! Connection()
 
-		try! db.execute(sql: "create table t1(a, b);")
+		try! connection.execute(sql: "create table t1(a, b);")
 
 		for i in 0..<10 {
-			try! db.prepare(sql: "insert into t1(a, b) values (?, ?);").bind([.int(i), .null]).execute()
+			try! connection.prepare(sql: "insert into t1(a, b) values (?, ?);").bind([.int(i), .null]).execute()
 		}
 
-		let statement = try! db.prepare(sql: "select * from t1 where a = ?")
+		let statement = try! connection.prepare(sql: "select * from t1 where a = ?")
 		try! statement.bind(integer: Int64(5), toParameter: 1)
 
 		try! statement.results { row in
-			let x = try row.int(at: 0)
-			let y = try row.valueOrNil(named: "b", .int)
+			let x = try row.get(.int, at: 0)
+			let y = try row.optional(.int, named: "b")
 
 			XCTAssertEqual(x, 5)
 			XCTAssertEqual(y, nil)
@@ -408,20 +414,20 @@ final class PipelineTests: XCTestCase {
 	}
 
 	func testDatabaseBindings2() {
-		let db = try! Database()
+		let connection = try! Connection()
 
-		try! db.execute(sql: "create table t1(a, b);")
+		try! connection.execute(sql: "create table t1(a, b);")
 
 		let int = 5
 		let optionalInt: Int? = nil
-		try! db.prepare(sql: "insert into t1(a, b) values (?, ?);").bind(.value(.integer(Int64(int))), .int(optionalInt)).execute()
+		try! connection.prepare(sql: "insert into t1(a, b) values (?, ?);").bind(.value(.integer(Int64(int))), .int(optionalInt)).execute()
 
-		let statement = try! db.prepare(sql: "select * from t1 where a = ?")
+		let statement = try! connection.prepare(sql: "select * from t1 where a = ?")
 		try! statement.bind(integer: Int64(5), toParameter: 1)
 
 		try! statement.results { row in
-			let x = try row.value(at: 0, .int)
-			let y = try row.valueOrNil(named: "b", .int)
+			let x = try row.get(.int, at: 0)
+			let y = try row.optional(.int, named: "b")
 
 			XCTAssertEqual(x, 5)
 			XCTAssertEqual(y, nil)
@@ -429,20 +435,20 @@ final class PipelineTests: XCTestCase {
 	}
 
 	func testDatabaseNamedBindings() {
-		let db = try! Database()
+		let connection = try! Connection()
 
-		try! db.execute(sql: "create table t1(a, b);")
+		try! connection.execute(sql: "create table t1(a, b);")
 
 		for i in 0..<10 {
-			try! db.execute(sql: "insert into t1(a, b) values (:b, :a);", parameters: [":a": .null, ":b": .int(i)])
+			try! connection.execute(sql: "insert into t1(a, b) values (:b, :a);", parameters: [":a": .null, ":b": .int(i)])
 		}
 
-		let statement = try! db.prepare(sql: "select * from t1 where a = :a")
+		let statement = try! connection.prepare(sql: "select * from t1 where a = :a")
 		try! statement.bind(integer: Int64(5), toParameter: ":a")
 
 		try! statement.results { row in
-			let x = try row.value(at: 0, .int)
-			let y = try row.valueOrNil(at: 1, .int)
+			let x = try row.get(.int, at: 0)
+			let y = try row.optional(.int, at: 1)
 
 			XCTAssertEqual(x, 5)
 			XCTAssertEqual(y, nil)
@@ -450,40 +456,40 @@ final class PipelineTests: XCTestCase {
 	}
 
 	func testStatementColumns() {
-		let db = try! Database()
+		let connection = try! Connection()
 
-		try! db.execute(sql: "create table t1(a, b, c);")
+		try! connection.execute(sql: "create table t1(a, b, c);")
 
 		for i in 0..<3 {
-			try! db.prepare(sql: "insert into t1(a, b, c) values (?,?,?);").bind([.int(i), .int(i * 3), .int(i * 5)]).execute()
+			try! connection.prepare(sql: "insert into t1(a, b, c) values (?,?,?);").bind([.int(i), .int(i * 3), .int(i * 5)]).execute()
 		}
 
-		let statement = try! db.prepare(sql: "select * from t1")
+		let statement = try! connection.prepare(sql: "select * from t1")
 		let cols = try! statement.columns([0,2], .int)
 		XCTAssertEqual(cols[0], [0,1,2])
 		XCTAssertEqual(cols[1], [0,5,10])
 	}
 
 	func testUUIDExtension() {
-		let db = try! Database()
-		let statement = try! db.prepare(sql: "select uuid();")
+		let connection = try! Connection()
+		let statement = try! connection.prepare(sql: "select uuid();")
 		let s: String = try! statement.step()!.text(at: 0)
 		let u = UUID(uuidString: s)
 		XCTAssertEqual(u?.uuidString.lowercased(), s.lowercased())
 	}
 
 	func testCArrayExtension() {
-		let db = try! Database()
+		let connection = try! Connection()
 
-		try! db.execute(sql: "create table animals(kind);")
+		try! connection.execute(sql: "create table animals(kind);")
 
-		try! db.prepare(sql: "insert into animals(kind) values ('dog');").execute()
-		try! db.prepare(sql: "insert into animals(kind) values ('cat');").execute()
-		try! db.prepare(sql: "insert into animals(kind) values ('bird');").execute()
-		try! db.prepare(sql: "insert into animals(kind) values ('hedgehog');").execute()
+		try! connection.prepare(sql: "insert into animals(kind) values ('dog');").execute()
+		try! connection.prepare(sql: "insert into animals(kind) values ('cat');").execute()
+		try! connection.prepare(sql: "insert into animals(kind) values ('bird');").execute()
+		try! connection.prepare(sql: "insert into animals(kind) values ('hedgehog');").execute()
 
 		let pets = [ "dog", "dragon", "hedgehog" ]
-		let statement = try! db.prepare(sql: "SELECT * FROM animals WHERE kind IN carray(?1);")
+		let statement = try! connection.prepare(sql: "SELECT * FROM animals WHERE kind IN carray(?1);")
 		try! statement.bind(.carray(pets), toParameter: 1)
 
 		let results: [String] = statement.map({try! $0.text(at: 0)})
@@ -517,14 +523,14 @@ final class PipelineTests: XCTestCase {
 				}
 			}
 
-			required init(database: Database, arguments: [String]) {
+			required init(connection: Connection, arguments: [String]) {
 			}
 
 			var declaration: String {
 				"CREATE TABLE x(value)"
 			}
 
-			var options: Database.VirtualTableModuleOptions {
+			var options: Connection.VirtualTableModuleOptions {
 				[.innocuous]
 			}
 
@@ -537,10 +543,10 @@ final class PipelineTests: XCTestCase {
 			}
 		}
 
-		let db = try! Database()
+		let connection = try! Connection()
 
-		try! db.addModule("natural_numbers", type: NaturalNumbersModule.self)
-		let statement = try! db.prepare(sql: "SELECT value FROM natural_numbers LIMIT 5;")
+		try! connection.addModule("natural_numbers", type: NaturalNumbersModule.self)
+		let statement = try! connection.prepare(sql: "SELECT value FROM natural_numbers LIMIT 5;")
 
 		let results: [Int] = try! statement.column(0, .int)
 		XCTAssertEqual(results, [1,2,3,4,5])
@@ -589,8 +595,7 @@ final class PipelineTests: XCTestCase {
 				func next() {
 					if _isDescending {
 						_value -= _step
-					}
-					else {
+					} else {
 						_value += _step
 					}
 					_rowid += 1
@@ -644,21 +649,20 @@ final class PipelineTests: XCTestCase {
 				var eof: Bool {
 					if _isDescending {
 						return _value < _min
-					}
-					else {
+					} else {
 						return _value > _max
 					}
 				}
 			}
 
-			required init(database: Database, arguments: [String]) {
+			required init(connection: Connection, arguments: [String]) {
 			}
 
 			var declaration: String {
 				"CREATE TABLE x(value,start hidden,stop hidden,step hidden)"
 			}
 
-			var options: Database.VirtualTableModuleOptions {
+			var options: Connection.VirtualTableModuleOptions {
 				return [.innocuous]
 			}
 
@@ -727,8 +731,7 @@ final class PipelineTests: XCTestCase {
 						}
 						indexInfo.orderByConsumed = 1
 					}
-				}
-				else {
+				} else {
 					indexInfo.estimatedRows = 2147483647
 				}
 
@@ -742,90 +745,90 @@ final class PipelineTests: XCTestCase {
 			}
 		}
 
-		let db = try! Database()
+		let connection = try! Connection()
 
-		try! db.addModule("generate_series", type: SeriesModule.self)
+		try! connection.addModule("generate_series", type: SeriesModule.self)
 
 		// Eponymous tables should not be available via `CREATE VIRTUAL TABLE`
-		XCTAssertThrowsError(try db.execute(sql: "CREATE VIRTUAL TABLE series USING generate_series;"))
+		XCTAssertThrowsError(try connection.execute(sql: "CREATE VIRTUAL TABLE series USING generate_series;"))
 
-		var statement = try! db.prepare(sql: "SELECT value FROM generate_series LIMIT 5;")
+		var statement = try! connection.prepare(sql: "SELECT value FROM generate_series LIMIT 5;")
 		var results: [Int] = try! statement.column(0, .int)
 		XCTAssertEqual(results, [0,1,2,3,4])
 
-		statement = try! db.prepare(sql: "SELECT value FROM generate_series(10) LIMIT 5;")
+		statement = try! connection.prepare(sql: "SELECT value FROM generate_series(10) LIMIT 5;")
 		results = try! statement.column(0, .int)
 		XCTAssertEqual(results, [10,11,12,13,14])
 
-		statement = try! db.prepare(sql: "SELECT value FROM generate_series(10,20,1) ORDER BY value DESC LIMIT 5;")
+		statement = try! connection.prepare(sql: "SELECT value FROM generate_series(10,20,1) ORDER BY value DESC LIMIT 5;")
 		results = try! statement.column(0, .int)
 		XCTAssertEqual(results, [20,19,18,17,16])
 
-		statement = try! db.prepare(sql: "SELECT value FROM generate_series(11,22,2) LIMIT 5;")
+		statement = try! connection.prepare(sql: "SELECT value FROM generate_series(11,22,2) LIMIT 5;")
 		results = try! statement.column(0, .int)
 		XCTAssertEqual(results, [11,13,15,17,19])
 	}
 
 	func testVirtualTable3() {
-		let db = try! Database()
+		let connection = try! Connection()
 
-		try! db.addModule("shuffled_sequence", type: ShuffledSequenceModule.self)
+		try! connection.addModule("shuffled_sequence", type: ShuffledSequenceModule.self)
 
 		// Non-eponymous tables should not be available without `CREATE VIRTUAL TABLE`
-		XCTAssertThrowsError(try db.execute(sql: "SELECT value FROM shuffled_sequence LIMIT 5;"))
+		XCTAssertThrowsError(try connection.execute(sql: "SELECT value FROM shuffled_sequence LIMIT 5;"))
 
-		try! db.execute(sql: "CREATE VIRTUAL TABLE temp.shuffled USING shuffled_sequence(count=5);")
-		var statement = try! db.prepare(sql: "SELECT value FROM shuffled;")
+		try! connection.execute(sql: "CREATE VIRTUAL TABLE temp.shuffled USING shuffled_sequence(count=5);")
+		var statement = try! connection.prepare(sql: "SELECT value FROM shuffled;")
 
-		var results: [Int] = statement.map({try! $0.value(at: 0, .int)})
+		var results: [Int] = statement.map({try! $0.get(.int, at: 0)})
 		// Probability of the shuffled sequence being the same as the original is 1/5! = 1/120 = 8% (?) so this isn't a good check
 		//		XCTAssertNotEqual(results, [1,2,3,4,5])
 		XCTAssertEqual(results.sorted(), [1,2,3,4,5])
 
-		try! db.execute(sql: "CREATE VIRTUAL TABLE temp.shuffled2 USING shuffled_sequence(start=10,count=5);")
-		statement = try! db.prepare(sql: "SELECT value FROM shuffled2;")
+		try! connection.execute(sql: "CREATE VIRTUAL TABLE temp.shuffled2 USING shuffled_sequence(start=10,count=5);")
+		statement = try! connection.prepare(sql: "SELECT value FROM shuffled2;")
 
-		results = statement.map({try! $0.value(at: 0, .int)})
+		results = statement.map({try! $0.get(.int, at: 0)})
 //		XCTAssertNotEqual(results, [10,11,12,13,14])
 		XCTAssertEqual(results.sorted(), [10,11,12,13,14])
 	}
 
 	func testVirtualTable4() {
 		let tempURL = temporaryFileURL()
-		let db1 = try! Database(url: tempURL)
+		let connection1 = try! Connection(url: tempURL)
 
-		try! db1.addModule("shuffled_sequence", type: ShuffledSequenceModule.self)
+		try! connection1.addModule("shuffled_sequence", type: ShuffledSequenceModule.self)
 
-		try! db1.execute(sql: "CREATE VIRTUAL TABLE shuffled USING shuffled_sequence(count=5);")
-		var statement = try! db1.prepare(sql: "SELECT value FROM shuffled;")
+		try! connection1.execute(sql: "CREATE VIRTUAL TABLE shuffled USING shuffled_sequence(count=5);")
+		var statement = try! connection1.prepare(sql: "SELECT value FROM shuffled;")
 
-		var results: [Int] = statement.map({try! $0.value(at: 0, .int)})
+		var results: [Int] = statement.map({try! $0.get(.int, at: 0)})
 		XCTAssertEqual(results.sorted(), [1,2,3,4,5])
 
-		let db2 = try! Database(url: tempURL)
+		let connection2 = try! Connection(url: tempURL)
 
-		try! db2.addModule("shuffled_sequence", type: ShuffledSequenceModule.self)
+		try! connection2.addModule("shuffled_sequence", type: ShuffledSequenceModule.self)
 
-		statement = try! db2.prepare(sql: "SELECT value FROM shuffled;")
+		statement = try! connection2.prepare(sql: "SELECT value FROM shuffled;")
 
-		results = statement.map({try! $0.value(at: 0, .int)})
+		results = statement.map({try! $0.get(.int, at: 0)})
 		XCTAssertEqual(results.sorted(), [1,2,3,4,5])
 	}
 
 #if SQLITE_ENABLE_PREUPDATE_HOOK
 
 	func testPreUpdateHook() {
-		let db = try! Database()
+		let connection = try! Connection()
 
-		try! db.execute(sql: "create table t1(a,b);")
+		try! connection.execute(sql: "create table t1(a,b);")
 
-		try! db.execute(sql: "insert into t1(a,b) values (?,?);", parameters: ["alpha","start"])
-		try! db.execute(sql: "insert into t1(a,b) values (?,?);", parameters: ["beta",123])
-		try! db.execute(sql: "insert into t1(a,b) values (?,?);", parameters: ["gamma","gamma value"])
-		try! db.execute(sql: "insert into t1(a,b) values (?,?);", parameters: ["epsilon","epsilon value"])
-		try! db.execute(sql: "insert into t1(a,b) values (?,?);", parameters: ["phi",123.456])
+		try! connection.execute(sql: "insert into t1(a,b) values (?,?);", parameters: ["alpha","start"])
+		try! connection.execute(sql: "insert into t1(a,b) values (?,?);", parameters: ["beta",123])
+		try! connection.execute(sql: "insert into t1(a,b) values (?,?);", parameters: ["gamma","gamma value"])
+		try! connection.execute(sql: "insert into t1(a,b) values (?,?);", parameters: ["epsilon","epsilon value"])
+		try! connection.execute(sql: "insert into t1(a,b) values (?,?);", parameters: ["phi",123.456])
 
-		db.setPreUpdateHook { change in
+		connection.setPreUpdateHook { change in
 			guard case .insert(_) = change.changeType else {
 				XCTFail("pre-update hook incorrect changeType")
 				return
@@ -839,12 +842,11 @@ final class PipelineTests: XCTestCase {
 
 			do {
 				XCTAssertThrowsError(try change.oldValue(at: 0))
-			}
-			catch {}
+			} catch {}
 		}
-		try! db.execute(sql: "insert into t1(a) values (?);", parameters: ["skeleton"])
+		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: ["skeleton"])
 
-		db.setPreUpdateHook { change in
+		connection.setPreUpdateHook { change in
 			guard case .update(_, _) = change.changeType else {
 				XCTFail("pre-update hook incorrect changeType")
 				return
@@ -862,9 +864,9 @@ final class PipelineTests: XCTestCase {
 				return
 			}
 		}
-		try! db.execute(sql: "update t1 set b=999 where a='beta';")
+		try! connection.execute(sql: "update t1 set b=999 where a='beta';")
 
-		db.setPreUpdateHook { change in
+		connection.setPreUpdateHook { change in
 			guard case .delete(_) = change.changeType else {
 				XCTFail("pre-update hook incorrect changeType")
 				return
@@ -878,10 +880,9 @@ final class PipelineTests: XCTestCase {
 
 			do {
 				XCTAssertThrowsError(try change.newValue(at: 0))
-			}
-			catch {}
+			} catch {}
 		}
-		try! db.execute(sql: "delete from t1 where a='beta';")
+		try! connection.execute(sql: "delete from t1 where a='beta';")
 
 
 	}
@@ -891,69 +892,116 @@ final class PipelineTests: XCTestCase {
 #if SQLITE_ENABLE_PREUPDATE_HOOK && SQLITE_ENABLE_SESSION
 
 	func testSession() {
-		let db1 = try! Database()
-		let db2 = try! Database()
+		let connection1 = try! Connection()
+		let connection2 = try! Connection()
 
 		let sql = "CREATE TABLE birds(id integer primary key, kind);"
 
-		try! db1.execute(sql: sql)
-		try! db2.execute(sql: sql)
+		try! connection1.execute(sql: sql)
+		try! connection2.execute(sql: sql)
 
-		let session = try! Session(database: db1, schema: "main")
+		let session = try! Session(connection: connection1, schema: "main")
 		try! session.attach("birds")
 
-		try! db1.prepare(sql: "insert into birds(kind) values ('robin');").execute()
-		try! db1.prepare(sql: "insert into birds(kind) values ('cardinal');").execute()
-		try! db1.prepare(sql: "insert into birds(kind) values ('finch');").execute()
-		try! db1.prepare(sql: "insert into birds(kind) values ('sparrow');").execute()
-		try! db1.prepare(sql: "insert into birds(kind) values ('utahraptor');").execute()
+		try! connection1.prepare(sql: "insert into birds(kind) values ('robin');").execute()
+		try! connection1.prepare(sql: "insert into birds(kind) values ('cardinal');").execute()
+		try! connection1.prepare(sql: "insert into birds(kind) values ('finch');").execute()
+		try! connection1.prepare(sql: "insert into birds(kind) values ('sparrow');").execute()
+		try! connection1.prepare(sql: "insert into birds(kind) values ('utahraptor');").execute()
 
 		XCTAssertFalse(session.isEmpty)
 
 		let changes = try! session.changeset()
 
-		try! db2.apply(changes) { conflict in
+		try! connection2.apply(changes) { conflict in
 				.abort
 		}
 
-		let birds: [String] = try! db2.prepare(sql: "select kind from birds;").column(0, .string)
+		let birds: [String] = try! connection2.prepare(sql: "select kind from birds;").column(0, .string)
 		XCTAssert(birds == ["robin","cardinal","finch","sparrow","utahraptor"])
 
 		let inverse = try! changes.inverted()
 
-		try! db2.apply(inverse) { conflict in
+		try! connection2.apply(inverse) { conflict in
 				.abort
 		}
 
-		let count: Int = try! db2.prepare(sql: "select count(*) from birds;").step()!.value(at: 0, .int)
+		let count: Int = try! connection2.prepare(sql: "select count(*) from birds;").step()!.get(.int, at: 0)
 		XCTAssert(count == 0)
 	}
 
 #endif
 
+	func testRowConverter() {
+		let connection = try! Connection()
+		XCTAssertNoThrow(try connection.execute(sql: "create table person(first_name text, last_name text);"))
+
+		XCTAssertNoThrow(try connection.execute(sql: "insert into person (first_name, last_name) values ('Isaac', 'Newton');"))
+
+		struct Person {
+			let firstName: String
+			let lastName: String
+		}
+
+		let personConverter = RowConverter<Person> { row in
+			let firstName = try row.text(at: 0)
+			let lastName = try row.text(at: 1)
+			return Person(firstName: firstName, lastName: lastName)
+		}
+
+		let person = try! connection.first(personConverter, from: "person")
+		XCTAssert(person?.firstName == "Isaac")
+		XCTAssert(person?.lastName == "Newton")
+	}
+
+	func testTableMapper() {
+		let connection = try! Connection()
+		XCTAssertNoThrow(try connection.execute(sql: "create table person(first_name text, last_name text);"))
+
+		XCTAssertNoThrow(try connection.execute(sql: "insert into person (first_name, last_name) values ('Isaac', 'Newton');"))
+
+		struct Person {
+			let firstName: String
+			let lastName: String
+		}
+
+		let personConverter = RowConverter<Person> { row in
+			let firstName = try row.text(at: 0)
+			let lastName = try row.text(at: 1)
+			return Person(firstName: firstName, lastName: lastName)
+		}
+
+		let personMapper = TableMapper(table: "person", converter: personConverter)
+
+		let person = try! connection.first(personMapper)
+		XCTAssert(person?.firstName == "Isaac")
+		XCTAssert(person?.lastName == "Newton")
+	}
+
 #if canImport(Combine)
 
 	func testRowPublisher() {
-		let db = try! Database()
-		XCTAssertNoThrow(try db.execute(sql: "create table t1(v1 text default (uuid()));"))
+		let connection = try! Connection()
+		XCTAssertNoThrow(try connection.execute(sql: "create table t1(v1 text default (uuid()));"))
 		let rowCount = 10
 		for _ in 0 ..< rowCount {
-			XCTAssertNoThrow(try db.execute(sql: "insert into t1 default values;"))
+			XCTAssertNoThrow(try connection.execute(sql: "insert into t1 default values;"))
 		}
 
-		let statement = try! db.prepare(sql: "select v1 from t1;")
+		let statement = try! connection.prepare(sql: "select v1 from t1;")
 		let uuids = try! statement.column(0, .uuidWithString)
 
-		struct UUIDHolder: RowMapping {
+		struct UUIDHolder {
 			let u: UUID
-			init(row: Row) throws {
-				u = UUID(uuidString: try row.text(at: 0))!
-			}
+		}
+
+		let uuidConverter = RowConverter {
+			UUIDHolder(u: try $0.get(.uuidWithString, at: 0))
 		}
 
 		let expectation = self.expectation(description: "uuids")
 
-		let publisher = db.rowPublisher(sql: "select v1 from t1;")
+		let publisher = connection.rowPublisher(sql: "select v1 from t1;")
 
 		var column: [UUIDHolder] = []
 		var error: Error?
@@ -961,7 +1009,7 @@ final class PipelineTests: XCTestCase {
 		var cancellables = Set<AnyCancellable>()
 
 		publisher
-			.mapRows(type: UUIDHolder.self)
+			.mapRows(uuidConverter)
 			.collect()
 			.sink { completion in
 				switch completion {
@@ -1008,8 +1056,7 @@ final class PipelineTests: XCTestCase {
 					// Verify that the file no longer exists after the deletion.
 					XCTAssertFalse(fileManager.fileExists(atPath: fileURL.path))
 				}
-			}
-			catch {
+			} catch {
 				// Treat any errors during file deletion as a test failure.
 				XCTFail("Error while deleting temporary file: \(error)")
 			}
@@ -1062,37 +1109,36 @@ final class ShuffledSequenceModule: VirtualTableModule {
 
 	let values: [Int]
 
-	required init(database: Database, arguments: [String], create: Bool) throws {
+	required init(connection: Connection, arguments: [String], create: Bool) throws {
 		var count = 0
 		var start = 1
 
 		for argument in arguments.suffix(from: 3) {
 			let scanner = Scanner(string: argument)
 			scanner.charactersToBeSkipped = .whitespaces
-			var token: NSString? = nil
-			guard scanner.scanUpTo("=", into: &token) else {
+			guard let token = scanner.scanUpToString("=") else {
 				continue
 			}
 			if token == "count" {
-				guard scanner.scanString("=", into: nil) else {
-					throw SQLiteError(code: SQLITE_ERROR, details: "Missing value for count")
+				guard scanner.scanString("=") != nil else {
+					throw SQLiteError("Missing value for count")
 				}
 				guard scanner.scanInt(&count), count > 0 else {
-					throw SQLiteError(code: SQLITE_ERROR, details: "Invalid value for count")
+					throw SQLiteError("Invalid value for count")
 				}
 			}
 			else if token == "start" {
-				guard scanner.scanString("=", into: nil) else {
-					throw SQLiteError(code: SQLITE_ERROR, details: "Missing value for start")
+				guard scanner.scanString("=") != nil else {
+					throw SQLiteError("Missing value for start")
 				}
 				guard scanner.scanInt(&start) else {
-					throw SQLiteError(code: SQLITE_ERROR, details: "Invalid value for start")
+					throw SQLiteError("Invalid value for start")
 				}
 			}
 		}
 
 		guard count > 0 else {
-			throw SQLiteError(code: SQLITE_ERROR, details: "Invalid value for count")
+			throw SQLiteError("Invalid value for count")
 		}
 
 		values = (start ..< start + count).shuffled()
@@ -1102,7 +1148,7 @@ final class ShuffledSequenceModule: VirtualTableModule {
 		"CREATE TABLE x(value)"
 	}
 
-	var options: Database.VirtualTableModuleOptions {
+	var options: Connection.VirtualTableModuleOptions {
 		[.innocuous]
 	}
 

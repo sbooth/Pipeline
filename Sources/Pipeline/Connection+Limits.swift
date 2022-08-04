@@ -7,8 +7,8 @@
 import Foundation
 import CSQLite
 
-extension Database {
-	/// Available database limit parameters.
+extension Connection {
+	/// Available per-connection database limit parameters.
 	///
 	/// - seealso: [Run-Time Limit Categories](https://www.sqlite.org/c3ref/c_limit_attached.html)
 	public enum LimitParameter {
@@ -52,18 +52,30 @@ extension Database {
 	public func limit(ofParameter parameter: LimitParameter, value: Int = -1) -> Int {
 		let op: Int32
 		switch parameter {
-		case .length: 				op = SQLITE_LIMIT_LENGTH
-		case .sqlLength:			op = SQLITE_LIMIT_SQL_LENGTH
-		case .column:				op = SQLITE_LIMIT_COLUMN
-		case .exprDepth:			op = SQLITE_LIMIT_EXPR_DEPTH
-		case .compoundSelect:		op = SQLITE_LIMIT_COMPOUND_SELECT
-		case .vdbeOp:				op = SQLITE_LIMIT_VDBE_OP
-		case .functionArg:			op = SQLITE_LIMIT_FUNCTION_ARG
-		case .attached:				op = SQLITE_LIMIT_ATTACHED
-		case .likePatternLength:	op = SQLITE_LIMIT_LIKE_PATTERN_LENGTH
-		case .variableNumber:		op = SQLITE_LIMIT_VARIABLE_NUMBER
-		case .triggerDepth:			op = SQLITE_LIMIT_TRIGGER_DEPTH
-		case .workerThreads:		op = SQLITE_LIMIT_WORKER_THREADS
+		case .length:
+			op = SQLITE_LIMIT_LENGTH
+		case .sqlLength:
+			op = SQLITE_LIMIT_SQL_LENGTH
+		case .column:
+			op = SQLITE_LIMIT_COLUMN
+		case .exprDepth:
+			op = SQLITE_LIMIT_EXPR_DEPTH
+		case .compoundSelect:
+			op = SQLITE_LIMIT_COMPOUND_SELECT
+		case .vdbeOp:
+			op = SQLITE_LIMIT_VDBE_OP
+		case .functionArg:
+			op = SQLITE_LIMIT_FUNCTION_ARG
+		case .attached:
+			op = SQLITE_LIMIT_ATTACHED
+		case .likePatternLength:
+			op = SQLITE_LIMIT_LIKE_PATTERN_LENGTH
+		case .variableNumber:
+			op = SQLITE_LIMIT_VARIABLE_NUMBER
+		case .triggerDepth:
+			op = SQLITE_LIMIT_TRIGGER_DEPTH
+		case .workerThreads:
+			op = SQLITE_LIMIT_WORKER_THREADS
 		}
 
 		return Int(sqlite3_limit(databaseConnection, op, Int32(value)))

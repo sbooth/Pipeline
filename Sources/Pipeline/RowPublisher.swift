@@ -10,7 +10,7 @@ import Foundation
 import CSQLite
 import Combine
 
-extension Database {
+extension Connection {
 	/// Creates and returns a publisher for an SQL statement's result rows.
 	///
 	/// - parameter sql: The SQL statement to compile.
@@ -18,43 +18,43 @@ extension Database {
 	///
 	/// - returns: A publisher for the statement's result rows.
 	public func rowPublisher(sql: String, bindings: @escaping (_ statement: Statement) throws -> Void = { _ in }) -> AnyPublisher<Row, SQLiteError> {
-		Publishers.RowPublisher(database: self, sql: sql, bindings: bindings)
+		Publishers.RowPublisher(connection: self, sql: sql, bindings: bindings)
 			.eraseToAnyPublisher()
 	}
 }
 
-extension Publishers {
+private extension Publishers {
 	struct RowPublisher: Publisher {
 		typealias Output = Row
 		typealias Failure = SQLiteError
 
-		private let database: Database
+		private let connection: Connection
 		private let sql: String
 		private let bindings: (_ statement: Statement) throws -> Void
 
-		fileprivate init(database: Database, sql: String, bindings: @escaping (_ statement: Statement) throws -> Void) {
-			self.database = database
+		init(connection: Connection, sql: String, bindings: @escaping (_ statement: Statement) throws -> Void) {
+			self.connection = connection
 			self.sql = sql
 			self.bindings = bindings
 		}
 
 		func receive<S>(subscriber: S) where S: Subscriber, Failure == S.Failure, Output == S.Input {
 			do {
-				let statement = try database.prepare(sql: sql)
+				let statement = try connection.prepare(sql: sql)
 				try bindings(statement)
 				let subscription = Subscription(subscriber: subscriber, statement: statement)
 				subscriber.receive(subscription: subscription)
 			} catch let error as SQLiteError {
 				Fail<Output, Failure>(error: error).subscribe(subscriber)
 			} catch {
-				Fail<Output, Failure>(error: SQLiteError(code: SQLITE_ERROR, details: "Unknown error creating a row publisher subscription. Did the binding closure throw something other than SQLiteError?")).subscribe(subscriber)
+				Fail<Output, Failure>(error: SQLiteError("Unknown error creating a row publisher subscription. Did the binding closure throw something other than SQLiteError?")).subscribe(subscriber)
 			}
 		}
 	}
 }
 
-extension Publishers.RowPublisher {
-	private final class Subscription<S>: Combine.Subscription where S: Subscriber, S.Input == Output, S.Failure == Failure {
+private extension Publishers.RowPublisher {
+	final class Subscription<S>: Combine.Subscription where S: Subscriber, S.Input == Output, S.Failure == Failure {
 		/// The subscriber.
 		private let subscriber: AnySubscriber<Output, Failure>
 		/// The current subscriber demand.
@@ -62,7 +62,7 @@ extension Publishers.RowPublisher {
 		/// The statement providing the result rows.
 		private let statement: Statement
 
-		fileprivate init(subscriber: S, statement: Statement) {
+		init(subscriber: S, statement: Statement) {
 			self.subscriber = AnySubscriber(subscriber)
 			self.statement = statement
 		}
@@ -79,7 +79,7 @@ extension Publishers.RowPublisher {
 					subscriber.receive(completion: .finished)
 					self.demand = .none
 				default:
-					subscriber.receive(completion: .failure(SQLiteError(fromPreparedStatement: statement.preparedStatement)))
+					subscriber.receive(completion: .failure(SQLiteError("Error evaluating statement", takingErrorCodeFromPreparedStatement: statement.preparedStatement)))
 					self.demand = .none
 				}
 			}

@@ -7,7 +7,7 @@
 import Foundation
 import CSQLite
 
-extension Database {
+extension Connection {
 	/// A hook called when a database transaction is committed.
 	///
 	/// - returns: `true` if the commit operation is allowed to proceed, `false` otherwise.
@@ -69,7 +69,7 @@ extension Database {
 	}
 }
 
-extension Database {
+extension Connection {
 	/// A hook called when a database transaction is committed in write-ahead log mode.
 	///
 	/// - parameter databaseName: The name of the database that was written to.
@@ -109,7 +109,7 @@ extension Database {
 	}
 }
 
-extension Database {
+extension Connection {
 	/// Possible types of row changes.
 	public enum RowChangeType {
 		/// A row was inserted.
@@ -170,7 +170,7 @@ extension Database {
 	}
 }
 
-extension Database.RowChangeType {
+private extension Connection.RowChangeType {
 	/// Convenience initializer for conversion of `SQLITE_` values.
 	///
 	/// - parameter operation: The second argument to the callback function passed to `sqlite3_update_hook()`.
@@ -192,7 +192,7 @@ extension Database.RowChangeType {
 
 import Combine
 
-extension Database {
+extension Connection {
 	/// Returns a publisher for changes to rowid tables.
 	///
 	/// - note: The publisher uses the database's update hook for event generation. If this
@@ -207,7 +207,7 @@ extension Database {
 
 #endif
 
-extension Database {
+extension Connection {
 	/// A hook that may be called when an attempt is made to access a locked database table.
 	///
 	/// - parameter attempts: The number of times the busy handler has been called for the same event.
@@ -235,7 +235,7 @@ extension Database {
 			busyHandler?.deinitialize(count: 1)
 			busyHandler?.deallocate()
 			busyHandler = nil
-			throw DatabaseError(message: "Error setting busy handler")
+			throw SQLiteError("Error setting busy handler")
 		}
 	}
 
@@ -249,7 +249,7 @@ extension Database {
 			busyHandler = nil
 		}
 		guard sqlite3_busy_handler(databaseConnection, nil, nil) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error removing busy handler", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -267,7 +267,7 @@ extension Database {
 			busyHandler = nil
 		}
 		guard sqlite3_busy_timeout(databaseConnection, Int32(ms)) == SQLITE_OK else {
-			throw DatabaseError(message: "Error setting busy timeout")
+			throw SQLiteError("Error setting busy timeout")
 		}
 	}
 }
@@ -278,7 +278,7 @@ extension Database {
 // To enable it uncomment the appropriate lines in Package.swift
 #if SQLITE_ENABLE_PREUPDATE_HOOK
 
-extension Database {
+extension Connection {
 	/// Information on an insert, update, or delete operation in a pre-update context.
 	///
 	/// - seealso: [The pre-update hook.](https://sqlite.org/c3ref/preupdate_count.html)
@@ -301,7 +301,7 @@ extension Database {
 		/// The type of pre-update change.
 		public let changeType: ChangeType
 		/// The name of the database being changed.
-		public let database: String
+		public let connection: String
 		/// The name of the table being changed.
 		public let table: String
 
@@ -329,11 +329,11 @@ extension Database {
 		/// - throws: An error if `index` is out of bounds or an other error occurs.
 		public func oldValue(at index: Int) throws -> DatabaseValue {
 			if case .insert(_) = changeType {
-				throw DatabaseError(message: "sqlite3_preupdate_old() is undefined for insertions")
+				throw DatabaseError("sqlite3_preupdate_old() is undefined for insertions")
 			}
 			var value: SQLiteValue?
 			guard sqlite3_preupdate_old(databaseConnection, Int32(index), &value) == SQLITE_OK else {
-				throw SQLiteError(fromDatabaseConnection: databaseConnection)
+				throw SQLiteError("Unable to retrieve old value at \(index) in pre-update hook", fromDatabaseConnection: databaseConnection)
 			}
 			return DatabaseValue(sqliteValue: value.unsafelyUnwrapped)
 		}
@@ -352,11 +352,11 @@ extension Database {
 		/// - throws: An error if `index` is out of bounds or an other error occurs.
 		public func newValue(at index: Int) throws -> DatabaseValue {
 			if case .delete(_) = changeType {
-				throw DatabaseError(message: "sqlite3_preupdate_new() is undefined for deletions")
+				throw DatabaseError("sqlite3_preupdate_new() is undefined for deletions")
 			}
 			var value: SQLiteValue?
 			guard sqlite3_preupdate_new(databaseConnection, Int32(index), &value) == SQLITE_OK else {
-				throw SQLiteError(fromDatabaseConnection: databaseConnection)
+				throw SQLiteError("Unable to retrieve new value at \(index) in pre-update hook", fromDatabaseConnection: databaseConnection)
 			}
 			return DatabaseValue(sqliteValue: value.unsafelyUnwrapped)
 		}
@@ -381,11 +381,11 @@ extension Database {
 		if let old = sqlite3_preupdate_hook(databaseConnection, { context, db, op, db_name, table_name, existing_rowid, new_rowid in
 			let function_ptr = context.unsafelyUnwrapped.assumingMemoryBound(to: PreUpdateHook.self)
 
-			let changeType = Database.PreUpdateChange.ChangeType(op: op, key1: existing_rowid, key2: new_rowid)
-			let database = String(utf8String: db_name.unsafelyUnwrapped).unsafelyUnwrapped
+			let changeType = Connection.PreUpdateChange.ChangeType(op: op, key1: existing_rowid, key2: new_rowid)
+			let connection = String(utf8String: db_name.unsafelyUnwrapped).unsafelyUnwrapped
 			let table = String(utf8String: table_name.unsafelyUnwrapped).unsafelyUnwrapped
 
-			let update = PreUpdateChange(databaseConnection: db.unsafelyUnwrapped, changeType: changeType, database: database, table: table)
+			let update = PreUpdateChange(databaseConnection: db.unsafelyUnwrapped, changeType: changeType, connection: connection, table: table)
 			function_ptr.pointee(update)
 		}, context) {
 			let oldContext = old.assumingMemoryBound(to: PreUpdateHook.self)
@@ -404,7 +404,7 @@ extension Database {
 	}
 }
 
-extension Database.PreUpdateChange.ChangeType {
+private extension Connection.PreUpdateChange.ChangeType {
 	/// Convenience initializer for conversion of `SQLITE_` values and associated rowids.
 	///
 	/// - parameter op: The third argument to the callback function passed to `sqlite3_preupdate_hook()`.

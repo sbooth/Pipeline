@@ -7,7 +7,7 @@
 import Foundation
 import CSQLite
 
-extension Database {
+extension Connection {
 	/// Begins a database savepoint transaction.
 	///
 	/// - note: Savepoint transactions may be nested.
@@ -19,7 +19,7 @@ extension Database {
 	/// - seealso: [SAVEPOINT](https://sqlite.org/lang_savepoint.html)
 	public func begin(savepoint name: String) throws {
 		guard sqlite3_exec(databaseConnection, "SAVEPOINT '\(name)';", nil, nil, nil) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error creating savepoint \(name)", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -30,7 +30,7 @@ extension Database {
 	/// - throws: An error if the savepoint transaction couldn't be rolled back or doesn't exist.
 	public func rollback(to name: String) throws {
 		guard sqlite3_exec(databaseConnection, "ROLLBACK TO '\(name)';", nil, nil, nil) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error rolling back to savepoint \(name)", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -43,7 +43,7 @@ extension Database {
 	/// - throws: An error if the savepoint transaction couldn't be committed or doesn't exist.
 	public func release(savepoint name: String) throws {
 		guard sqlite3_exec(databaseConnection, "RELEASE '\(name)';", nil, nil, nil) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error releasing savepoint \(name)", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -57,10 +57,17 @@ extension Database {
 
 	/// A series of database actions grouped into a savepoint transaction.
 	///
-	/// - parameter database: A `Database` used for database access within the block.
+	/// - parameter connection: A `Connection` used for database access within the block.
+	/// - parameter command: `.release` if the savepoint should be released or `.rollback` if the savepoint should be rolled back.
 	///
-	/// - returns: `.release` if the savepoint should be released or `.rollback` if the savepoint should be rolled back.
-	public typealias SavepointBlock = (_ database: Database) throws -> SavepointCompletion
+	/// - returns: An object.
+	public typealias SavepointBlock<T> = (_ connection: Connection, _ command: inout SavepointCompletion) throws -> T
+
+	/// The result of a savepoint transaction.
+	///
+	/// - parameter command: `.release` if the savepoint was released or `.rollback` if the savepoint was rolled back.
+	/// - parameter value: The object returned by the savepoint block.
+	public typealias SavepointResult<T> = (command: SavepointCompletion, value: T)
 
 	/// Performs a savepoint transaction on the database.
 	///
@@ -68,21 +75,24 @@ extension Database {
 	///
 	/// - throws: Any error thrown in `block` or an error if the savepoint could not be started, rolled back, or released.
 	///
+	/// - returns: The result of the savepoint transaction.
+	///
 	/// - note: If `block` throws an error the savepoint will be rolled back and the error will be re-thrown.
 	/// - note: If an error occurs releasing the savepoint a rollback will be attempted and the error will be re-thrown.
-	public func savepoint(block: SavepointBlock) throws {
+	@discardableResult public func savepoint<T>(block: SavepointBlock<T>) throws -> SavepointResult<T> {
 		let savepointUUID = UUID().uuidString
 		try begin(savepoint: savepointUUID)
 		do {
-			let action = try block(self)
-			switch action {
+			var command = SavepointCompletion.release
+			let result = try block(self, &command)
+			switch command {
 			case .release:
 				try release(savepoint: savepointUUID)
 			case .rollback:
 				try rollback(to: savepointUUID)
 			}
-		}
-		catch let error {
+			return (command, result)
+		} catch let error {
 			try? rollback(to: savepointUUID)
 			throw error
 		}

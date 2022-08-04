@@ -7,19 +7,31 @@
 import Foundation
 import CSQLite
 
-extension Database {
-	/// Possible database transaction types.
-	///
-	/// - seealso: [Transactions in SQLite](https://sqlite.org/lang_transaction.html)
-	public enum TransactionType {
-		/// A deferred transaction.
-		case deferred
-		/// An immediate transaction.
-		case immediate
-		/// An exclusive transaction.
-		case exclusive
-	}
+/// Possible database transaction types.
+///
+/// - seealso: [Transactions in SQLite](https://sqlite.org/lang_transaction.html)
+public enum TransactionType {
+	/// A deferred transaction.
+	case deferred
+	/// An immediate transaction.
+	case immediate
+	/// An exclusive transaction.
+	case exclusive
+}
 
+/// Possible transaction states for a database.
+///
+/// - seealso: [Determine the transaction state of a database](https://www.sqlite.org/c3ref/txn_state.html)
+public enum TransactionState {
+	/// No transaction is currently pending.
+	case none
+	/// The database is currently in a read transaction.
+	case read
+	/// The database is currently in a write transaction.
+	case write
+}
+
+extension Connection {
 	/// Begins a database transaction.
 	///
 	/// - note: Database transactions may not be nested.
@@ -32,13 +44,16 @@ extension Database {
 	public func begin(type: TransactionType = .deferred) throws {
 		let sql: String
 		switch type {
-		case .deferred:		sql = "BEGIN DEFERRED TRANSACTION;"
-		case .immediate:	sql = "BEGIN IMMEDIATE TRANSACTION;"
-		case .exclusive:	sql = "BEGIN EXCLUSIVE TRANSACTION;"
+		case .deferred:
+			sql = "BEGIN DEFERRED TRANSACTION;"
+		case .immediate:
+			sql = "BEGIN IMMEDIATE TRANSACTION;"
+		case .exclusive:
+			sql = "BEGIN EXCLUSIVE TRANSACTION;"
 		}
 
 		guard sqlite3_exec(databaseConnection, sql, nil, nil, nil) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error beginning \(type) transaction", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -47,7 +62,7 @@ extension Database {
 	/// - throws: An error if the transaction couldn't be rolled back or there is no active transaction.
 	public func rollback() throws {
 		guard sqlite3_exec(databaseConnection, "ROLLBACK;", nil, nil, nil) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error rolling back", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 
@@ -56,18 +71,8 @@ extension Database {
 	/// - throws: An error if the transaction couldn't be committed or there is no active transaction.
 	public func commit() throws {
 		guard sqlite3_exec(databaseConnection, "COMMIT;", nil, nil, nil) == SQLITE_OK else {
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error committing", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
-	}
-
-	/// Possible transaction states for a database.
-	public enum TransactionState {
-		/// No transaction is currently pending.
-		case none
-		/// The database is currently in a read transaction.
-		case read
-		/// The database is currently in a write transaction.
-		case write
 	}
 
 	/// Determines the transaction state of a database.
@@ -108,10 +113,17 @@ extension Database {
 
 	/// A series of database actions grouped into a transaction.
 	///
-	/// - parameter database: A `Database` used for database access within the block.
+	/// - parameter connection: A `Connection` used for database access within the block.
+	/// - parameter command: `.commit` if the transaction should be committed or `.rollback` if the transaction should be rolled back.
 	///
-	/// - returns: `.commit` if the transaction should be committed or `.rollback` if the transaction should be rolled back.
-	public typealias TransactionBlock = (_ database: Database) throws -> TransactionCompletion
+	/// - returns: An object.
+	public typealias TransactionBlock<T> = (_ connection: Connection, _ command: inout TransactionCompletion) throws -> T
+
+	/// The result of a transaction.
+	///
+	/// - parameter command: `.commit` if the transaction was committed or `.rollback` if the transaction was rolled back.
+	/// - parameter value: The object returned by the transaction block.
+	public typealias TransactionResult<T> = (command: TransactionCompletion, value: T)
 
 	/// Performs a transaction on the database.
 	///
@@ -120,20 +132,23 @@ extension Database {
 	///
 	/// - throws: Any error thrown in `block` or an error if the transaction could not be started, rolled back, or committed.
 	///
+	/// - returns: The result of the transaction.
+	///
 	/// - note: If `block` throws an error the transaction will be rolled back and the error will be re-thrown.
 	/// - note: If an error occurs committing the transaction a rollback will be attempted and the error will be re-thrown.
-	public func transaction(type: Database.TransactionType = .deferred, _ block: TransactionBlock) throws {
+	@discardableResult public func transaction<T>(type: TransactionType = .deferred, _ block: TransactionBlock<T>) throws -> TransactionResult<T> {
 		try begin(type: type)
 		do {
-			let action = try block(self)
-			switch action {
+			var command = TransactionCompletion.commit
+			let result = try block(self, &command)
+			switch command {
 			case .commit:
 				try commit()
 			case .rollback:
 				try rollback()
 			}
-		}
-		catch let error {
+			return (command, result)
+		} catch let error {
 			if !isInAutocommitMode {
 				try rollback()
 			}

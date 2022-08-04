@@ -19,7 +19,7 @@ public protocol FTS5Tokenizer {
 	///
 	/// - parameter text: The text to be tokenized.
 	/// - parameter reason: The reason tokenization is being requested.
-	func setText(_ text: String, reason: Database.FTS5TokenizationReason)
+	func setText(_ text: String, reason: FTS5TokenizationReason)
 
 	/// Advances the tokenizer to the next token.
 	///
@@ -42,32 +42,19 @@ public protocol FTS5Tokenizer {
 	func copyCurrentToken(to buffer: UnsafeMutablePointer<UInt8>, capacity: Int) throws -> Int
 }
 
-extension Database {
-	/// Glue for creating a generic Swift type in a C callback.
-	final class FTS5TokenizerCreator {
-		/// The constructor closure.
-		let construct: (_ arguments : [String]) throws -> FTS5Tokenizer
+/// The reasons FTS5 will request tokenization.
+public enum FTS5TokenizationReason {
+	/// A document is being inserted into or removed from the FTS table.
+	case document
+	/// A `MATCH` query is being executed against the FTS index.
+	case query
+	/// Same as `query`, except that the bareword or quoted string is followed by a `*` character.
+	case prefix
+	/// The tokenizer is being invoked to satisfy an `fts5_api.xTokenize()` request made by an auxiliary function.
+	case aux
+}
 
-		/// Creates a new FTS5TokenizerCreator.
-		///
-		/// - parameter construct: A closure that creates the tokenizer.
-		init(_ construct: @escaping (_ arguments: [String]) -> FTS5Tokenizer) {
-			self.construct = construct
-		}
-	}
-
-	/// The reasons FTS5 will request tokenization.
-	public enum FTS5TokenizationReason {
-		/// A document is being inserted into or removed from the FTS table.
-		case document
-		/// A `MATCH` query is being executed against the FTS index.
-		case query
-		/// Same as `query`, except that the bareword or quoted string is followed by a `*` character.
-		case prefix
-		/// The tokenizer is being invoked to satisfy an `fts5_api.xTokenize()` request made by an auxiliary function.
-		case aux
-	}
-
+extension Connection {
 	/// Adds a custom FTS5 tokenizer.
 	///
 	/// For example, a word tokenizer using `CFStringTokenizer` could be implemented as:
@@ -107,7 +94,7 @@ extension Database {
 	/// 		var bytesConverted = 0
 	/// 		let charsConverted = CFStringGetBytes(text, tokenRange, CFStringBuiltInEncodings.UTF8.rawValue, 0, false, buffer, capacity, &bytesConverted)
 	/// 		guard charsConverted > 0 else {
-	/// 			throw DatabaseError(message: "Insufficient buffer size")
+	/// 			throw DatabaseError("Insufficient buffer size")
 	/// 		}
 	/// 		return bytesConverted
 	/// 	}
@@ -180,9 +167,7 @@ extension Database {
 					guard result == SQLITE_OK else {
 						return result
 					}
-				}
-
-				catch {
+				} catch {
 					// The token was too large to fit in buf
 					guard let token = tokenizer.currentToken() else {
 						continue
@@ -210,12 +195,27 @@ extension Database {
 		}) == SQLITE_OK else {
 			// xDestroy is not called if fts5_api.xCreateTokenizer() fails
 			Unmanaged<FTS5TokenizerCreator>.fromOpaque(user_data_ptr).release()
-			throw SQLiteError(fromDatabaseConnection: databaseConnection)
+			throw SQLiteError("Error creating FTS5 tokenizer \"\(name)\"", takingErrorCodeFromDatabaseConnection: databaseConnection)
 		}
 	}
 }
 
-extension Database.FTS5TokenizationReason {
+private extension Connection {
+	/// Glue for creating a generic Swift type in a C callback.
+	final class FTS5TokenizerCreator {
+		/// The constructor closure.
+		let construct: (_ arguments : [String]) throws -> FTS5Tokenizer
+
+		/// Creates a new FTS5TokenizerCreator.
+		///
+		/// - parameter construct: A closure that creates the tokenizer.
+		init(_ construct: @escaping (_ arguments: [String]) -> FTS5Tokenizer) {
+			self.construct = construct
+		}
+	}
+}
+
+private extension FTS5TokenizationReason {
 	/// Convenience initializer for conversion of `FTS5_TOKENIZE_` values.
 	///
 	/// - parameter flags: The flags passed as the second argument of `fts5_tokenizer.xTokenize()`.
@@ -246,7 +246,7 @@ private func get_fts5_api(for databaseConnection: SQLiteDatabaseConnection) thro
 	var stmt: SQLitePreparedStatement? = nil
 	let sql = "SELECT fts5(?1);"
 	guard sqlite3_prepare_v2(databaseConnection, sql, -1, &stmt, nil) == SQLITE_OK else {
-		throw SQLiteError(fromDatabaseConnection: databaseConnection)
+		throw SQLiteError("Error preparing SQL \"\(sql)\"", takingErrorCodeFromDatabaseConnection: databaseConnection)
 	}
 
 	defer {
@@ -255,15 +255,15 @@ private func get_fts5_api(for databaseConnection: SQLiteDatabaseConnection) thro
 
 	var api_ptr: UnsafePointer<fts5_api>?
 	guard sqlite3_bind_pointer(stmt, 1, &api_ptr, "fts5_api_ptr", nil) == SQLITE_OK else {
-		throw SQLiteError(fromDatabaseConnection: databaseConnection)
+		throw SQLiteError("Error binding FTS5 API pointer", takingErrorCodeFromDatabaseConnection: databaseConnection)
 	}
 
 	guard sqlite3_step(stmt) == SQLITE_ROW else {
-		throw SQLiteError(fromDatabaseConnection: databaseConnection)
+		throw SQLiteError("Error retrieving FTS5 API pointer", takingErrorCodeFromDatabaseConnection: databaseConnection)
 	}
 
 	guard let api = api_ptr else {
-		throw DatabaseError(message: "FTS5 not available")
+		throw DatabaseError("FTS5 not available")
 	}
 
 	return api
