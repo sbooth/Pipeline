@@ -424,7 +424,7 @@ extension Row {
 	///
 	/// - returns: The column's value as a `String` object.
 	func string(at index: Int, _ converter: ColumnValueConverter<String> = .defaultConverter) throws -> String {
-		try value(at: index, converter)
+		try get(converter, at: index)
 	}
 
 	/// Returns the value of the column with name `name` converted to a string.
@@ -438,7 +438,7 @@ extension Row {
 	///
 	/// - returns: The column's value as a `String` object.
 	func string(named name: String, _ converter: ColumnValueConverter<String> = .defaultConverter) throws -> String {
-		try value(named: name, converter)
+		try get(converter, named: name)
 	}
 }
 
@@ -461,7 +461,7 @@ extension Row {
 	///
 	/// - returns: The column's value as an `Int` object.
 	func int(at index: Int, _ converter: ColumnValueConverter<Int> = .defaultConverter) throws -> Int {
-		try value(at: index, converter)
+		try get(converter, at: index)
 	}
 
 	/// Returns the value of the column with name `name` converted to an integer.
@@ -475,7 +475,7 @@ extension Row {
 	///
 	/// - returns: The column's value as an `Int` object.
 	func int(named name: String, _ converter: ColumnValueConverter<Int> = .defaultConverter) throws -> Int {
-		try value(named: name, converter)
+		try get(converter, named: name)
 	}
 }
 
@@ -498,7 +498,7 @@ extension Row {
 	///
 	/// - returns: The column's value as a `UInt` object.
 	func uint(at index: Int, _ converter: ColumnValueConverter<UInt> = .defaultConverter) throws -> UInt {
-		try value(at: index, converter)
+		try get(converter, at: index)
 	}
 
 	/// Returns the value of the column with name `name` converted to an unsigned integer.
@@ -512,7 +512,7 @@ extension Row {
 	///
 	/// - returns: The column's value as a `UInt` object.
 	func uint(named name: String, _ converter: ColumnValueConverter<UInt> = .defaultConverter) throws -> UInt {
-		try value(named: name, converter)
+		try get(converter, named: name)
 	}
 }
 
@@ -535,7 +535,7 @@ extension Row {
 	///
 	/// - returns: The column's value as an `Int64` object.
 	func int64(at index: Int, _ converter: ColumnValueConverter<Int64> = .defaultConverter) throws -> Int64 {
-		try value(at: index, converter)
+		try get(converter, at: index)
 	}
 
 	/// Returns the value of the column with name `name` converted to a 64-bit integer.
@@ -549,7 +549,7 @@ extension Row {
 	///
 	/// - returns: The column's value as an `Int64` object.
 	func int64(named name: String, _ converter: ColumnValueConverter<Int64> = .defaultConverter) throws -> Int64 {
-		try value(named: name, converter)
+		try get(converter, named: name)
 	}
 }
 
@@ -572,7 +572,7 @@ extension Row {
 	///
 	/// - returns: The column's value as an `UInt64` object.
 	func uint64(at index: Int, _ converter: ColumnValueConverter<UInt64> = .defaultConverter) throws -> UInt64 {
-		try value(at: index, converter)
+		try get(converter, at: index)
 	}
 
 	/// Returns the value of the column with name `name` converted to an unsigned 64-bit integer.
@@ -586,7 +586,7 @@ extension Row {
 	///
 	/// - returns: The column's value as an `UInt64` object.
 	func uint64(named name: String, _ converter: ColumnValueConverter<UInt64> = .defaultConverter) throws -> UInt64 {
-		try value(named: name, converter)
+		try get(converter, named: name)
 	}
 }
 
@@ -609,7 +609,7 @@ extension Row {
 	///
 	/// - returns: The column's value as an `Float` object.
 	func float(at index: Int, _ converter: ColumnValueConverter<Float> = .defaultConverter) throws -> Float {
-		try value(at: index, converter)
+		try get(converter, at: index)
 	}
 
 	/// Returns the value of the column with name `name` converted to a float.
@@ -623,7 +623,7 @@ extension Row {
 	///
 	/// - returns: The column's value as an `Float` object.
 	func float(named name: String, _ converter: ColumnValueConverter<Float> = .defaultConverter) throws -> Float {
-		try value(named: name, converter)
+		try get(converter, named: name)
 	}
 }
 
@@ -646,7 +646,7 @@ extension Row {
 	///
 	/// - returns: The column's value as an `Double` object.
 	func double(at index: Int, _ converter: ColumnValueConverter<Double> = .defaultConverter) throws -> Double {
-		try value(at: index, converter)
+		try get(converter, at: index)
 	}
 
 	/// Returns the value of the column with name `name` converted to a double.
@@ -660,7 +660,7 @@ extension Row {
 	///
 	/// - returns: The column's value as an `Double` object.
 	func double(named name: String, _ converter: ColumnValueConverter<Double> = .defaultConverter) throws -> Double {
-		try value(named: name, converter)
+		try get(converter, named: name)
 	}
 }
 
@@ -683,7 +683,7 @@ extension Row {
 	///
 	/// - returns: The column's value as a `UUID` object.
 	func uuid(at index: Int, _ converter: ColumnValueConverter<UUID> = .defaultConverter) throws -> UUID {
-		try value(at: index, converter)
+		try get(converter, at: index)
 	}
 
 	/// Returns the value of the column with name `name` converted to a UUID.
@@ -697,7 +697,7 @@ extension Row {
 	///
 	/// - returns: The column's value as a `UUID` object.
 	func uuid(named name: String, _ converter: ColumnValueConverter<UUID> = .defaultConverter) throws -> UUID {
-		try value(named: name, converter)
+		try get(converter, named: name)
 	}
 }
 
@@ -720,7 +720,7 @@ extension Row {
 	///
 	/// - returns: The column's value as a `URL` object.
 	func url(at index: Int, _ converter: ColumnValueConverter<URL> = .defaultConverter) throws -> URL {
-		try value(at: index, converter)
+		try get(converter, at: index)
 	}
 
 	/// Returns the value of the column with name `name` converted to a URL.
@@ -734,7 +734,7 @@ extension Row {
 	///
 	/// - returns: The column's value as a `URL` object.
 	func url(named name: String, _ converter: ColumnValueConverter<URL> = .defaultConverter) throws -> URL {
-		try value(named: name, converter)
+		try get(converter, named: name)
 	}
 }
 
@@ -757,7 +757,7 @@ extension Row {
 	///
 	/// - returns: The column's value as a `Date` object.
 	func date(at index: Int, _ converter: ColumnValueConverter<Date> = .defaultConverter) throws -> Date {
-		try value(at: index, converter)
+		try get(converter, at: index)
 	}
 
 	/// Returns the value of the column with name `name` converted to a date.
@@ -771,6 +771,6 @@ extension Row {
 	///
 	/// - returns: The column's value as a `Date` object.
 	func date(named name: String, _ converter: ColumnValueConverter<Date> = .defaultConverter) throws -> Date {
-		try value(named: name, converter)
+		try get(converter, named: name)
 	}
 }
