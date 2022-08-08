@@ -86,7 +86,7 @@ extension Connection {
 	///
 	/// - returns: The first row in `mapper.table` as `type`.
 	public func first<T>(as type: T.Type = T.self, _ mapper: TableMapper<T>) throws -> T? {
-		try query(as: type, mapper.converter, sql: "SELECT * FROM \"\(mapper.table)\" LIMT 1;").first
+		try query(as: type, mapper.converter, sql: "SELECT * FROM \"\(mapper.table)\" LIMIT 1;").first
 	}
 
 	/// Returns the rows in `mapper.table` matching `expression` converted to `type`.
