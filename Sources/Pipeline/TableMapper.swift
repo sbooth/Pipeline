@@ -8,7 +8,13 @@ import Foundation
 
 /// A struct responsible for converting result rows from a specific table to `T`.
 ///
-/// For example, if `Person` and the associated row converter are defined as:
+/// If a table `person` is defined as
+///
+/// ```
+/// CREATE TABLE person(first_name TEXT, last_name TEXT);
+/// ```
+///
+/// and a corresponding `Person` struct and  associated row converter are defined as
 ///
 /// ```swift
 /// struct Person {
@@ -36,7 +42,7 @@ import Foundation
 /// The table mapper could be used from a database connection as:
 ///
 /// ```swift
-/// try connection.first(.person)
+/// let someone = try connection.first(.person)
 /// ```
 public struct TableMapper<T> {
 	/// The name of the table.
@@ -66,7 +72,7 @@ extension Connection {
 	///
 	/// - returns: All rows in `mapper.table` as `type`.
 	public func all<T>(as type: T.Type = T.self, _ mapper: TableMapper<T>) throws -> [T] {
-		try all(as: type, mapper.converter, from: mapper.table)
+		try query(as: type, mapper.converter, sql: "SELECT * FROM \"\(mapper.table)\";")
 	}
 
 	/// Returns the first row in `mapper.table` converted to `type`.
@@ -80,7 +86,7 @@ extension Connection {
 	///
 	/// - returns: The first row in `mapper.table` as `type`.
 	public func first<T>(as type: T.Type = T.self, _ mapper: TableMapper<T>) throws -> T? {
-		try first(as: type, mapper.converter, from: mapper.table)
+		try query(as: type, mapper.converter, sql: "SELECT * FROM \"\(mapper.table)\" LIMT 1;").first
 	}
 
 	/// Returns the rows in `mapper.table` matching `expression` converted to `type`.
@@ -98,7 +104,7 @@ extension Connection {
 	///
 	/// - seealso: [expr](http://sqlite.org/syntax/expr.html)
 	public func find<T, C: Collection>(as type: T.Type = T.self, _ mapper: TableMapper<T>, `where` expression: String, parameters: C) throws -> [T] where C.Element == SQLParameter {
-		try find(as: type, mapper.converter, from: mapper.table, where: expression, parameters: parameters)
+		try query(as: type, mapper.converter, sql: "SELECT * FROM \"\(mapper.table)\" WHERE \(expression);", parameters: parameters)
 	}
 
 	/// Returns the rows in `mapper.table` matching `expression` converted to `type`.
@@ -116,7 +122,7 @@ extension Connection {
 	///
 	/// - seealso: [expr](http://sqlite.org/syntax/expr.html)
 	public func find<T, C: Collection>(as type: T.Type = T.self, _ mapper: TableMapper<T>, `where` expression: String, parameters: C) throws -> [T] where C.Element == (key: String, value: SQLParameter) {
-		try find(as: type, mapper.converter, from: mapper.table, where: expression, parameters: parameters)
+		try query(as: type, mapper.converter, sql: "SELECT * FROM \"\(mapper.table)\" WHERE \(expression);", parameters: parameters)
 	}
 }
 
@@ -136,6 +142,6 @@ extension Connection {
 	///
 	/// - seealso: [expr](http://sqlite.org/syntax/expr.html)
 	public func find<T>(as type: T.Type = T.self, _ mapper: TableMapper<T>, `where` expression: String, parameters: SQLParameter...) throws -> [T] {
-		try find(as: type, mapper.converter, from: mapper.table, where: expression, parameters: parameters)
+		try find(as: type, mapper, where: expression, parameters: parameters)
 	}
 }
