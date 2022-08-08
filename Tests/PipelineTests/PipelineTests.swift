@@ -107,6 +107,57 @@ final class PipelineTests: XCTestCase {
 		XCTAssertEqual(result2.value, value)
 	}
 
+	func testAsyncTransaction() {
+		let queue = try! ConnectionQueue(label: "cq")
+
+		let expectation = self.expectation(description: "transaction")
+
+		var result: Result<Connection.TransactionResult<Int64>, Error>?
+		queue.asyncTransaction { connection, command -> Int64 in
+			//connection.lastInsertRowid
+			25
+		} completion: {
+			result = $0
+			expectation.fulfill()
+		}
+
+		waitForExpectations(timeout: 5)
+
+		if case let .success((command, value)) = result {
+			XCTAssertEqual(command, .commit)
+			XCTAssertEqual(value, 25)
+		} else {
+			XCTAssert(false)
+		}
+	}
+
+	func testAsyncTransaction2() {
+		let queue = try! ConnectionQueue(label: "cq")
+
+		let expectation = self.expectation(description: "transaction")
+
+		let msg = "something went wrong"
+		var result: Result<Connection.TransactionResult<Int64>, Error>?
+		queue.asyncTransaction { connection, command -> Int64 in
+			throw DatabaseError(msg)
+		} completion: {
+			result = $0
+			expectation.fulfill()
+		}
+
+		waitForExpectations(timeout: 5)
+
+		if case let .failure(error) = result {
+			if let err = error as? DatabaseError {
+				XCTAssertEqual(err.message, msg)
+			} else {
+				XCTAssert(false)
+			}
+		} else {
+			XCTAssert(false)
+		}
+	}
+
 	func testIteration() {
 		let connection = try! Connection()
 
