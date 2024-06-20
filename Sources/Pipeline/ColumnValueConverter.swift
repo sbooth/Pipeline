@@ -403,3 +403,374 @@ extension ColumnValueConverter where T: NSObject, T: NSCoding {
 		}
 	}
 }
+
+// MARK: - Convenience Functions
+
+extension ColumnValueConverter where T == String {
+	/// The default converter for `String` objects is `.string`.
+	public static let defaultConverter: Self = .string
+}
+
+extension Row {
+	/// Returns the value of the column at `index` converted to a string.
+	///
+	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter index: The index of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `String`.
+	///
+	/// - throws: An error if `index` is out of bounds, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as a `String` object.
+	func string(at index: Int, _ converter: ColumnValueConverter<String> = .defaultConverter) throws -> String {
+		try get(converter, at: index)
+	}
+
+	/// Returns the value of the column with name `name` converted to a string.
+	///
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter name: The name of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `String`.
+	///
+	/// - throws: An error if the column doesn't exist, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as a `String` object.
+	func string(named name: String, _ converter: ColumnValueConverter<String> = .defaultConverter) throws -> String {
+		try get(converter, named: name)
+	}
+}
+
+
+extension ColumnValueConverter where T == Int {
+	/// The default converter for `Int` objects is `.int`.
+	public static let defaultConverter: Self = .int
+}
+
+extension Row {
+	/// Returns the value of the column at `index` converted to an integer.
+	///
+	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter index: The index of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `Int`.
+	///
+	/// - throws: An error if `index` is out of bounds, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as an `Int` object.
+	func int(at index: Int, _ converter: ColumnValueConverter<Int> = .defaultConverter) throws -> Int {
+		try get(converter, at: index)
+	}
+
+	/// Returns the value of the column with name `name` converted to an integer.
+	///
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter name: The name of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `Int`.
+	///
+	/// - throws: An error if the column doesn't exist, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as an `Int` object.
+	func int(named name: String, _ converter: ColumnValueConverter<Int> = .defaultConverter) throws -> Int {
+		try get(converter, named: name)
+	}
+}
+
+
+extension ColumnValueConverter where T == UInt {
+	/// The default converter for `UInt` objects is `.uint`.
+	public static let defaultConverter: Self = .uint
+}
+
+extension Row {
+	/// Returns the value of the column at `index` converted to an unsigned integer.
+	///
+	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter index: The index of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `UInt`.
+	///
+	/// - throws: An error if `index` is out of bounds, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as a `UInt` object.
+	func uint(at index: Int, _ converter: ColumnValueConverter<UInt> = .defaultConverter) throws -> UInt {
+		try get(converter, at: index)
+	}
+
+	/// Returns the value of the column with name `name` converted to an unsigned integer.
+	///
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter name: The name of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `UInt`.
+	///
+	/// - throws: An error if the column doesn't exist, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as a `UInt` object.
+	func uint(named name: String, _ converter: ColumnValueConverter<UInt> = .defaultConverter) throws -> UInt {
+		try get(converter, named: name)
+	}
+}
+
+
+extension ColumnValueConverter where T == Int64 {
+	/// The default converter for `Int64` objects is `.int64`.
+	public static let defaultConverter: Self = .int64
+}
+
+extension Row {
+	/// Returns the value of the column at `index` converted to a 64-bit integer.
+	///
+	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter index: The index of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `Int64`.
+	///
+	/// - throws: An error if `index` is out of bounds, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as an `Int64` object.
+	func int64(at index: Int, _ converter: ColumnValueConverter<Int64> = .defaultConverter) throws -> Int64 {
+		try get(converter, at: index)
+	}
+
+	/// Returns the value of the column with name `name` converted to a 64-bit integer.
+	///
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter name: The name of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `Int64`.
+	///
+	/// - throws: An error if the column doesn't exist, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as an `Int64` object.
+	func int64(named name: String, _ converter: ColumnValueConverter<Int64> = .defaultConverter) throws -> Int64 {
+		try get(converter, named: name)
+	}
+}
+
+
+extension ColumnValueConverter where T == UInt64 {
+	/// The default converter for `UInt64` objects is `.uint64`.
+	public static let defaultConverter: Self = .uint64
+}
+
+extension Row {
+	/// Returns the value of the column at `index` converted to an unsigned 64-bit integer.
+	///
+	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter index: The index of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `UInt64`.
+	///
+	/// - throws: An error if `index` is out of bounds, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as an `UInt64` object.
+	func uint64(at index: Int, _ converter: ColumnValueConverter<UInt64> = .defaultConverter) throws -> UInt64 {
+		try get(converter, at: index)
+	}
+
+	/// Returns the value of the column with name `name` converted to an unsigned 64-bit integer.
+	///
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter name: The name of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `UInt64`.
+	///
+	/// - throws: An error if the column doesn't exist, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as an `UInt64` object.
+	func uint64(named name: String, _ converter: ColumnValueConverter<UInt64> = .defaultConverter) throws -> UInt64 {
+		try get(converter, named: name)
+	}
+}
+
+
+extension ColumnValueConverter where T == Float {
+	/// The default converter for `Float` objects is `.float`.
+	public static let defaultConverter: Self = .float
+}
+
+extension Row {
+	/// Returns the value of the column at `index` converted to a float.
+	///
+	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter index: The index of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `Float`.
+	///
+	/// - throws: An error if `index` is out of bounds, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as an `Float` object.
+	func float(at index: Int, _ converter: ColumnValueConverter<Float> = .defaultConverter) throws -> Float {
+		try get(converter, at: index)
+	}
+
+	/// Returns the value of the column with name `name` converted to a float.
+	///
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter name: The name of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `Float`.
+	///
+	/// - throws: An error if the column doesn't exist, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as an `Float` object.
+	func float(named name: String, _ converter: ColumnValueConverter<Float> = .defaultConverter) throws -> Float {
+		try get(converter, named: name)
+	}
+}
+
+
+extension ColumnValueConverter where T == Double {
+	/// The default converter for `Double` objects is `.double`.
+	public static let defaultConverter: Self = .double
+}
+
+extension Row {
+	/// Returns the value of the column at `index` converted to a double.
+	///
+	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter index: The index of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `Double`.
+	///
+	/// - throws: An error if `index` is out of bounds, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as an `Double` object.
+	func double(at index: Int, _ converter: ColumnValueConverter<Double> = .defaultConverter) throws -> Double {
+		try get(converter, at: index)
+	}
+
+	/// Returns the value of the column with name `name` converted to a double.
+	///
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter name: The name of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `Double`.
+	///
+	/// - throws: An error if the column doesn't exist, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as an `Double` object.
+	func double(named name: String, _ converter: ColumnValueConverter<Double> = .defaultConverter) throws -> Double {
+		try get(converter, named: name)
+	}
+}
+
+
+extension ColumnValueConverter where T == UUID {
+	/// The default converter for `UUID` objects is `.uuidWithString`.
+	public static let defaultConverter: Self = .uuidWithString
+}
+
+extension Row {
+	/// Returns the value of the column at `index` converted to a UUID.
+	///
+	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter index: The index of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `UUID`.
+	///
+	/// - throws: An error if `index` is out of bounds, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as a `UUID` object.
+	func uuid(at index: Int, _ converter: ColumnValueConverter<UUID> = .defaultConverter) throws -> UUID {
+		try get(converter, at: index)
+	}
+
+	/// Returns the value of the column with name `name` converted to a UUID.
+	///
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter name: The name of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `UUID`.
+	///
+	/// - throws: An error if the column doesn't exist, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as a `UUID` object.
+	func uuid(named name: String, _ converter: ColumnValueConverter<UUID> = .defaultConverter) throws -> UUID {
+		try get(converter, named: name)
+	}
+}
+
+
+extension ColumnValueConverter where T == URL {
+	/// The default converter for `URL` objects is `.urlWithString`.
+	public static let defaultConverter: Self = .urlWithString
+}
+
+extension Row {
+	/// Returns the value of the column at `index` converted to a URL.
+	///
+	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter index: The index of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `URL`.
+	///
+	/// - throws: An error if `index` is out of bounds, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as a `URL` object.
+	func url(at index: Int, _ converter: ColumnValueConverter<URL> = .defaultConverter) throws -> URL {
+		try get(converter, at: index)
+	}
+
+	/// Returns the value of the column with name `name` converted to a URL.
+	///
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter name: The name of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `URL`.
+	///
+	/// - throws: An error if the column doesn't exist, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as a `URL` object.
+	func url(named name: String, _ converter: ColumnValueConverter<URL> = .defaultConverter) throws -> URL {
+		try get(converter, named: name)
+	}
+}
+
+
+extension ColumnValueConverter where T == Date {
+	/// The default converter for `Date` objects is `.dateWithTimeIntervalSinceReferenceData`.
+	public static let defaultConverter: Self = .dateWithTimeIntervalSinceReferenceDate
+}
+
+extension Row {
+	/// Returns the value of the column at `index` converted to a date.
+	///
+	/// - note: Column indexes are 0-based.  The leftmost column in a row has index 0.
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter index: The index of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `Date`.
+	///
+	/// - throws: An error if `index` is out of bounds, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as a `Date` object.
+	func date(at index: Int, _ converter: ColumnValueConverter<Date> = .defaultConverter) throws -> Date {
+		try get(converter, at: index)
+	}
+
+	/// Returns the value of the column with name `name` converted to a date.
+	///
+	/// - note: Automatic type conversion may be performed by SQLite depending on the column's initial data type.
+	///
+	/// - parameter name: The name of the desired column.
+	/// - parameter converter: The `ColumnValueConverter` to use for converting the SQLite fundamental type to `Date`.
+	///
+	/// - throws: An error if the column doesn't exist, the column contains a null value, or type conversion could not be accomplished.
+	///
+	/// - returns: The column's value as a `Date` object.
+	func date(named name: String, _ converter: ColumnValueConverter<Date> = .defaultConverter) throws -> Date {
+		try get(converter, named: name)
+	}
+}
