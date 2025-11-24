@@ -46,12 +46,6 @@ final class PipelineTests: XCTestCase {
 		let connection = try! Connection()
 		XCTAssertNoThrow(try connection.execute(sql: "create table t1(v1);"))
 
-//		do {
-//			try connection.execute(sql: "select c1 from t2;")
-//		} catch let error {
-//			print(error)
-//		}
-
 		let rowCount = 10
 		for _ in 0 ..< rowCount {
 			XCTAssertNoThrow(try connection.execute(sql: "insert into t1 default values;"))
