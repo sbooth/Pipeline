@@ -1,5 +1,5 @@
 //
-// Copyright © 2015 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright © 2015 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/Pipeline
 // MIT license
 //
@@ -141,6 +141,56 @@ public final class Statement {
 		return String(cString: name)
 	}
 
+#if SQLITE_ENABLE_COLUMN_METADATA
+	/// Returns the name of the database that is the source of the result column at `index`.
+	///
+	/// - note: Column indexes are 0-based.  The leftmost column in a result row has index 0.
+	///
+	/// - parameter index: The index of the desired column.
+	///
+	/// - throws: An error if `index` is out of bounds, if `index` refers to an expression or subquery,  or an out-of-memory error occurs.
+	///
+	/// - returns: The original unaliased name of the database that is the source of the result column for the specified index.
+	public func databaseNameOfColumn(_ index: Int) throws -> String {
+		guard let databaseName = sqlite3_column_database_name(preparedStatement, Int32(index)) else {
+			throw DatabaseError("Column index \(index) is out of bounds or not a column value")
+		}
+		return String(cString: databaseName)
+	}
+
+	/// Returns the name of the table that is the source of the result column at `index`.
+	///
+	/// - note: Column indexes are 0-based.  The leftmost column in a result row has index 0.
+	///
+	/// - parameter index: The index of the desired column.
+	///
+	/// - throws: An error if `index` is out of bounds, if `index` refers to an expression or subquery,  or an out-of-memory error occurs.
+	///
+	/// - returns: The original unaliased name of the table that is the source of the result column for the specified index.
+	public func tableNameOfColumn(_ index: Int) throws -> String {
+		guard let tableName = sqlite3_column_table_name(preparedStatement, Int32(index)) else {
+			throw DatabaseError("Column index \(index) is out of bounds or not a column value")
+		}
+		return String(cString: tableName)
+	}
+
+	/// Returns the name of the table column that is the source of the result column at `index`.
+	///
+	/// - note: Column indexes are 0-based.  The leftmost column in a result row has index 0.
+	///
+	/// - parameter index: The index of the desired column.
+	///
+	/// - throws: An error if `index` is out of bounds, if `index` refers to an expression or subquery,  or an out-of-memory error occurs.
+	///
+	/// - returns: The original unaliased name of the table column that is the source of the result column for the specified index.
+	public func originNameOfColumn(_ index: Int) throws -> String {
+		guard let originName = sqlite3_column_origin_name(preparedStatement, Int32(index)) else {
+			throw DatabaseError("Column index \(index) is out of bounds or not a column value")
+		}
+		return String(cString: originName)
+	}
+#endif
+
 	/// The mapping of column names to indexes.
 	lazy var columnNamesAndIndexes: [String: Int] = {
 		let count = sqlite3_column_count(preparedStatement)
@@ -167,6 +217,39 @@ public final class Statement {
 			throw DatabaseError("Unknown column \"\(name)\"")
 		}
 		return index
+	}
+
+	/// Possible prepared statement explain modes.
+	public enum ExplainMode {
+		/// The prepared statement behaves as normal.
+		case normal
+		/// The prepares statement behaves as if its SQL text begins with `EXPLAIN`.
+		case explain
+		/// The prepares statement behaves as if its SQL text begins with `EXPLAIN QUERY PLAN`.
+		case explainQueryPlan
+	}
+
+	/// Changes the `EXPLAIN` mode for the prepared statement.
+	///
+	/// - parameter mode: The desired explain mode.
+	///
+	/// - throws: An error if the statement's explain mode could not be changed.
+	///
+	/// - seealso: [Change The EXPLAIN Setting For A Prepared Statement](https://sqlite.org/c3ref/stmt_explain.html)
+	public func explain(_ mode: ExplainMode) throws {
+		let eMode: Int32
+		switch mode {
+		case .normal:
+			eMode = 0
+		case .explain:
+			eMode = 1
+		case .explainQueryPlan:
+			eMode = 2
+		}
+		let result = sqlite3_stmt_explain(preparedStatement, eMode)
+		guard result == SQLITE_OK else {
+			throw SQLiteError("Error setting statement explain mode", code: result)
+		}
 	}
 }
 

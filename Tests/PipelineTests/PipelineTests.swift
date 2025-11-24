@@ -1,5 +1,5 @@
 //
-// Copyright © 2015 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright © 2015 - 2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/Pipeline
 // MIT license
 //
@@ -17,7 +17,6 @@ final class PipelineTests: XCTestCase {
 		// It's necessary to call sqlite3_initialize() since SQLITE_OMIT_AUTOINIT is defined
 		XCTAssert(sqlite3_initialize() == SQLITE_OK)
 		XCTAssert(csqlite_sqlite3_auto_extension_uuid() == SQLITE_OK)
-		XCTAssert(csqlite_sqlite3_auto_extension_carray() == SQLITE_OK)
 	}
 
 	override class func tearDown() {
@@ -85,6 +84,77 @@ final class PipelineTests: XCTestCase {
 		try! connection.prepare(sql: "insert into t1(a) values (?);").bind([.timeIntervalSinceReferenceDate(Date())]).execute()
 
 		try! connection.execute(sql: "insert into t1(a) values (?);", parameters: [.null])
+	}
+
+	func testTransaction() {
+		let connection = try! Connection()
+
+		var result = try! connection.transaction { connection, command in
+		}
+		XCTAssertEqual(result.command, .commit)
+
+		result = try! connection.transaction { connection, command in
+			command = .rollback
+		}
+		XCTAssertEqual(result.command, .rollback)
+
+		let value = 9
+		let result2 = try! connection.transaction { connection, command in
+			return value
+		}
+		XCTAssertEqual(result2.command, .commit)
+		XCTAssertEqual(result2.value, value)
+	}
+
+	func testAsyncTransaction() {
+		let queue = try! ConnectionQueue(label: "cq")
+
+		let expectation = self.expectation(description: "transaction")
+
+		var result: Result<Connection.TransactionResult<Int64>, Error>?
+		queue.asyncTransaction { connection, command -> Int64 in
+			//connection.lastInsertRowid
+			25
+		} completion: {
+			result = $0
+			expectation.fulfill()
+		}
+
+		waitForExpectations(timeout: 5)
+
+		if case let .success((command, value)) = result {
+			XCTAssertEqual(command, .commit)
+			XCTAssertEqual(value, 25)
+		} else {
+			XCTAssert(false)
+		}
+	}
+
+	func testAsyncTransaction2() {
+		let queue = try! ConnectionQueue(label: "cq")
+
+		let expectation = self.expectation(description: "transaction")
+
+		let msg = "something went wrong"
+		var result: Result<Connection.TransactionResult<Int64>, Error>?
+		queue.asyncTransaction { connection, command -> Int64 in
+			throw DatabaseError(msg)
+		} completion: {
+			result = $0
+			expectation.fulfill()
+		}
+
+		waitForExpectations(timeout: 5)
+
+		if case let .failure(error) = result {
+			if let err = error as? DatabaseError {
+				XCTAssertEqual(err.message, msg)
+			} else {
+				XCTAssert(false)
+			}
+		} else {
+			XCTAssert(false)
+		}
 	}
 
 	func testIteration() {
@@ -495,6 +565,25 @@ final class PipelineTests: XCTestCase {
 		let results: [String] = statement.map({try! $0.text(at: 0)})
 
 		XCTAssertEqual([ "dog", "hedgehog" ], results)
+	}
+
+	func testCArrayExtension2() {
+		let connection = try! Connection()
+
+		try! connection.execute(sql: "create table numbers(val);")
+
+		try! connection.prepare(sql: "insert into numbers(val) values (1);").execute()
+		try! connection.prepare(sql: "insert into numbers(val) values (3);").execute()
+		try! connection.prepare(sql: "insert into numbers(val) values (2);").execute()
+		try! connection.prepare(sql: "insert into numbers(val) values (4);").execute()
+
+		let vals: [Int32] = [ 1, 2, 33 ]
+		let statement = try! connection.prepare(sql: "SELECT * FROM numbers WHERE val IN carray(?1);")
+		try! statement.bind(.carray(vals), toParameter: 1)
+
+		let results: [Int64] = statement.map({try! $0.integer(at: 0)})
+
+		XCTAssertEqual([ 1, 2 ], results)
 	}
 
 	func testVirtualTable() {
@@ -949,7 +1038,7 @@ final class PipelineTests: XCTestCase {
 			return Person(firstName: firstName, lastName: lastName)
 		}
 
-		let person = try! connection.first(personConverter, from: "person")
+		let person = try! connection.query(personConverter, sql: "SELECT * FROM person LIMIT 1").first
 		XCTAssert(person?.firstName == "Isaac")
 		XCTAssert(person?.lastName == "Newton")
 	}

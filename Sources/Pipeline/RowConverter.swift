@@ -8,7 +8,13 @@ import Foundation
 
 /// A struct responsible for converting a result row to `T`.
 ///
-/// For example, if `Person` is defined as:
+/// If a table `person` is defined as
+///
+/// ```
+/// CREATE TABLE person(first_name TEXT, last_name TEXT);
+/// ```
+///
+/// and a corresponding `Person` struct is defined as
 ///
 /// ```swift
 /// struct Person {
@@ -32,7 +38,8 @@ import Foundation
 /// The row converter could be used from a database connection as:
 ///
 /// ```swift
-/// try connection.first(.person, from: "person")
+/// let sql = "SELECT * FROM person LIMIT 1;"
+/// let someone = try connection.query(.person, sql: sql).first
 /// ```
 public struct RowConverter<T> {
 	/// Converts `row` to `T` and returns the result.
@@ -68,19 +75,17 @@ extension Statement {
 }
 
 extension Connection {
-	/// Returns all rows in `table` converted to `type`.
-	///
-	/// This is equivalent to the SQL `SELECT * FROM "`*table*`"`.
+	/// Returns all result rows from `sql` converted to `type` using `converter`.
 	///
 	/// - parameter type: The type of object to create from each row.
 	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
-	/// - parameter table: The name of the desired table.
+	/// - parameter sql: The SQL to execute.
 	///
 	/// - throws: An error if the SQL could not be compiled or executed, or if initialization fails.
 	///
-	/// - returns: All rows as `type`.
-	public func all<T>(as type: T.Type = T.self, _ converter: RowConverter<T>, from table: String) throws -> [T] {
-		let statement = try prepare(sql: "SELECT * FROM \"\(table)\";")
+	/// - returns: The result rows converter to `type`.
+	public func query<T>(as type: T.Type = T.self, _ converter: RowConverter<T>, sql: String) throws -> [T] {
+		let statement = try prepare(sql: sql)
 		var results = [T]()
 		try statement.results(as: type, converter) { object in
 			results.append(object)
@@ -88,42 +93,18 @@ extension Connection {
 		return results
 	}
 
-	/// Returns the first row in `table` converted to `type`.
-	///
-	/// This is equivalent to the SQL `SELECT * FROM "`*table*`" LIMIT 1`.
-	///
-	/// - parameter type: The type of object to create from the row.
-	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
-	/// - parameter table: The name of the desired table.
-	///
-	/// - throws: An error if the SQL could not be compiled or executed, or if initialization fails.
-	///
-	/// - returns: The first row as `type`.
-	public func first<T>(as type: T.Type = T.self, _ converter: RowConverter<T>, from table: String) throws -> T? {
-		let statement = try prepare(sql: "SELECT * FROM \"\(table)\" LIMIT 1;")
-		guard let row = try statement.step() else {
-			return nil
-		}
-		return try converter.convert(row)
-	}
-
-	/// Returns the rows in `table` matching `expression` converted to `type`.
-	///
-	/// This is equivalent to the SQL `SELECT * FROM "`*table*`" WHERE` *expression*.
+	/// Returns all result rows from `sql` converted to `type` using `converter`.
 	///
 	/// - parameter type: The type of object to create from each row.
 	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
-	/// - parameter table: The name of the desired table.
-	/// - parameter expression: An SQL expression defining the scope of the result rows.
+	/// - parameter sql: The SQL to execute.
 	/// - parameter parameters: A collection of values to bind to SQL parameters.
 	///
 	/// - throws: An error if the SQL could not be compiled or executed, or if initialization fails.
 	///
-	/// - returns: The matching rows as `type`.
-	///
-	/// - seealso: [expr](http://sqlite.org/syntax/expr.html)
-	public func find<T, C: Collection>(as type: T.Type = T.self, _ converter: RowConverter<T>, from table: String, `where` expression: String, parameters: C) throws -> [T] where C.Element == SQLParameter {
-		let statement = try prepare(sql: "SELECT * FROM \"\(table)\" WHERE \(expression);")
+	/// - returns: The result rows converter to `type`.
+	public func query<T, C: Collection>(as type: T.Type = T.self, _ converter: RowConverter<T>, sql: String, parameters: C) throws -> [T] where C.Element == SQLParameter {
+		let statement = try prepare(sql: sql)
 		try statement.bind(parameters)
 		var results = [T]()
 		try statement.results(as: type, converter) { object in
@@ -132,23 +113,18 @@ extension Connection {
 		return results
 	}
 
-	/// Returns the rows in `table` matching `expression` converted to `type`.
-	///
-	/// This is equivalent to `SELECT * FROM "`*table*`" WHERE` *expression*.
+	/// Returns all result rows from `sql` converted to `type` using `converter`.
 	///
 	/// - parameter type: The type of object to create from each row.
 	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
-	/// - parameter table: The name of the desired table.
-	/// - parameter expression: An SQL expression defining the scope of the result rows.
+	/// - parameter sql: The SQL to execute.
 	/// - parameter parameters: A collection of name and value pairs to bind to SQL parameters.
 	///
 	/// - throws: An error if the SQL could not be compiled or executed, or if initialization fails.
 	///
-	/// - returns: The matching rows as `type`.
-	///
-	/// - seealso: [expr](http://sqlite.org/syntax/expr.html)
-	public func find<T, C: Collection>(as type: T.Type = T.self, _ converter: RowConverter<T>, from table: String, `where` expression: String, parameters: C) throws -> [T] where C.Element == (key: String, value: SQLParameter) {
-		let statement = try prepare(sql: "SELECT * FROM \"\(table)\" WHERE \(expression);")
+	/// - returns: The result rows converter to `type`.
+	public func query<T, C: Collection>(as type: T.Type = T.self, _ converter: RowConverter<T>, sql: String, parameters: C) throws -> [T] where C.Element == (key: String, value: SQLParameter) {
+		let statement = try prepare(sql: sql)
 		try statement.bind(parameters)
 		var results = [T]()
 		try statement.results(as: type, converter) { object in
@@ -159,23 +135,18 @@ extension Connection {
 }
 
 extension Connection {
-	/// Returns the rows in `table` matching `expression` converted to `type`.
-	///
-	/// This is equivalent to the SQL `SELECT * FROM "`*table*`" WHERE` *expression*.
+	/// Returns all result rows from `sql` converted to `type` using `converter`.
 	///
 	/// - parameter type: The type of object to create from each row.
 	/// - parameter converter: A `RowConverter` object to use for converting result rows to `type`.
-	/// - parameter table: The name of the desired table.
-	/// - parameter expression: An SQL expression defining the scope of the result rows.
+	/// - parameter sql: The SQL to execute.
 	/// - parameter parameters: A collection of values to bind to SQL parameters.
 	///
 	/// - throws: An error if the SQL could not be compiled or executed, or if initialization fails.
 	///
-	/// - returns: The matching rows as `type`.
-	///
-	/// - seealso: [expr](http://sqlite.org/syntax/expr.html)
-	public func find<T>(as type: T.Type = T.self, _ converter: RowConverter<T>, from table: String, `where` expression: String, parameters: SQLParameter...) throws -> [T] {
-		try find(as: type, converter, from: table, where: expression, parameters: parameters)
+	/// - returns: The result rows converter to `type`.
+	public func query<T>(as type: T.Type = T.self, _ converter: RowConverter<T>, sql: String, parameters: SQLParameter...) throws -> [T] {
+		try query(as: type, converter, sql: sql, parameters: parameters)
 	}
 }
 

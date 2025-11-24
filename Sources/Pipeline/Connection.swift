@@ -1,5 +1,5 @@
 //
-// Copyright © 2015 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright © 2015 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/Pipeline
 // MIT license
 //
@@ -153,6 +153,11 @@ extension Connection {
 	/// Interrupts a long-running query.
 	public func interrupt() {
 		sqlite3_interrupt(databaseConnection)
+	}
+
+	/// `true` if an interrupt is currently in effect
+	public var isInterrupted: Bool {
+		sqlite3_is_interrupted(databaseConnection) != 0
 	}
 
 	/// Returns the name of the *n*th attached database.

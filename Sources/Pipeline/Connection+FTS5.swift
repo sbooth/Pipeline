@@ -1,5 +1,5 @@
 //
-// Copyright © 2015 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright © 2015 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/Pipeline
 // MIT license
 //
@@ -235,6 +235,9 @@ private extension FTS5TokenizationReason {
 	}
 }
 
+// sqlite3_bind_pointer(S,I,P,T,D) requires that T be a static string
+let fts_5_api_ptr_static_string = StaticString(stringLiteral: "fts5_api_ptr")
+
 /// Returns a pointer to the `fts5_api` structure for `databaseConnection`.
 ///
 /// - parameter databaseConnection: The database connection to query.
@@ -254,7 +257,7 @@ private func get_fts5_api(for databaseConnection: SQLiteDatabaseConnection) thro
 	}
 
 	var api_ptr: UnsafePointer<fts5_api>?
-	guard sqlite3_bind_pointer(stmt, 1, &api_ptr, "fts5_api_ptr", nil) == SQLITE_OK else {
+	guard sqlite3_bind_pointer(stmt, 1, &api_ptr, fts_5_api_ptr_static_string.utf8Start, nil) == SQLITE_OK else {
 		throw SQLiteError("Error binding FTS5 API pointer", takingErrorCodeFromDatabaseConnection: databaseConnection)
 	}
 

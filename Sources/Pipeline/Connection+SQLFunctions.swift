@@ -1,5 +1,5 @@
 //
-// Copyright © 2015 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright © 2015 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/Pipeline
 // MIT license
 //
@@ -30,11 +30,13 @@ public struct SQLFunctionFlags: OptionSet {
 	/// The function may only be invoked from top-level SQL, and cannot be used in views or triggers.
 	/// nor in schema structures such as `CHECK` constraints, `DEFAULT` clauses, expression indexes, partial indexes, or generated columns.
 	public static let directOnly = SQLFunctionFlags(rawValue: 1 << 1)
-	/// Indicates to SQLite that a function may call `sqlite3_value_subtype() `to inspect the sub-types of its arguments.
+	/// Indicates to SQLite that a function may call `sqlite3_value_subtype()` to inspect the sub-types of its arguments.
 	public static let subtype = SQLFunctionFlags(rawValue: 1 << 2)
 	/// The function is unlikely to cause problems even if misused.
 	/// An innocuous function should have no side effects and should not depend on any values other than its input parameters.
 	public static let innocuous = SQLFunctionFlags(rawValue: 1 << 3)
+	/// Indicates to SQLite that a function may call `sqlite3_result_subtype()` to to cause a sub-type to be associated with its result.
+	public static let resultSubtype = SQLFunctionFlags(rawValue: 1 << 4)
 }
 
 /// A custom SQL aggregate function.
@@ -317,6 +319,9 @@ private extension SQLFunctionFlags {
 		}
 		if contains(.innocuous) {
 			flags |= SQLITE_INNOCUOUS
+		}
+		if contains(.resultSubtype) {
+			flags |= SQLITE_RESULT_SUBTYPE
 		}
 		return flags
 	}

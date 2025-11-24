@@ -1,5 +1,5 @@
 //
-// Copyright © 2015 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright © 2015 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/Pipeline
 // MIT license
 //
@@ -168,6 +168,37 @@ extension Connection {
 		}
 		set {
 			_ = csqlite_sqlite3_db_config_trusted_schema(databaseConnection, newValue ? 1 : 0, nil)
+		}
+	}
+
+#if SQLITE_ENABLE_STMT_SCANSTATUS
+
+	/// Enables or disables collection of `sqlite3_stmt_scanstatus_v2()` statistics for the database connection.
+	public var statementScanStatus: Bool {
+		get {
+			var enabled: Int32 = 0
+			_ = csqlite_sqlite3_db_config_stmt_scanstatus(databaseConnection, -1, &enabled)
+			return enabled != 0
+		}
+		set {
+			_ = csqlite_sqlite3_db_config_stmt_scanstatus(databaseConnection, newValue ? 1 : 0, nil)
+		}
+	}
+
+#endif
+
+	/// Changes the default order in which tables and indexes are scanned for the database connection.
+	///
+	/// If `true` scans start at the end and work toward the beginning rather than starting at the beginning and working toward the end.
+	/// - seealso: [PRAGMA reverse_unordered_selects](https://sqlite.org/pragma.html#pragma_reverse_unordered_selects)
+	public var reverseScanOrder: Bool {
+		get {
+			var enabled: Int32 = 0
+			_ = csqlite_sqlite3_db_config_reverse_scanorder(databaseConnection, -1, &enabled)
+			return enabled != 0
+		}
+		set {
+			_ = csqlite_sqlite3_db_config_reverse_scanorder(databaseConnection, newValue ? 1 : 0, nil)
 		}
 	}
 }
