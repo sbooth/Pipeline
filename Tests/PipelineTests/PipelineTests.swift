@@ -1,5 +1,5 @@
 //
-// Copyright © 2015 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright © 2015 - 2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/Pipeline
 // MIT license
 //
@@ -17,7 +17,6 @@ final class PipelineTests: XCTestCase {
 		// It's necessary to call sqlite3_initialize() since SQLITE_OMIT_AUTOINIT is defined
 		XCTAssert(sqlite3_initialize() == SQLITE_OK)
 		XCTAssert(csqlite_sqlite3_auto_extension_uuid() == SQLITE_OK)
-		XCTAssert(csqlite_sqlite3_auto_extension_carray() == SQLITE_OK)
 	}
 
 	override class func tearDown() {
@@ -566,6 +565,25 @@ final class PipelineTests: XCTestCase {
 		let results: [String] = statement.map({try! $0.text(at: 0)})
 
 		XCTAssertEqual([ "dog", "hedgehog" ], results)
+	}
+
+	func testCArrayExtension2() {
+		let connection = try! Connection()
+
+		try! connection.execute(sql: "create table numbers(val);")
+
+		try! connection.prepare(sql: "insert into numbers(val) values (1);").execute()
+		try! connection.prepare(sql: "insert into numbers(val) values (3);").execute()
+		try! connection.prepare(sql: "insert into numbers(val) values (2);").execute()
+		try! connection.prepare(sql: "insert into numbers(val) values (4);").execute()
+
+		let vals: [Int32] = [ 1, 2, 33 ]
+		let statement = try! connection.prepare(sql: "SELECT * FROM numbers WHERE val IN carray(?1);")
+		try! statement.bind(.carray(vals), toParameter: 1)
+
+		let results: [Int64] = statement.map({try! $0.integer(at: 0)})
+
+		XCTAssertEqual([ 1, 2 ], results)
 	}
 
 	func testVirtualTable() {
