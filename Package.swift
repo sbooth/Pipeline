@@ -51,6 +51,9 @@ let package = Package(
 //				.define("SQLITE_ENABLE_PREUPDATE_HOOK"),
 //				.define("SQLITE_ENABLE_SESSION"),
 			]),
+		.testTarget(
+			name: "PipelinePerformanceTests",
+			dependencies: ["Pipeline"]),
 	],
 	cLanguageStandard: .gnu11
 )

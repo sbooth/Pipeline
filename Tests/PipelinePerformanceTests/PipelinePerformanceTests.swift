@@ -1,0 +1,191 @@
+import XCTest
+import CSQLite
+import Pipeline
+
+class PipelinePerformanceTests: XCTestCase {
+	override func setUp() {
+		super.setUp()
+		// It's necessary to call sqlite3_initialize() since SQLITE_OMIT_AUTOINIT is defined
+		XCTAssert(sqlite3_initialize() == SQLITE_OK)
+	}
+
+	override func tearDown() {
+		super.tearDown()
+		XCTAssert(sqlite3_shutdown() == SQLITE_OK)
+	}
+
+	func testPipelineInsertPerformance_1() {
+		self.measureMetrics(XCTestCase.defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
+			let connection = try! Connection()
+
+			try! connection.execute(sql: "create table t1(a, b);")
+
+			startMeasuring()
+
+			let rowCount = 50_000
+			for i in 0..<rowCount {
+				let s = try! connection.prepare(sql: "insert into t1(a, b) values (?, ?);")
+
+				try! s.bind(.int(i*2), toParameter: 1)
+				try! s.bind(.int(i*2+1), toParameter: 2)
+
+				try! s.execute()
+			}
+
+			stopMeasuring()
+
+			let s = try! connection.prepare(sql: "select count(*) from t1;")
+			var count = 0
+			try! s.results { row in
+				count = try row.get(.int, at: 0)
+			}
+
+			XCTAssertEqual(count, rowCount)
+		}
+	}
+
+	func testPipelineInsertPerformance_2_1() {
+		self.measureMetrics(XCTestCase.defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
+			let connection = try! Connection()
+
+			try! connection.execute(sql: "create table t1(a, b);")
+
+			var s = try! connection.prepare(sql: "insert into t1(a, b) values (?, ?);")
+
+			startMeasuring()
+
+			let rowCount = 50_000
+			for i in 0..<rowCount {
+				try! s.bind(.int(i*2), toParameter: 1)
+				try! s.bind(.int(i*2+1), toParameter: 2)
+
+				try! s.execute()
+
+				try! s.clearBindings()
+				try! s.reset()
+			}
+
+			stopMeasuring()
+
+			s = try! connection.prepare(sql: "select count(*) from t1;")
+			let count = try! s.step()!.get(.int, at: 0)
+
+			XCTAssertEqual(count, rowCount)
+		}
+	}
+
+	func testPipelineInsertPerformance_2_2() {
+		self.measureMetrics(XCTestCase.defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
+			let connection = try! Connection()
+
+			try! connection.execute(sql: "create table t1(a, b);")
+
+			var s = try! connection.prepare(sql: "insert into t1(a, b) values (?, ?);")
+
+			startMeasuring()
+
+			let rowCount = 50_000
+			for i in 0..<rowCount {
+				try! s.bind(.int(i*2), toParameter: 1)
+				try! s.bind(.int(i*2+1), toParameter: 2)
+
+				try! s.execute()
+
+				try! s.clearBindings()
+				try! s.reset()
+			}
+
+			stopMeasuring()
+
+			s = try! connection.prepare(sql: "select count(*) from t1;")
+			let count = try! s.step()!.get(.int, at: 0)
+
+			XCTAssertEqual(count, rowCount)
+		}
+	}
+
+	func testPipelineInsertPerformance_3_1() {
+		self.measureMetrics(XCTestCase.defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
+			let connection = try! Connection()
+
+			try! connection.execute(sql: "create table t1(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z);")
+
+			var s = try! connection.prepare(sql: "insert into t1(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);")
+
+			let values: [DatabaseValue] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
+
+			startMeasuring()
+
+			let rowCount = 10_000
+			for _ in 0..<rowCount {
+				try! s.bind(values.map({ .value($0) }))
+
+				try! s.execute()
+
+				try! s.clearBindings()
+				try! s.reset()
+			}
+
+			stopMeasuring()
+
+			s = try! connection.prepare(sql: "select count(*) from t1;")
+			let count = try! s.step()!.get(.int, at: 0)
+
+			XCTAssertEqual(count, rowCount)
+		}
+	}
+
+	func testPipelineSelectPerformance_1_1() {
+		self.measureMetrics(XCTestCase.defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
+			let connection = try! Connection()
+
+			try! connection.execute(sql: "create table t1(a, b);")
+
+			var s = try! connection.prepare(sql: "insert into t1(a, b) values (1, 2);")
+
+			let rowCount = 50_000
+			for _ in 0..<rowCount {
+				try! s.execute()
+				try! s.reset()
+			}
+
+			s = try! connection.prepare(sql: "select a, b from t1;")
+
+			startMeasuring()
+
+			try! s.results { row in
+				_ = try row.get(.int, at: 0)
+				_ = try row.get(.int, at: 1)
+			}
+
+			stopMeasuring()
+		}
+	}
+
+	func testPipelineSelectPerformance_1_2() {
+		self.measureMetrics(XCTestCase.defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
+			let connection = try! Connection()
+
+			try! connection.execute(sql: "create table t1(a, b);")
+
+			var s = try! connection.prepare(sql: "insert into t1(a, b) values (1, 2);")
+
+			let rowCount = 50_000
+			for _ in 0..<rowCount {
+				try! s.execute()
+				try! s.reset()
+			}
+
+			s = try! connection.prepare(sql: "select a, b from t1;")
+
+			startMeasuring()
+
+			try! s.results { row in
+				_ = try row.value(at: 0)
+				_ = try row.value(at: 1)
+			}
+
+			stopMeasuring()
+		}
+	}
+}
